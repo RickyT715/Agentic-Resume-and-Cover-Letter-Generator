@@ -1,0 +1,101 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+  schedule:
+    - cron: "0 6 * * 1" # Weekly Monday 6am UTC
+
+jobs:
+  bandit:
+    name: Bandit Security Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install bandit
+        run: pip install bandit[toml]
+
+      - name: Run bandit
+        run: >
+          bandit -r .
+          --exclude ./tests,./alembic
+          -s B101
+          -f json
+          -o bandit-report.json
+          || true
+
+      - name: Display results
+        if: always()
+        run: |
+          if [ -f bandit-report.json ]; then
+            python -c "
+          import json
+          with open('bandit-report.json') as f:
+              data = json.load(f)
+          results = data.get('results', [])
+          if results:
+              print(f'Found {len(results)} issue(s):')
+              for r in results:
+                  print(f\"  [{r['issue_severity']}] {r['issue_text']} at {r['filename']}:{r['line_number']}\")
+          else:
+              print('No security issues found')
+          "
+          fi
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: backend/bandit-report.json
+          retention-days: 30
+
+  dependency-check:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install safety
+        run: pip install safety
+
+      - name: Run safety check
+        run: |
+          cd backend
+          pip install -r <(python -c "
+          import tomllib
+          with open('pyproject.toml', 'rb') as f:
+              data = tomllib.load(f)
+          for dep in data['project']['dependencies']:
+              print(dep)
+          ") 2>/dev/null || true
+          safety check --output json > safety-report.json || true
+          cat safety-report.json
+
+      - name: Frontend audit
+        run: |
+          cd frontend
+          npm audit --production --json > npm-audit.json || true
+          npm audit --production || true

@@ -51,6 +51,20 @@ backend/prompts/User_information_prompts_zh.txt
 # AI tool settings
 .claude/
 
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Test cassettes (recorded API responses)
+backend/tests/cassettes/*.yaml
+
+# uv lock file (optional - can be committed for reproducibility)
+# backend/uv.lock
+
+# ChromaDB local data
+backend/chroma_data/
+
 # Temporary files
 *.tmp
 *.temp

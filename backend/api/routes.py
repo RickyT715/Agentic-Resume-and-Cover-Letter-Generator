@@ -77,6 +77,11 @@ class UpdateQuestionRequest(BaseModel):
     word_limit: Optional[int] = None
 
 
+class CompanyScrapeRequest(BaseModel):
+    url: str
+    company_name: str
+
+
 class PromptUpdate(BaseModel):
     content: str
 
@@ -254,6 +259,21 @@ async def start_task(task_id: str, background_tasks: BackgroundTasks):
     return {"message": "Task started", "task_id": task_id}
 
 
+@router.post("/tasks/{task_id}/start-v3")
+async def start_task_v3(task_id: str, background_tasks: BackgroundTasks):
+    """Start a task using the v3 LangGraph multi-agent pipeline."""
+    task = task_manager.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.status != "pending":
+        raise HTTPException(status_code=400, detail="Task already started or completed")
+    if not task.job_description.strip():
+        raise HTTPException(status_code=400, detail="Job description is required")
+
+    background_tasks.add_task(task_manager.run_task_v3, task_id)
+    return {"message": "Task started (v3 pipeline)", "task_id": task_id, "pipeline": "v3"}
+
+
 @router.post("/tasks/{task_id}/retry")
 async def retry_task(task_id: str, background_tasks: BackgroundTasks):
     task = task_manager.retry_task(task_id)
@@ -379,6 +399,98 @@ async def delete_question(task_id: str, question_id: str):
         raise HTTPException(status_code=404, detail="Task or question not found")
     return {"message": "Question deleted"}
 
+
+# ============== Evaluation Endpoints ==============
+
+@router.get("/tasks/{task_id}/evaluation")
+async def get_evaluation(task_id: str):
+    """Get ATS evaluation score breakdown for a completed task."""
+    task = task_manager.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if not task.latex_source:
+        raise HTTPException(status_code=400, detail="No resume available for evaluation")
+
+    from evaluation.metrics import evaluate_resume
+
+    result = await evaluate_resume(
+        resume_latex=task.latex_source,
+        job_description=task.job_description,
+        use_llm_judge=False,  # GET endpoint uses fast ATS-only scoring
+    )
+    return result
+
+
+@router.post("/tasks/{task_id}/evaluate")
+async def evaluate_task(task_id: str):
+    """Run full evaluation (ATS + LLM judge) on an existing resume."""
+    task = task_manager.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if not task.latex_source:
+        raise HTTPException(status_code=400, detail="No resume available for evaluation")
+
+    from evaluation.metrics import evaluate_resume
+
+    result = await evaluate_resume(
+        resume_latex=task.latex_source,
+        job_description=task.job_description,
+        provider_name=task.provider,
+        task_id=task.id,
+        task_number=task.task_number,
+        use_llm_judge=True,
+    )
+    return result
+
+
+# ============== Company Research (RAG) Endpoints ==============
+
+@router.post("/companies/scrape")
+async def scrape_company(data: CompanyScrapeRequest):
+    """Scrape a company website and index it for RAG retrieval."""
+    try:
+        from rag.retriever import scrape_and_index_company
+        result = await scrape_and_index_company(data.url, data.company_name)
+        return result
+    except ImportError:
+        raise HTTPException(status_code=501, detail="RAG module not installed (chromadb required)")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
+
+
+@router.get("/companies/{company_name}/info")
+async def get_company_info(company_name: str):
+    """Get indexed company data from the vector store."""
+    try:
+        from rag.vector_store import get_company_info as _get_info
+        docs = _get_info(company_name)
+        return {"company_name": company_name, "documents": len(docs), "chunks": docs}
+    except ImportError:
+        raise HTTPException(status_code=501, detail="RAG module not installed")
+
+
+@router.delete("/companies/{company_name}")
+async def delete_company_data(company_name: str):
+    """Delete all indexed data for a company."""
+    try:
+        from rag.vector_store import delete_company
+        count = delete_company(company_name)
+        return {"message": f"Deleted {count} documents", "count": count}
+    except ImportError:
+        raise HTTPException(status_code=501, detail="RAG module not installed")
+
+
+@router.get("/companies")
+async def list_companies():
+    """List all companies with indexed data."""
+    try:
+        from rag.vector_store import list_companies as _list
+        return {"companies": _list()}
+    except ImportError:
+        return {"companies": []}
+
+
+# ============== Application Questions Endpoints ==============
 
 @router.post("/tasks/{task_id}/questions/{question_id}/generate", response_model=ApplicationQuestion)
 async def generate_question_answer(task_id: str, question_id: str):

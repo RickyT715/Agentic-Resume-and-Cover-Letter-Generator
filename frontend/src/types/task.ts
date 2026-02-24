@@ -46,6 +46,7 @@ export interface Task {
   template_id: string;
   language?: string;
   provider?: string | null;
+  pipeline_version?: string;
   steps: StepProgress[];
   resume_pdf_path?: string;
   cover_letter_pdf_path?: string;
@@ -66,6 +67,8 @@ export interface ProgressUpdate {
   status: TaskStatus;
   message: string;
   attempt: number;
+  node?: string;
+  pipeline_version?: string;
 }
 
 export interface WebSocketMessage {

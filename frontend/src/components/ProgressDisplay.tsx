@@ -11,11 +11,24 @@ const STEP_LABELS: Record<string, string> = {
 };
 
 const STEP_DESCRIPTIONS: Record<string, string> = {
-  generate_resume: 'Using Gemini 3 Pro to create a tailored LaTeX resume',
+  generate_resume: 'Using AI to create a tailored LaTeX resume',
   compile_latex: 'Converting LaTeX code to PDF format',
   extract_text: 'Reading resume content for cover letter generation',
   generate_cover_letter: 'Creating a personalized cover letter',
   create_cover_pdf: 'Formatting and saving the cover letter as PDF',
+};
+
+// V3 pipeline agent node descriptions (shown in step messages)
+const V3_NODE_LABELS: Record<string, string> = {
+  jd_analyzer: 'Analyzing Job Description',
+  relevance_matcher: 'Matching Profile to Requirements',
+  resume_writer: 'Generating Tailored Resume',
+  quality_gate: 'Evaluating Resume Quality',
+  compile_latex: 'Compiling LaTeX',
+  extract_text: 'Extracting Resume Text',
+  cover_letter_writer: 'Generating Cover Letter',
+  create_cover_pdf: 'Creating Cover Letter PDF',
+  finalize: 'Finalizing Outputs',
 };
 
 function formatElapsed(seconds: number): string {

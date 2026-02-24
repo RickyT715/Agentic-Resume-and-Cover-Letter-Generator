@@ -1,0 +1,36 @@
+target-version = "py311"
+line-length = 120
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults (FastAPI Depends)
+    "A003",   # class attribute shadowing builtin
+    "RUF012", # mutable class variable without ClassVar
+    "N805",   # first argument of a method should be named `self` (pydantic validators)
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["S101", "B011"]  # allow assert in tests
+"alembic/*" = ["E402", "I001"]
+
+[lint.isort]
+known-first-party = ["agents", "api", "db", "evaluation", "models", "rag", "services"]
+
+[format]
+quote-style = "double"
+indent-style = "space"

@@ -59,6 +59,7 @@ class Task(BaseModel):
     template_id: str = "classic"
     language: str = "en"
     provider: Optional[str] = None
+    pipeline_version: str = "v2"
     steps: List[StepProgress] = Field(default_factory=list)
     resume_pdf_path: Optional[str] = None
     cover_letter_pdf_path: Optional[str] = None

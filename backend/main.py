@@ -86,17 +86,28 @@ async def lifespan(app: FastAPI):
 
     validate_environment()
 
+    # Initialize database if configured
+    from db.session import init_db, close_db
+
+    await init_db()
+
     yield
 
+    await close_db()
     logger.info("Resume & Cover Letter Generator Shutting Down")
 
 
 app = FastAPI(
     title="Resume & Cover Letter Generator",
     description="Automated resume and cover letter generation with multi-provider AI support",
-    version="2.3.0",
+    version="3.0.0",
     lifespan=lifespan,
 )
+
+# Rate limiting (optional - requires slowapi)
+from middleware.rate_limit import setup_rate_limiting
+
+setup_rate_limiting(app)
 
 # CORS for frontend
 app.add_middleware(

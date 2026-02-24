@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (will be installed in container)
+node_modules
+venv
+.venv
+__pycache__
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Build artifacts
+dist
+*.egg-info
+htmlcov
+.coverage
+
+# Environment files (pass via docker-compose env)
+.env
+*.env.local
+*.env.production
+
+# Logs and generated files
+backend/output/*
+backend/logs/*
+backend/responses/*
+backend/data/*
+backend/chroma_data/
+
+# Claude settings
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md

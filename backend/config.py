@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     templates_dir: Path = base_dir / "templates"
     data_dir: Path = base_dir / "data"
 
+    # Database Configuration
+    database_url: str = ""  # e.g. "postgresql+asyncpg://user:pass@localhost:5432/resume_gen"
+    database_echo: bool = False  # Log SQL queries
+
     # Server Configuration
     host: str = "0.0.0.0"
     port: int = 8000

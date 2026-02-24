@@ -400,7 +400,7 @@ class TaskManager:
     # ===================== Task Execution =====================
 
     async def run_task(self, task_id: str):
-        """Run a task with concurrency limiting."""
+        """Run a task with concurrency limiting (v2 pipeline)."""
         task = self.tasks.get(task_id)
         if not task:
             raise ValueError(f"Task {task_id} not found")
@@ -419,6 +419,42 @@ class TaskManager:
                 self._save_tasks()
                 return
             await self._execute_task(task_id)
+
+    async def run_task_v3(self, task_id: str):
+        """Run a task using the v3 LangGraph multi-agent pipeline."""
+        task = self.tasks.get(task_id)
+        if not task:
+            raise ValueError(f"Task {task_id} not found")
+
+        task.status = TaskStatus.QUEUED
+        task.pipeline_version = "v3"
+        self._save_tasks()
+
+        await self._notify_progress(
+            task, task.steps[0].step, TaskStatus.PENDING, "Waiting in queue (v3 pipeline)..."
+        )
+
+        async with self._semaphore:
+            if task.cancelled:
+                task.status = TaskStatus.CANCELLED
+                self._save_tasks()
+                return
+
+            from services.langgraph_executor import run_langgraph_pipeline
+
+            # Save JD to history
+            self._save_jd_to_history(task.job_description)
+
+            # Build a progress callback that broadcasts via WebSocket
+            async def v3_progress_callback(update: dict):
+                for cb in self._progress_callbacks:
+                    try:
+                        await cb(update)
+                    except Exception as e:
+                        logger.error(f"Progress callback error: {e}")
+
+            await run_langgraph_pipeline(task, progress_callback=v3_progress_callback)
+            self._save_tasks()
 
     async def _execute_task(self, task_id: str):
         task = self.tasks.get(task_id)

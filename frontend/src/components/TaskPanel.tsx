@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Play, Download, AlertCircle, FileText, FileCheck, RefreshCw, Code, Eye, History, ClipboardList, Copy, Check } from 'lucide-react';
+import { Play, Download, AlertCircle, FileText, FileCheck, RefreshCw, Code, Eye, History, ClipboardList, Copy, Check, Zap, Globe, Loader2 } from 'lucide-react';
 import { useTaskStore } from '../store/taskStore';
 import { ProgressDisplay } from './ProgressDisplay';
 import { QuestionsSection } from './QuestionsSection';
@@ -23,6 +23,10 @@ export function TaskPanel() {
   const [previewTab, setPreviewTab] = useState<'resume' | 'cover'>('resume');
   const [copiedAnswerId, setCopiedAnswerId] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [pipelineVersion, setPipelineVersion] = useState<'v2' | 'v3'>('v3');
+  const [companyUrl, setCompanyUrl] = useState('');
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeStatus, setScrapeStatus] = useState<string | null>(null);
 
   // Load templates
   useEffect(() => {
@@ -54,6 +58,35 @@ export function TaskPanel() {
     setJobDescription(value);
     if (activeTask && activeTask.status === 'pending') {
       updateTaskJobDescription(activeTask.id, value);
+    }
+  };
+
+  const handleScrapeCompany = async () => {
+    if (!companyUrl.trim()) return;
+    setIsScraping(true);
+    setScrapeStatus(null);
+    try {
+      // Extract company name from URL
+      const hostname = new URL(companyUrl).hostname.replace('www.', '');
+      const companyName = hostname.split('.')[0];
+      const response = await fetch(`${API_URL}/companies/scrape`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: companyUrl, company_name: companyName }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || 'Scraping failed');
+      }
+      const result = await response.json();
+      setScrapeStatus(`Indexed ${result.chunks_indexed} chunks from ${result.pages_scraped} pages`);
+      addToast('success', `Company research indexed for ${companyName}`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Scraping failed';
+      setScrapeStatus(msg);
+      addToast('error', msg);
+    } finally {
+      setIsScraping(false);
     }
   };
 
@@ -145,7 +178,8 @@ export function TaskPanel() {
         generate_cover_letter: generateCoverLetter,
         status: 'running',
       });
-      const startResponse = await fetch(`${API_URL}/tasks/${activeTask.id}/start`, { method: 'POST' });
+      const startEndpoint = pipelineVersion === 'v3' ? 'start-v3' : 'start';
+      const startResponse = await fetch(`${API_URL}/tasks/${activeTask.id}/${startEndpoint}`, { method: 'POST' });
       if (!startResponse.ok) {
         const data = await startResponse.json();
         throw new Error(data.detail || 'Failed to start task');
@@ -381,6 +415,34 @@ export function TaskPanel() {
                   </select>
                 </div>
 
+                {/* Company URL (RAG Research) */}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                    <Globe className="w-3.5 h-3.5 inline mr-1" />
+                    Company URL:
+                  </label>
+                  <div className="flex-1 flex gap-2">
+                    <input
+                      type="url"
+                      value={companyUrl}
+                      onChange={(e) => setCompanyUrl(e.target.value)}
+                      placeholder="https://company.com (optional)"
+                      className="flex-1 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                    />
+                    <button
+                      onClick={handleScrapeCompany}
+                      disabled={!companyUrl.trim() || isScraping}
+                      className="px-3 py-1.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                    >
+                      {isScraping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
+                      {isScraping ? 'Scraping...' : 'Research'}
+                    </button>
+                  </div>
+                  {scrapeStatus && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{scrapeStatus}</span>
+                  )}
+                </div>
+
                 {/* Cover Letter Toggle */}
                 <div className="flex items-center gap-3">
                   <button
@@ -406,6 +468,39 @@ export function TaskPanel() {
                   <span className="text-xs text-gray-400">
                     {generateCoverLetter ? '(Resume + Cover Letter)' : '(Resume Only)'}
                   </span>
+                </div>
+
+                {/* Pipeline Version */}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Pipeline:</label>
+                  <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+                    <button
+                      onClick={() => setPipelineVersion('v3')}
+                      className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1 ${
+                        pipelineVersion === 'v3'
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      <Zap className="w-3 h-3" />
+                      v3 Multi-Agent
+                    </button>
+                    <button
+                      onClick={() => setPipelineVersion('v2')}
+                      className={`px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-300 dark:border-gray-600 ${
+                        pipelineVersion === 'v2'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      v2 Classic
+                    </button>
+                  </div>
+                  {pipelineVersion === 'v3' && (
+                    <span className="text-xs text-purple-600 dark:text-purple-400">
+                      JD Analysis + Relevance Match + Quality Gate
+                    </span>
+                  )}
                 </div>
 
                 {/* Start Button */}

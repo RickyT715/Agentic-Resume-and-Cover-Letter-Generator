@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TaskSidebar } from './components/TaskSidebar';
 import { TaskPanel } from './components/TaskPanel';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -10,7 +11,17 @@ import { Wifi, WifiOff, Settings, FileText, Moon, Sun } from 'lucide-react';
 
 const API_URL = '/api';
 
-function App() {
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 10_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function AppContent() {
   const { isConnected } = useWebSocket();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [promptsOpen, setPromptsOpen] = useState(false);
@@ -142,6 +153,14 @@ function App() {
       <PromptsPanel isOpen={promptsOpen} onClose={() => setPromptsOpen(false)} />
       <ToastContainer />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
+    </QueryClientProvider>
   );
 }
 
