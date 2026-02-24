@@ -1,0 +1,7 @@
+Adapt the provided LaTeX template to use a more modern design approach:
+- Use a two-column layout if possible: a narrow left sidebar (about 30% width) for contact info, skills, and certifications, and a wider right column for experience and education.
+- Use subtle color accents (dark blue or teal) for section headers and dividing lines.
+- Use sans-serif fonts where possible (e.g., \usepackage{helvet} or \usepackage{lato}).
+- Replace traditional bullet points with compact, tight descriptions.
+- Use horizontal rules or colored bars to separate sections.
+- Keep the overall look clean and professional while being visually distinctive.

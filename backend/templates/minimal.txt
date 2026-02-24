@@ -1,0 +1,8 @@
+Adapt the provided LaTeX template to use a minimal, spacious design:
+- Use generous margins and whitespace between sections.
+- Use a single-column layout with clean typography.
+- Minimize decorative elements: no lines, boxes, or color accents. Use only black text on white.
+- Use a modern sans-serif font (e.g., \usepackage{lato} or \usepackage[sfdefault]{inter}).
+- Section headers should be simple: slightly larger font, bold, with extra vertical space above.
+- Keep descriptions very concise with minimal bullet points.
+- Prioritize readability and elegant simplicity over visual complexity.

@@ -1,0 +1,30 @@
+John Doe
+https://www.linkedin.com/in/johndoe/
+
+Education
+Email: johndoe@example.com
+Mobile: +1-555-123-4567
+
+Education
+- Master of Science in Computer Science, University of Example, 2023
+- Bachelor of Science in Software Engineering, Example State University, 2021
+
+Work Experience
+- Software Engineer at Example Corp (2023 - Present)
+  - Developed RESTful APIs using Python/FastAPI
+  - Built React frontends with TypeScript
+- Junior Developer Intern at StartupXYZ (Summer 2022)
+  - Contributed to CI/CD pipeline automation
+
+Skills
+- Languages: Python, TypeScript, JavaScript, Java, C++
+- Frameworks: React, FastAPI, Node.js
+- Tools: Git, Docker, AWS, PostgreSQL
+
+Projects
+- Resume Generator: AI-powered resume and cover letter generator using Gemini API
+- Portfolio Website: Personal portfolio built with React and Tailwind CSS
+
+NOTE: Replace this file with your actual personal information.
+This file is gitignored to protect your privacy.
+Copy this file to User_information_prompts.txt and fill in your real details.

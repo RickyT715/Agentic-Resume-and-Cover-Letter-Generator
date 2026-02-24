@@ -1,0 +1,57 @@
+# Environment variables
+.env
+*.env.local
+*.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+*.egg-info/
+*.egg
+
+# Node
+node_modules/
+dist/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+nul
+desktop.ini
+
+# Generated output
+backend/output/*
+!backend/output/.gitkeep
+backend/logs/*
+!backend/logs/.gitkeep
+backend/responses/*
+!backend/responses/.gitkeep
+
+# Persisted task data
+backend/data/*
+!backend/data/.gitkeep
+
+# Settings file (contains API keys)
+backend/settings.json
+
+# User personal information (contains real resume data)
+backend/prompts/User_information_prompts.txt
+backend/prompts/User_information_prompts_zh.txt
+
+# AI tool settings
+.claude/
+
+# Temporary files
+*.tmp
+*.temp
+*.log

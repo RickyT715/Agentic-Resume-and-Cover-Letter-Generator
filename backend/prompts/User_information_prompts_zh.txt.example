@@ -1,0 +1,30 @@
+张三
+https://www.linkedin.com/in/zhangsan/
+
+教育背景
+邮箱：zhangsan@example.com
+手机：+86-138-0000-0000
+
+教育背景
+- 计算机科学硕士，示例大学，2023年
+- 软件工程学士，示例理工大学，2021年
+
+工作经历
+- 示例科技有限公司 软件工程师（2023年 - 至今）
+  - 使用Python/FastAPI开发RESTful API
+  - 使用React和TypeScript构建前端
+- 创业公司XYZ 初级开发实习生（2022年夏季）
+  - 参与CI/CD流水线自动化
+
+技能
+- 编程语言：Python、TypeScript、JavaScript、Java、C++
+- 框架：React、FastAPI、Node.js
+- 工具：Git、Docker、AWS、PostgreSQL
+
+项目
+- 简历生成器：使用Gemini API的AI驱动简历和求职信生成器
+- 个人主页：使用React和Tailwind CSS构建的个人作品集网站
+
+注意：请将此文件替换为您的真实个人信息。
+此文件已被gitignore保护您的隐私。
+将此文件复制为 User_information_prompts_zh.txt 并填入您的真实信息。
