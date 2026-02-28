@@ -18,19 +18,6 @@ const STEP_DESCRIPTIONS: Record<string, string> = {
   create_cover_pdf: 'Formatting and saving the cover letter as PDF',
 };
 
-// V3 pipeline agent node descriptions (shown in step messages)
-const V3_NODE_LABELS: Record<string, string> = {
-  jd_analyzer: 'Analyzing Job Description',
-  relevance_matcher: 'Matching Profile to Requirements',
-  resume_writer: 'Generating Tailored Resume',
-  quality_gate: 'Evaluating Resume Quality',
-  compile_latex: 'Compiling LaTeX',
-  extract_text: 'Extracting Resume Text',
-  cover_letter_writer: 'Generating Cover Letter',
-  create_cover_pdf: 'Creating Cover Letter PDF',
-  finalize: 'Finalizing Outputs',
-};
-
 function formatElapsed(seconds: number): string {
   if (seconds < 60) return `${Math.floor(seconds)}s`;
   const mins = Math.floor(seconds / 60);

@@ -1,7 +1,7 @@
-import { CheckCircle, Circle, Loader2, XCircle, Brain, Search, FileEdit, Shield, FileText, Printer, Send } from "lucide-react"
+import { CheckCircle, Loader2, XCircle, Brain, Search, FileEdit, Shield, Printer, Send } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"
 import { Badge } from "./ui/badge"
-import type { Task, StepProgress } from "../types/task"
+import type { Task } from "../types/task"
 
 interface AgentNode {
   id: string

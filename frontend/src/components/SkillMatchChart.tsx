@@ -37,16 +37,9 @@ interface SkillMatchChartProps {
   evaluation: EvaluationData
 }
 
-function ScoreBar({ label, value, color = "blue" }: { label: string; value: number; color?: string }) {
+function ScoreBar({ label, value }: { label: string; value: number }) {
   const percentage = Math.round(value * 100)
-  const colorClasses: Record<string, string> = {
-    blue: "bg-blue-500",
-    green: "bg-green-500",
-    yellow: "bg-yellow-500",
-    red: "bg-red-500",
-    purple: "bg-purple-500",
-  }
-  const bgClass = percentage >= 70 ? colorClasses.green : percentage >= 50 ? colorClasses.yellow : colorClasses.red
+  const bgClass = percentage >= 70 ? "bg-green-500" : percentage >= 50 ? "bg-yellow-500" : "bg-red-500"
 
   return (
     <div className="flex items-center gap-3">

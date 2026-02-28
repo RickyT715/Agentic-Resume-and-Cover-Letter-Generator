@@ -127,8 +127,8 @@ describe('SettingsPanel', () => {
     fireEvent.click(screen.getByText('Save Settings'));
 
     await waitFor(() => {
-      const saveCalls = mockFetch.mock.calls.filter(
-        (call: [string, RequestInit?]) => call[0] === '/api/settings' && call[1]?.method === 'PUT'
+      const saveCalls = (mockFetch.mock.calls as [string, RequestInit?][]).filter(
+        (call) => call[0] === '/api/settings' && call[1]?.method === 'PUT'
       );
       expect(saveCalls.length).toBe(1);
     });
@@ -220,8 +220,8 @@ describe('SettingsPanel', () => {
 
     await waitFor(() => {
       const fetchCalls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
-      const resetCalls = fetchCalls.filter(
-        (call: [string, RequestInit?]) => call[0] === '/api/settings/reset'
+      const resetCalls = (fetchCalls as [string, RequestInit?][]).filter(
+        (call) => call[0] === '/api/settings/reset'
       );
       expect(resetCalls.length).toBe(1);
     });

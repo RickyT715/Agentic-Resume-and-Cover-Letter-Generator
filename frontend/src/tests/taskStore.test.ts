@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useTaskStore } from '../store/taskStore';
-import type { Task, ProgressUpdate, Toast } from '../types/task';
+import type { Task, ProgressUpdate } from '../types/task';
 
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
