@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TaskPanel } from '../components/TaskPanel';
 import { useTaskStore } from '../store/taskStore';
 import type { Task } from '../types/task';
@@ -24,6 +25,15 @@ function makeTask(overrides: Partial<Task> = {}): Task {
   };
 }
 
+function renderWithQuery(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+  );
+}
+
 describe('TaskPanel', () => {
   beforeEach(() => {
     useTaskStore.setState({ tasks: [], activeTaskId: null, toasts: [], darkMode: false });
@@ -40,7 +50,7 @@ describe('TaskPanel', () => {
   });
 
   it('shows empty state when no task selected', () => {
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('No task selected')).toBeTruthy();
     expect(screen.getByText(/Create a new task or select one from the sidebar/)).toBeTruthy();
   });
@@ -48,28 +58,28 @@ describe('TaskPanel', () => {
   it('shows task header with New Task for pending', () => {
     const task = makeTask();
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('New Task')).toBeTruthy();
   });
 
   it('shows company and position in header', () => {
     const task = makeTask({ company_name: 'Google', position_name: 'SWE', status: 'completed' });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Google - SWE')).toBeTruthy();
   });
 
   it('shows status text', () => {
     const task = makeTask({ status: 'running' });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Running')).toBeTruthy();
   });
 
   it('shows job description textarea', () => {
     const task = makeTask();
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     const textarea = screen.getByPlaceholderText('Paste the job description here...');
     expect(textarea).toBeTruthy();
     expect((textarea as HTMLTextAreaElement).value).toBe('Looking for a Python developer');
@@ -78,35 +88,35 @@ describe('TaskPanel', () => {
   it('shows Start Task button for pending task', () => {
     const task = makeTask();
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Start Task')).toBeTruthy();
   });
 
   it('does not show Start Task for running task', () => {
     const task = makeTask({ status: 'running' });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.queryByText('Start Task')).toBeNull();
   });
 
   it('shows Retry Task button for completed tasks', () => {
     const task = makeTask({ status: 'completed' });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Retry Task')).toBeTruthy();
   });
 
   it('shows Retry Task button for failed tasks', () => {
     const task = makeTask({ status: 'failed', error_message: 'Something went wrong' });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Retry Task')).toBeTruthy();
   });
 
   it('shows error message for failed task', () => {
     const task = makeTask({ status: 'failed', error_message: 'LaTeX compilation failed' });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Task Failed')).toBeTruthy();
     expect(screen.getByText('LaTeX compilation failed')).toBeTruthy();
   });
@@ -114,7 +124,7 @@ describe('TaskPanel', () => {
   it('shows cancelled message', () => {
     const task = makeTask({ status: 'cancelled', error_message: 'Cancelled by user' });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Task Cancelled')).toBeTruthy();
     expect(screen.getByText('Cancelled by user')).toBeTruthy();
   });
@@ -126,7 +136,7 @@ describe('TaskPanel', () => {
       latex_source: '\\documentclass{article}...',
     });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Resume (PDF)')).toBeTruthy();
     expect(screen.getByText('LaTeX Source (.tex)')).toBeTruthy();
   });
@@ -139,7 +149,7 @@ describe('TaskPanel', () => {
       generate_cover_letter: true,
     });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Cover Letter (PDF)')).toBeTruthy();
   });
 
@@ -150,14 +160,14 @@ describe('TaskPanel', () => {
       error_message: 'Cover letter generation failed',
     });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText(/Resume was generated before the failure/)).toBeTruthy();
   });
 
   it('shows pipeline version toggle for pending task', () => {
     const task = makeTask();
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('v3 Multi-Agent')).toBeTruthy();
     expect(screen.getByText('v2 Classic')).toBeTruthy();
   });
@@ -165,14 +175,14 @@ describe('TaskPanel', () => {
   it('shows cover letter toggle for pending task', () => {
     const task = makeTask();
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     expect(screen.getByText('Generate Cover Letter')).toBeTruthy();
   });
 
   it('disables textarea for non-pending task', () => {
     const task = makeTask({ status: 'running' });
     useTaskStore.setState({ tasks: [task], activeTaskId: 'test-1' });
-    render(<TaskPanel />);
+    renderWithQuery(<TaskPanel />);
     const textarea = screen.getByPlaceholderText('Paste the job description here...');
     expect((textarea as HTMLTextAreaElement).disabled).toBe(true);
   });

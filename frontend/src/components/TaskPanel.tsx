@@ -304,7 +304,7 @@ export function TaskPanel() {
                   'text-gray-600 dark:text-gray-400'
                 }`}
               >
-                {activeTask.status.charAt(0).toUpperCase() + activeTask.status.slice(1)}
+                {(activeTask.status || 'pending').charAt(0).toUpperCase() + (activeTask.status || 'pending').slice(1)}
               </span>
             </p>
           </div>

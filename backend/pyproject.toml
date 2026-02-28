@@ -2,7 +2,6 @@
 name = "resume-generator-backend"
 version = "3.0.0"
 description = "AI-powered resume and cover letter generator with multi-agent pipeline"
-readme = "../README.md"
 requires-python = ">=3.11"
 dependencies = [
     # Core Framework
