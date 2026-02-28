@@ -99,3 +99,38 @@ def get_provider_for_task(task_provider: Optional[str]) -> AIClientBase:
     if task_provider:
         return get_provider(task_provider)
     return get_default_provider()
+
+
+# Agent names that support per-agent provider overrides
+AGENT_NAMES = [
+    "jd_analyzer",
+    "relevance_matcher",
+    "resume_writer",
+    "cover_letter_writer",
+    "company_researcher",
+]
+
+
+def get_provider_for_agent(agent_name: str, task_provider: str) -> AIClientBase:
+    """Resolve the provider for a specific agent node.
+
+    Priority:
+      1. Per-agent override from settings (agent_providers dict)
+      2. Task-level provider (passed through state)
+
+    Args:
+        agent_name: The agent node name (e.g. "resume_writer")
+        task_provider: The task-level provider name from state["provider_name"]
+
+    Returns:
+        The resolved AIClientBase instance
+    """
+    sm = get_settings_manager()
+    agent_providers = sm.get("agent_providers") or {}
+    override = agent_providers.get(agent_name)
+
+    if override:
+        logger.debug(f"Agent '{agent_name}' using per-agent provider override: {override}")
+        return get_provider(override)
+
+    return get_provider(task_provider)

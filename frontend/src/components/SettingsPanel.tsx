@@ -40,6 +40,8 @@ interface AppSettings {
   generate_cover_letter: boolean;
   max_latex_retries: number;
   default_template_id: string;
+  // Per-Agent Providers
+  agent_providers: Record<string, string>;
 }
 
 interface SettingsPanelProps {
@@ -55,6 +57,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const addToast = useTaskStore((state) => state.addToast);
   const [expandedSections, setExpandedSections] = useState({
     provider: true,
+    agent_providers: false,
     gemini: true,
     claude: false,
     openai_compat: false,
@@ -141,6 +144,22 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     setSettings(prev => prev ? { ...prev, [key]: value } : null);
   };
 
+  const updateAgentProvider = (agent: string, provider: string) => {
+    setSettings(prev => {
+      if (!prev) return null;
+      const current = prev.agent_providers || {};
+      return { ...prev, agent_providers: { ...current, [agent]: provider } };
+    });
+  };
+
+  const AGENT_LABELS: Record<string, string> = {
+    jd_analyzer: 'JD Analyzer',
+    relevance_matcher: 'Relevance Matcher',
+    resume_writer: 'Resume Writer',
+    cover_letter_writer: 'Cover Letter Writer',
+    company_researcher: 'Company Researcher',
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -192,6 +211,42 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Provider used for new tasks by default. Individual tasks can override this.
                     </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Per-Agent Provider Overrides Section */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+                <button
+                  onClick={() => toggleSection('agent_providers')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-t-lg"
+                >
+                  <span className="font-medium">Per-Agent Provider Overrides</span>
+                  {expandedSections.agent_providers ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedSections.agent_providers && (
+                  <div className="p-4 space-y-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      Override the AI provider for individual pipeline agents. Leave as "Use Default" to use the task-level provider.
+                    </p>
+                    {Object.entries(AGENT_LABELS).map(([agent, label]) => (
+                      <div key={agent} className="flex items-center gap-3">
+                        <label className="text-sm text-gray-700 dark:text-gray-300 w-40 shrink-0">
+                          {label}
+                        </label>
+                        <select
+                          value={(settings.agent_providers || {})[agent] || ''}
+                          onChange={(e) => updateAgentProvider(agent, e.target.value)}
+                          className="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        >
+                          <option value="">Use Default</option>
+                          <option value="gemini">Google Gemini</option>
+                          <option value="claude">Anthropic Claude</option>
+                          <option value="openai_compat">OpenAI-Compatible Proxy</option>
+                          <option value="claude_proxy">Claude Code Proxy</option>
+                        </select>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

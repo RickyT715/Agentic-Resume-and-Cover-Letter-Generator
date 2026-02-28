@@ -70,7 +70,7 @@ class LaTeXCompiler:
             )
         
         if not latex_code.strip().endswith("\\end{document}"):
-            logger.error(f"LaTeX code does not end with \\end{document}!")
+            logger.error("LaTeX code does not end with \\end{document}!")
             logger.error(f"Last 200 chars: {latex_code[-200:]!r}")
             return CompilationAttempt(
                 attempt_number=attempt_num,

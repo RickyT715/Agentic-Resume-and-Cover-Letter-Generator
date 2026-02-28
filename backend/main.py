@@ -86,14 +86,19 @@ async def lifespan(app: FastAPI):
 
     validate_environment()
 
-    # Initialize database if configured
-    from db.session import init_db, close_db
-
-    await init_db()
+    # Initialize database if configured (sqlalchemy is optional)
+    _close_db = None
+    try:
+        from db.session import init_db, close_db
+        await init_db()
+        _close_db = close_db
+    except ImportError:
+        logger.info("SQLAlchemy not installed - database features disabled")
 
     yield
 
-    await close_db()
+    if _close_db:
+        await _close_db()
     logger.info("Resume & Cover Letter Generator Shutting Down")
 
 
@@ -113,9 +118,9 @@ setup_rate_limiting(app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
+        f"http://localhost:{settings.frontend_port}",
+        f"http://127.0.0.1:{settings.frontend_port}",
+        "http://localhost:3000",  # Docker/production
         "http://127.0.0.1:3000",
     ],
     allow_credentials=True,

@@ -38,13 +38,13 @@ async def relevance_matcher_agent(state: ResumeState) -> dict:
     Reads: user_information, jd_analysis
     Writes: relevance_match, current_node, agent_outputs
     """
-    from services.provider_registry import get_provider
+    from services.provider_registry import get_provider_for_agent
 
     logger.info(f"Task {state['task_number']}: Matching user profile to JD")
     start = time.time()
 
     jd = state["jd_analysis"]
-    provider = get_provider(state["provider_name"])
+    provider = get_provider_for_agent("relevance_matcher", state["provider_name"])
 
     prompt = RELEVANCE_MATCH_PROMPT.format(
         user_information=state.get("user_information", ""),
@@ -92,7 +92,10 @@ async def relevance_matcher_agent(state: ResumeState) -> dict:
     agent_outputs["relevance_matcher"] = {
         "latency_ms": latency,
         "match_score": match.match_score,
+        "prompt_chars": len(prompt),
     }
+    if hasattr(provider, 'last_token_usage') and provider.last_token_usage:
+        agent_outputs["relevance_matcher"]["token_usage"] = provider.last_token_usage
 
     return {
         "relevance_match": match.model_dump(),

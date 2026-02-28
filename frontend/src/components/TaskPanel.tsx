@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Play, Download, AlertCircle, FileText, FileCheck, RefreshCw, Code, Eye, History, ClipboardList, Copy, Check, Zap, Globe, Loader2 } from 'lucide-react';
+import { Play, Download, AlertCircle, FileText, FileCheck, RefreshCw, Code, Eye, History, ClipboardList, Copy, Check, Zap, Globe, Loader2, BarChart2, Ban } from 'lucide-react';
 import { useTaskStore } from '../store/taskStore';
 import { ProgressDisplay } from './ProgressDisplay';
 import { QuestionsSection } from './QuestionsSection';
+import { SkillMatchChart } from './SkillMatchChart';
+import { useEvaluationQuery, useEvaluateTaskMutation, useCoverLetterTextQuery } from '../hooks/useTaskQuery';
 import { Template, JDHistoryEntry } from '../types/task';
 
 const API_URL = '/api';
@@ -20,13 +22,26 @@ export function TaskPanel() {
   const [showJdHistory, setShowJdHistory] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewTab, setPreviewTab] = useState<'resume' | 'cover'>('resume');
+  const [previewTab, setPreviewTab] = useState<'resume' | 'cover' | 'cover-text'>('resume');
   const [copiedAnswerId, setCopiedAnswerId] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [copiedCoverLetter, setCopiedCoverLetter] = useState(false);
   const [pipelineVersion, setPipelineVersion] = useState<'v2' | 'v3'>('v3');
   const [companyUrl, setCompanyUrl] = useState('');
   const [isScraping, setIsScraping] = useState(false);
   const [scrapeStatus, setScrapeStatus] = useState<string | null>(null);
+
+  // ATS Evaluation hooks (must be before early return)
+  const shouldShowEvaluation = activeTask &&
+    (activeTask.status === 'completed' || (activeTask.status === 'failed' && !!activeTask.resume_pdf_path));
+  const { data: evaluation, isLoading: evalLoading, error: evalError } = useEvaluationQuery(
+    shouldShowEvaluation ? activeTask.id : undefined
+  );
+  const evaluateMutation = useEvaluateTaskMutation();
+  const { data: coverLetterTextData } = useCoverLetterTextQuery(
+    activeTask?.id,
+    previewTab === 'cover-text' && !!activeTask?.cover_letter_pdf_path
+  );
 
   // Load templates
   useEffect(() => {
@@ -293,15 +308,37 @@ export function TaskPanel() {
               </span>
             </p>
           </div>
-          {(isCompleted || isFailed || isCancelled) && (
-            <button
-              onClick={handleRetry}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Retry Task
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {activeTask.status === 'running' && (
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`${API_URL}/tasks/${activeTask.id}/cancel`, { method: 'POST' });
+                    if (response.ok) {
+                      const task = await response.json();
+                      updateTask(activeTask.id, task);
+                      addToast('info', `Task ${task.task_number} cancellation requested`);
+                    }
+                  } catch (e) {
+                    console.error('Failed to cancel task:', e);
+                  }
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+              >
+                <Ban className="w-4 h-4" />
+                Cancel Task
+              </button>
+            )}
+            {(isCompleted || isFailed || isCancelled) && (
+              <button
+                onClick={handleRetry}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Retry Task
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -655,6 +692,47 @@ export function TaskPanel() {
           </div>
         )}
 
+        {/* ATS Evaluation */}
+        {shouldShowEvaluation && (
+          <div className="space-y-3">
+            {evalLoading && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 flex items-center gap-3">
+                <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">Loading evaluation scores...</span>
+              </div>
+            )}
+            {!!evaluation && <SkillMatchChart evaluation={evaluation as any} />}
+            {evalError && !evaluation && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex items-center gap-3">
+                <BarChart2 className="w-5 h-5 text-gray-400" />
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Evaluation not available yet.
+                </span>
+                <button
+                  onClick={() => evaluateMutation.mutate(activeTask.id)}
+                  disabled={evaluateMutation.isPending}
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                >
+                  {evaluateMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BarChart2 className="w-3.5 h-3.5" />}
+                  Run Evaluation
+                </button>
+              </div>
+            )}
+            {!!evaluation && !(evaluation as any).llm_breakdown && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => evaluateMutation.mutate(activeTask.id)}
+                  disabled={evaluateMutation.isPending}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {evaluateMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                  Run AI Expert Review
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* PDF Preview */}
         {(isCompleted || (isFailed && hasResume)) && (
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
@@ -683,19 +761,56 @@ export function TaskPanel() {
                   >
                     Cover Letter
                   </button>
+                  <button
+                    onClick={() => setPreviewTab('cover-text')}
+                    className={`px-3 py-1 text-xs rounded ${
+                      previewTab === 'cover-text'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                        : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    Cover Letter (Text)
+                  </button>
                 </div>
               )}
             </div>
             <div className="p-4">
-              <iframe
-                src={
-                  previewTab === 'cover' && hasCoverLetter
-                    ? `${API_URL}/tasks/${activeTask.id}/cover-letter?inline=true`
-                    : `${API_URL}/tasks/${activeTask.id}/resume?inline=true`
-                }
-                className="w-full h-[600px] rounded border border-gray-200 dark:border-gray-600 bg-white"
-                title="PDF Preview"
-              />
+              {previewTab === 'cover-text' && hasCoverLetter ? (
+                <div className="relative">
+                  <button
+                    onClick={async () => {
+                      if (coverLetterTextData?.text) {
+                        await navigator.clipboard.writeText(coverLetterTextData.text);
+                        setCopiedCoverLetter(true);
+                        setTimeout(() => setCopiedCoverLetter(false), 2000);
+                      }
+                    }}
+                    className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors shadow-sm z-10"
+                  >
+                    {copiedCoverLetter ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedCoverLetter ? 'Copied!' : 'Copy Text'}
+                  </button>
+                  <div className="w-full h-[600px] overflow-y-auto rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 p-6">
+                    {coverLetterTextData?.text ? (
+                      <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+                        {coverLetterTextData.text}
+                      </pre>
+                    ) : (
+                      <p className="text-gray-400 text-sm">Loading cover letter text...</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <iframe
+                  src={
+                    previewTab === 'cover' && hasCoverLetter
+                      ? `${API_URL}/tasks/${activeTask.id}/cover-letter?inline=true`
+                      : `${API_URL}/tasks/${activeTask.id}/resume?inline=true`
+                  }
+                  className="w-full h-[600px] rounded border border-gray-200 dark:border-gray-600 bg-white"
+                  title="PDF Preview"
+                />
+              )}
             </div>
           </div>
         )}

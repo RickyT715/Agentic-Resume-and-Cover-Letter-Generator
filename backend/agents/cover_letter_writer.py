@@ -26,13 +26,13 @@ async def cover_letter_writer_agent(state: ResumeState) -> dict:
     Writes: cover_letter_text, current_node, agent_outputs
     """
     from services.prompt_manager import get_prompt_manager
-    from services.provider_registry import get_provider
+    from services.provider_registry import get_provider_for_agent
 
     logger.info(f"Task {state['task_number']}: Generating cover letter")
     start = time.time()
 
     pm = get_prompt_manager()
-    provider = get_provider(state["provider_name"])
+    provider = get_provider_for_agent("cover_letter_writer", state["provider_name"])
 
     base_prompt = pm.get_cover_letter_prompt_with_substitutions(
         resume_content=state.get("resume_text", ""),
@@ -80,7 +80,10 @@ async def cover_letter_writer_agent(state: ResumeState) -> dict:
     agent_outputs["cover_letter_writer"] = {
         "latency_ms": latency,
         "text_length": len(cover_letter_text),
+        "prompt_chars": len(full_prompt),
     }
+    if hasattr(provider, 'last_token_usage') and provider.last_token_usage:
+        agent_outputs["cover_letter_writer"]["token_usage"] = provider.last_token_usage
 
     return {
         "cover_letter_text": cover_letter_text,

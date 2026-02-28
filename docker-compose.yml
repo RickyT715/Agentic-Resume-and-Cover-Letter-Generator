@@ -6,7 +6,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "48765:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://resumegen:resumegen@postgres:5432/resumegen
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}

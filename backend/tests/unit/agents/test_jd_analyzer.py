@@ -43,7 +43,7 @@ class TestJDAnalyzer:
             "industry": "Technology",
         })
 
-        with patch("agents.jd_analyzer.get_provider", return_value=mock_provider):
+        with patch("services.provider_registry.get_provider", return_value=mock_provider):
             result = await jd_analyzer_agent(base_state)
 
         assert result["jd_analysis"]["job_title"] == "Software Engineer"
@@ -67,7 +67,7 @@ class TestJDAnalyzer:
 }
 ```"""
 
-        with patch("agents.jd_analyzer.get_provider", return_value=mock_provider):
+        with patch("services.provider_registry.get_provider", return_value=mock_provider):
             result = await jd_analyzer_agent(base_state)
 
         assert result["jd_analysis"]["job_title"] == "Backend Dev"
@@ -76,7 +76,7 @@ class TestJDAnalyzer:
     async def test_fallback_on_invalid_json(self, mock_provider, base_state):
         mock_provider.generate.return_value = "This is not valid JSON at all."
 
-        with patch("agents.jd_analyzer.get_provider", return_value=mock_provider):
+        with patch("services.provider_registry.get_provider", return_value=mock_provider):
             result = await jd_analyzer_agent(base_state)
 
         assert result["jd_analysis"]["job_title"] == "Unknown Position"
@@ -94,7 +94,7 @@ class TestJDAnalyzer:
             "industry": "",
         })
 
-        with patch("agents.jd_analyzer.get_provider", return_value=mock_provider):
+        with patch("services.provider_registry.get_provider", return_value=mock_provider):
             result = await jd_analyzer_agent(base_state)
 
         assert "jd_analyzer" in result["agent_outputs"]

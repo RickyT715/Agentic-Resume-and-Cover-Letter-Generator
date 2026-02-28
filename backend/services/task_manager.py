@@ -592,6 +592,7 @@ class TaskManager:
                 cover_letter_text = await ai_client.generate_cover_letter(
                     cover_letter_prompt, task_id=task.id, task_number=task.task_number
                 )
+                task.cover_letter_text = cover_letter_text
                 # Use cover letter heuristic as fallback if metadata didn't provide a name
                 if not task.company_name:
                     task.company_name = self._extract_company_name(cover_letter_text)

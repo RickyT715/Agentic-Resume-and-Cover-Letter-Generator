@@ -227,6 +227,13 @@ async def finalize_node(state: ResumeState) -> dict:
 
     logger.info(f"Task {state['task_number']}: Finalizing outputs")
 
+    # If there's an error or no resume PDF, skip file operations
+    if state.get("error") or not state.get("resume_pdf_path"):
+        logger.warning(f"Task {state['task_number']}: Finalizing with error or no resume PDF")
+        return {
+            "current_node": "finalize",
+        }
+
     company = state.get("company_name", "")
     position = state.get("position_name", "")
     if company and position:

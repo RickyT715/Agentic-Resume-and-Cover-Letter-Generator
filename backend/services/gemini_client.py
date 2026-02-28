@@ -18,6 +18,7 @@ class GeminiClient(AIClientBase):
         self.settings_manager = get_settings_manager()
         self._client = None
         self._current_api_key = None
+        self.last_token_usage = None  # Token usage from the most recent API call
         logger.info("GeminiClient initialized (settings read dynamically per request)")
 
     @property
@@ -158,11 +159,14 @@ Generation Parameters:
         if 'gemini-3' in self.model.lower():
             level_str = (thinking or "high").lower()
             level_map = {
-                "minimal": types.ThinkingLevel.MINIMAL,
                 "low": types.ThinkingLevel.LOW,
-                "medium": types.ThinkingLevel.MEDIUM,
                 "high": types.ThinkingLevel.HIGH,
             }
+            # Map unsupported levels to closest available
+            if level_str == "minimal":
+                level_str = "low"
+            elif level_str == "medium":
+                level_str = "high"
             thinking_enum = level_map.get(level_str, types.ThinkingLevel.HIGH)
 
             config_kwargs['thinking_config'] = types.ThinkingConfig(
@@ -273,7 +277,25 @@ Generation Parameters:
             elapsed_time = (datetime.now() - start_time).total_seconds()
             logger.info(f"Gemini API response received in {elapsed_time:.2f} seconds")
             logger.debug(f"Response length: {len(response.text)} characters")
-            
+
+            # Extract token usage from response
+            usage = getattr(response, 'usage_metadata', None)
+            if usage:
+                input_tokens = getattr(usage, 'prompt_token_count', 0) or 0
+                output_tokens = getattr(usage, 'candidates_token_count', 0) or 0
+                total_tokens = getattr(usage, 'total_token_count', 0) or 0
+                logger.info(
+                    f"Token usage: input={input_tokens}, output={output_tokens}, total={total_tokens}"
+                )
+                # Store on client for callers to access
+                self.last_token_usage = {
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "total_tokens": total_tokens,
+                }
+            else:
+                self.last_token_usage = None
+
             # Extract grounding metadata if search was enabled
             grounding_metadata = None
             if effective_search:

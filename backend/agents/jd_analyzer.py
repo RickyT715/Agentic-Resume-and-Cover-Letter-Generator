@@ -32,12 +32,12 @@ async def jd_analyzer_agent(state: ResumeState) -> dict:
     Reads: job_description
     Writes: jd_analysis, company_name, position_name, current_node, agent_outputs
     """
-    from services.provider_registry import get_provider
+    from services.provider_registry import get_provider_for_agent
 
     logger.info(f"Task {state['task_number']}: Analyzing job description")
     start = time.time()
 
-    provider = get_provider(state["provider_name"])
+    provider = get_provider_for_agent("jd_analyzer", state["provider_name"])
     prompt = JD_ANALYSIS_PROMPT.format(job_description=state["job_description"])
 
     raw = await provider.generate(
@@ -80,7 +80,11 @@ async def jd_analyzer_agent(state: ResumeState) -> dict:
     agent_outputs["jd_analyzer"] = {
         "latency_ms": latency,
         "skills_found": len(analysis.required_skills) + len(analysis.preferred_skills),
+        "prompt_chars": len(prompt),
     }
+    # Capture token usage if available
+    if hasattr(provider, 'last_token_usage') and provider.last_token_usage:
+        agent_outputs["jd_analyzer"]["token_usage"] = provider.last_token_usage
 
     return {
         "jd_analysis": analysis.model_dump(),

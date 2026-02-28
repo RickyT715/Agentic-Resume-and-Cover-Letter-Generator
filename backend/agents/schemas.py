@@ -33,7 +33,7 @@ class QualityEvaluation(BaseModel):
     """Structured output from the Quality Gate evaluation."""
 
     overall_score: float = Field(ge=0.0, le=1.0, description="Combined quality score 0-1")
-    keyword_match: float = Field(default=0.0, ge=0.0, le=1.0, description="Keyword alignment score")
+    keyword_similarity: float = Field(default=0.0, ge=0.0, le=1.0, description="Keyword alignment score (TF-IDF)")
     format_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Format and structure score")
     relevance_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Content relevance score")
     feedback: str = Field(default="", description="Actionable improvement feedback")

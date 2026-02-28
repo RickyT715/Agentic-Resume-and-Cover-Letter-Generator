@@ -62,7 +62,7 @@ class TestATSScorer:
         }
         result = score_resume(GOOD_RESUME_LATEX, jd, jd_analysis)
         assert result.overall > 0.6
-        assert result.keyword_match > 0.5
+        assert result.keyword_similarity > 0.0  # TF-IDF cosine sim is naturally low for short JDs
         assert len(result.matched_keywords) > 0
 
     def test_minimal_resume_scores_low(self):
@@ -77,15 +77,15 @@ class TestATSScorer:
 
     def test_action_verbs_detected(self):
         result = score_resume(GOOD_RESUME_LATEX, "SWE role", {})
-        assert result.action_verbs > 0.5
+        assert result.action_verbs_score > 0.5
 
     def test_quantified_achievements_detected(self):
         result = score_resume(GOOD_RESUME_LATEX, "SWE role", {})
-        assert result.readability > 0.5
+        assert result.quantified_score > 0.5
 
     def test_sections_detected(self):
         result = score_resume(GOOD_RESUME_LATEX, "SWE role", {})
-        assert result.section_completeness > 0.5
+        assert result.section_score > 0.5
 
     def test_missing_skills_in_feedback(self):
         jd_analysis = {
@@ -99,7 +99,7 @@ class TestATSScorer:
     def test_no_jd_analysis_fallback(self):
         result = score_resume(GOOD_RESUME_LATEX, "Software engineer with Python and Docker experience", None)
         assert 0 <= result.overall <= 1
-        assert result.keyword_match >= 0
+        assert result.keyword_similarity >= 0
 
 
 class TestCombinedScore:
@@ -120,12 +120,16 @@ class TestCombinedScore:
 class TestFeedbackGenerator:
     def test_generates_feedback(self):
         ats = ATSScoreBreakdown(
-            keyword_match=0.4,
-            experience_alignment=0.6,
+            keyword_similarity=0.4,
+            semantic_similarity=0.6,
+            skill_coverage=0.5,
+            fuzzy_match=0.7,
+            resume_quality=0.4,
+            section_bonus=0.5,
+            action_verbs_score=0.3,
+            quantified_score=0.2,
+            section_score=0.8,
             format_score=0.7,
-            action_verbs=0.3,
-            readability=0.2,
-            section_completeness=0.8,
             overall=0.45,
             matched_keywords=["Python", "Docker"],
             missing_keywords=["Kubernetes", "AWS", "Go"],

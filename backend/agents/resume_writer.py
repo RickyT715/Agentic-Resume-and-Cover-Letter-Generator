@@ -13,8 +13,11 @@ Based on analysis of the job description, optimize this resume with the followin
 
 **Target Role:** {job_title} at {company_name}
 **Key Skills to Highlight:** {matched_skills}
+**Skills to Incorporate (candidate lacks these but should still include plausibly):** {missing_skills}
+**Required Experience Level:** {experience_level}
 **Points to Emphasize:** {emphasis_points}
-**Match Score:** {match_score:.0%}
+
+**ATS KEYWORD OPTIMIZATION**: Every skill listed above (both matched and missing) MUST appear verbatim somewhere in the resume — either in the Skills section, bullet points, or project descriptions. ATS systems do exact substring matching, so "Kubernetes" must appear as "Kubernetes", not just "K8s". Include ALL of them.
 
 {company_context_section}{feedback_section}
 
@@ -32,13 +35,13 @@ async def resume_writer_agent(state: ResumeState) -> dict:
     """
     from services.latex_utils import extract_metadata, process_latex_response
     from services.prompt_manager import get_prompt_manager
-    from services.provider_registry import get_provider
+    from services.provider_registry import get_provider_for_agent
 
     logger.info(f"Task {state['task_number']}: Generating resume (retry={state.get('retry_count', 0)})")
     start = time.time()
 
     pm = get_prompt_manager()
-    provider = get_provider(state["provider_name"])
+    provider = get_provider_for_agent("resume_writer", state["provider_name"])
 
     # Build the base prompt using existing infrastructure
     base_prompt = pm.get_resume_prompt_with_substitutions(
@@ -72,6 +75,8 @@ async def resume_writer_agent(state: ResumeState) -> dict:
         job_title=jd.get("job_title", "the target role"),
         company_name=jd.get("company_name", "the company"),
         matched_skills=", ".join(relevance.get("matched_skills", [])) or "N/A",
+        missing_skills=", ".join(relevance.get("missing_skills", [])) or "None",
+        experience_level=jd.get("experience_level", "Not specified"),
         emphasis_points="\n- ".join([""] + relevance.get("emphasis_points", [])) or "N/A",
         match_score=relevance.get("match_score", 0.5),
         company_context_section=company_context_section,
@@ -102,7 +107,10 @@ async def resume_writer_agent(state: ResumeState) -> dict:
         "latency_ms": latency,
         "latex_length": len(latex_source),
         "attempt": state.get("retry_count", 0) + 1,
+        "prompt_chars": len(full_prompt),
     }
+    if hasattr(provider, 'last_token_usage') and provider.last_token_usage:
+        agent_outputs["resume_writer"]["token_usage"] = provider.last_token_usage
 
     result: dict = {
         "latex_source": latex_source,

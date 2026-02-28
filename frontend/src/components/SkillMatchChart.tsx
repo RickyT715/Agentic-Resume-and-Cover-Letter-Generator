@@ -1,16 +1,21 @@
+import { useState } from "react"
 import { Badge } from "./ui/badge"
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"
-import { BarChart2, CheckCircle, XCircle, Target } from "lucide-react"
+import { BarChart2, CheckCircle, XCircle, Target, ChevronDown, ChevronRight } from "lucide-react"
 
 interface EvaluationData {
   ats_score: number
   ats_breakdown: {
-    keyword_match: number
-    experience_alignment: number
+    keyword_similarity: number
+    semantic_similarity: number
+    skill_coverage: number
+    fuzzy_match: number
+    resume_quality: number
+    section_bonus: number
+    action_verbs_score: number
+    quantified_score: number
+    section_score: number
     format_score: number
-    action_verbs: number
-    readability: number
-    section_completeness: number
   }
   matched_keywords: string[]
   missing_keywords: string[]
@@ -54,8 +59,24 @@ function ScoreBar({ label, value, color = "blue" }: { label: string; value: numb
   )
 }
 
+function SmallScoreBar({ label, value }: { label: string; value: number }) {
+  const percentage = Math.round(value * 100)
+  const bgClass = percentage >= 70 ? "bg-green-400" : percentage >= 50 ? "bg-yellow-400" : "bg-red-400"
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-gray-500 dark:text-gray-500 w-32 flex-shrink-0">{label}</span>
+      <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className={`h-full ${bgClass} transition-all duration-500`} style={{ width: `${percentage}%` }} />
+      </div>
+      <span className="text-xs text-gray-500 dark:text-gray-400 w-10 text-right">{percentage}%</span>
+    </div>
+  )
+}
+
 export function SkillMatchChart({ evaluation }: SkillMatchChartProps) {
   const { ats_breakdown, matched_keywords, missing_keywords, combined_score, passed } = evaluation
+  const [qualityExpanded, setQualityExpanded] = useState(false)
 
   return (
     <Card>
@@ -78,12 +99,31 @@ export function SkillMatchChart({ evaluation }: SkillMatchChartProps) {
             <Target className="w-3.5 h-3.5" />
             ATS Score Breakdown
           </h4>
-          <ScoreBar label="Keyword Match" value={ats_breakdown.keyword_match} />
-          <ScoreBar label="Experience Alignment" value={ats_breakdown.experience_alignment} />
-          <ScoreBar label="Format Quality" value={ats_breakdown.format_score} />
-          <ScoreBar label="Action Verbs" value={ats_breakdown.action_verbs} />
-          <ScoreBar label="Quantified Results" value={ats_breakdown.readability} />
-          <ScoreBar label="Section Completeness" value={ats_breakdown.section_completeness} />
+          <ScoreBar label="Keyword Relevance" value={ats_breakdown.keyword_similarity} />
+          <ScoreBar label="Semantic Match" value={ats_breakdown.semantic_similarity} />
+          <ScoreBar label="Skill Coverage" value={ats_breakdown.skill_coverage} />
+          <ScoreBar label="Fuzzy Match" value={ats_breakdown.fuzzy_match} />
+          <ScoreBar label="Resume Quality" value={ats_breakdown.resume_quality} />
+          <ScoreBar label="Section Placement" value={ats_breakdown.section_bonus} />
+
+          {/* Collapsible Quality Details */}
+          <div className="ml-2">
+            <button
+              onClick={() => setQualityExpanded(!qualityExpanded)}
+              className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            >
+              {qualityExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              Quality Details
+            </button>
+            {qualityExpanded && (
+              <div className="mt-2 ml-4 space-y-1.5">
+                <SmallScoreBar label="Action Verbs" value={ats_breakdown.action_verbs_score} />
+                <SmallScoreBar label="Quantified Results" value={ats_breakdown.quantified_score} />
+                <SmallScoreBar label="Sections" value={ats_breakdown.section_score} />
+                <SmallScoreBar label="Format" value={ats_breakdown.format_score} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Keywords */}

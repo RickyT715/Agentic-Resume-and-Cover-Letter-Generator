@@ -6,7 +6,7 @@ Settings are persisted to a JSON file and can be modified via the UI.
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -58,6 +58,11 @@ class AppSettings(BaseModel):
     generate_cover_letter: bool = True
     max_latex_retries: int = 3
     default_template_id: str = "classic"
+
+    # Per-Agent Provider Overrides
+    # Maps agent name -> provider id. Empty string means "use task default".
+    # Agents: jd_analyzer, relevance_matcher, resume_writer, cover_letter_writer, company_researcher
+    agent_providers: Dict[str, str] = {}
 
 
 class SettingsManager:
@@ -126,6 +131,9 @@ class SettingsManager:
                 # Skip masked API key values
                 if key in self._api_key_fields and value and "..." in value:
                     continue
+                # For agent_providers, strip empty-string values (means "use default")
+                if key == "agent_providers" and isinstance(value, dict):
+                    value = {k: v for k, v in value.items() if v}
                 current[key] = value
                 logger.debug(f"Updated setting: {key}")
 

@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 NODE_TO_STEP = {
     "jd_analyzer": TaskStep.GENERATE_RESUME,
     "relevance_matcher": TaskStep.GENERATE_RESUME,
+    "auto_company_research": TaskStep.GENERATE_RESUME,
+    "retrieve_company": TaskStep.GENERATE_RESUME,
     "resume_writer": TaskStep.GENERATE_RESUME,
     "quality_gate": TaskStep.GENERATE_RESUME,
     "compile_latex": TaskStep.COMPILE_LATEX,
@@ -28,6 +30,8 @@ NODE_TO_STEP = {
 NODE_DESCRIPTIONS = {
     "jd_analyzer": "Analyzing job description...",
     "relevance_matcher": "Matching your profile to job requirements...",
+    "auto_company_research": "Researching company...",
+    "retrieve_company": "Retrieving company context...",
     "resume_writer": "Generating tailored resume...",
     "quality_gate": "Evaluating resume quality...",
     "compile_latex": "Compiling LaTeX to PDF...",
@@ -36,6 +40,11 @@ NODE_DESCRIPTIONS = {
     "create_cover_pdf": "Creating cover letter PDF...",
     "finalize": "Finalizing outputs...",
 }
+
+
+class _TaskCancelled(Exception):
+    """Raised when a task's cancelled flag is detected during v3 execution."""
+    pass
 
 
 async def run_langgraph_pipeline(
@@ -82,48 +91,55 @@ async def run_langgraph_pipeline(
     task.pipeline_version = "v3"
 
     try:
-        # Stream updates from the graph for progress tracking
-        final_state = None
-        async for event in graph.astream(initial_state, stream_mode="updates"):
-            for node_name, node_output in event.items():
-                if node_name == "__end__":
-                    continue
+        # Stream graph execution for progress tracking using "values" mode
+        # which gives the full accumulated state after each node (no double-run)
+        full_result = None
+        last_node = None
+        async for state_snapshot in graph.astream(initial_state, stream_mode="values"):
+            # Determine which node just ran by checking current_node in state
+            # Check for cancellation between nodes
+            if task.cancelled:
+                raise _TaskCancelled()
 
-                description = NODE_DESCRIPTIONS.get(node_name, f"Running {node_name}...")
-                step = NODE_TO_STEP.get(node_name, TaskStep.GENERATE_RESUME)
+            node_name = state_snapshot.get("current_node")
+            if not node_name or node_name == last_node:
+                continue
+            last_node = node_name
 
-                logger.info(f"Task {task.task_number}: Node '{node_name}' completed")
+            description = NODE_DESCRIPTIONS.get(node_name, f"Running {node_name}...")
+            step = NODE_TO_STEP.get(node_name, TaskStep.GENERATE_RESUME)
 
-                # Broadcast progress
-                if progress_callback:
-                    await progress_callback({
-                        "task_id": task.id,
-                        "task_number": task.task_number,
-                        "step": step.value,
-                        "status": TaskStatus.RUNNING.value,
-                        "message": description,
-                        "node": node_name,
-                        "pipeline_version": "v3",
-                    })
+            logger.info(f"Task {task.task_number}: Node '{node_name}' completed")
 
-                # Update step progress on the task
-                for s in task.steps:
-                    if s.step == step and s.status != TaskStatus.COMPLETED:
-                        s.status = TaskStatus.RUNNING
-                        s.message = description
-                        s.started_at = s.started_at or datetime.now()
-                        break
+            # Broadcast progress
+            if progress_callback:
+                await progress_callback({
+                    "task_id": task.id,
+                    "task_number": task.task_number,
+                    "step": step.value,
+                    "status": TaskStatus.RUNNING.value,
+                    "message": description,
+                    "node": node_name,
+                    "pipeline_version": "v3",
+                })
 
-                final_state = node_output
+            # Update step progress on the task
+            for s in task.steps:
+                if s.step == step and s.status != TaskStatus.COMPLETED:
+                    s.status = TaskStatus.RUNNING
+                    s.message = description
+                    s.started_at = s.started_at or datetime.now()
+                    break
 
-        # Collect final state from the last event
-        # We need to get the accumulated state, so run once more
-        # Actually astream with "updates" gives per-node diffs. Let's invoke instead for final state.
-        # Re-run to get complete state (astream already ran it, so let's collect from events)
+            full_result = state_snapshot
 
-        # The final_state from streaming is only the last node's output.
-        # For the full state, we invoke the graph synchronously.
-        full_result = await graph.ainvoke(initial_state)
+        # full_result now contains the complete accumulated state from the last emission
+        if full_result is None:
+            full_result = {}
+
+        # Always save agent_outputs from the final state (even on error)
+        if full_result.get("agent_outputs"):
+            task.agent_outputs = full_result["agent_outputs"]
 
         # Apply results to task
         if full_result.get("error"):
@@ -133,11 +149,14 @@ async def run_langgraph_pipeline(
             task.status = TaskStatus.COMPLETED
             task.resume_pdf_path = full_result.get("resume_pdf_path")
             task.cover_letter_pdf_path = full_result.get("cover_letter_pdf_path")
+            task.cover_letter_text = full_result.get("cover_letter_text")
             task.latex_source = full_result.get("latex_source")
             if full_result.get("company_name"):
                 task.company_name = full_result["company_name"]
             if full_result.get("position_name"):
                 task.position_name = full_result["position_name"]
+            if full_result.get("agent_outputs"):
+                task.agent_outputs = full_result["agent_outputs"]
 
         # Mark all steps as completed
         for s in task.steps:
@@ -148,10 +167,32 @@ async def run_langgraph_pipeline(
                 s.status = TaskStatus.FAILED
                 s.message = task.error_message or "Pipeline failed"
 
+    except _TaskCancelled:
+        logger.info(f"Task {task.task_number}: Cancelled by user during v3 pipeline")
+        task.status = TaskStatus.CANCELLED
+        task.error_message = "Task cancelled by user"
+
+        # Preserve partial results
+        if full_result:
+            task.resume_pdf_path = full_result.get("resume_pdf_path") or task.resume_pdf_path
+            task.latex_source = full_result.get("latex_source") or task.latex_source
+            task.cover_letter_text = full_result.get("cover_letter_text") or task.cover_letter_text
+            if full_result.get("agent_outputs"):
+                task.agent_outputs = full_result["agent_outputs"]
+
+        for s in task.steps:
+            if s.status in (TaskStatus.PENDING, TaskStatus.RUNNING):
+                s.status = TaskStatus.CANCELLED
+                s.message = "Task cancelled"
+
     except Exception as e:
         logger.error(f"Task {task.task_number}: LangGraph pipeline failed: {e}", exc_info=True)
         task.status = TaskStatus.FAILED
         task.error_message = str(e)
+
+        # Preserve agent_outputs from partial state even on failure
+        if full_result and full_result.get("agent_outputs"):
+            task.agent_outputs = full_result["agent_outputs"]
 
         for s in task.steps:
             if s.status in (TaskStatus.PENDING, TaskStatus.RUNNING):

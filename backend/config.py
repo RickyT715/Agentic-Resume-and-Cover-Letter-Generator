@@ -56,7 +56,8 @@ class Settings(BaseSettings):
 
     # Server Configuration
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 48765
+    frontend_port: int = 45173
 
     # PDF Generation Settings
     cover_letter_font: str = "Helvetica"

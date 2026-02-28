@@ -121,3 +121,86 @@ def task_manager_isolated(tmp_path, prompt_manager):
 
         # Reset singleton
         TaskManager._instance = None
+
+
+@pytest.fixture
+def settings_manager_isolated(tmp_path):
+    """SettingsManager backed by a temp file so tests never touch real settings."""
+    from services.settings_manager import SettingsManager
+    return SettingsManager(settings_file=tmp_path / "settings.json")
+
+
+@pytest.fixture
+def mock_ai_provider():
+    """An AsyncMock AI provider returning canned LaTeX/text."""
+    provider = AsyncMock()
+    provider.provider_name = "mock"
+    provider.model = "mock-model-1"
+    provider.generate = AsyncMock(return_value=(
+        "% META_COMPANY: TestCo\n"
+        "% META_POSITION: Engineer\n"
+        "\\documentclass[letterpaper,10pt]{article}\n"
+        "\\begin{document}\n"
+        "Hello World\n"
+        "\\end{document}"
+    ))
+    provider.generate_resume = AsyncMock(return_value=(
+        "\\documentclass[letterpaper,10pt]{article}\n"
+        "\\begin{document}\n"
+        "Resume content\n"
+        "\\end{document}"
+    ))
+    provider.generate_cover_letter = AsyncMock(return_value="Dear Hiring Manager,\n\nI am writing...")
+    provider.generate_resume_with_error_feedback = AsyncMock(return_value=(
+        "\\documentclass[letterpaper,10pt]{article}\n"
+        "\\begin{document}\n"
+        "Fixed resume\n"
+        "\\end{document}"
+    ))
+    return provider
+
+
+@pytest.fixture
+def sample_resume_state():
+    """Pre-populated ResumeState dict for agent tests."""
+    return {
+        "task_id": "test-123",
+        "task_number": 1,
+        "job_description": "We are looking for a software engineer with Python experience.",
+        "language": "en",
+        "template_id": "classic",
+        "generate_cover_letter": True,
+        "provider_name": "gemini",
+        "user_information": "I am a software engineer with 5 years of experience in Python.",
+        "jd_analysis": {
+            "job_title": "Software Engineer",
+            "company_name": "TestCo",
+            "required_skills": ["Python", "FastAPI"],
+            "preferred_skills": ["Docker", "AWS"],
+            "experience_level": "3-5 years",
+            "key_responsibilities": ["Build APIs", "Write tests"],
+            "industry": "Technology",
+        },
+        "relevance_match": {
+            "matched_skills": ["Python", "FastAPI"],
+            "missing_skills": ["Docker"],
+            "relevant_experiences": ["Built REST APIs"],
+            "emphasis_points": ["Python expertise", "API development"],
+            "match_score": 0.8,
+        },
+        "retry_count": 0,
+        "agent_outputs": {},
+    }
+
+
+@pytest.fixture
+def valid_latex_source():
+    """A valid LaTeX document string."""
+    return (
+        "\\documentclass[letterpaper,10pt]{article}\n"
+        "\\usepackage[utf8]{inputenc}\n"
+        "\\begin{document}\n"
+        "\\section{Experience}\n"
+        "Software Engineer at TestCo.\n"
+        "\\end{document}"
+    )

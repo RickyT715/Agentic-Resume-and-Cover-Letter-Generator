@@ -1,6 +1,6 @@
 from enum import Enum
 from datetime import datetime
-from typing import Optional, List
+from typing import Any, Optional, List
 from pydantic import BaseModel, Field
 import uuid
 
@@ -63,6 +63,7 @@ class Task(BaseModel):
     steps: List[StepProgress] = Field(default_factory=list)
     resume_pdf_path: Optional[str] = None
     cover_letter_pdf_path: Optional[str] = None
+    cover_letter_text: Optional[str] = None
     latex_source: Optional[str] = None
     error_message: Optional[str] = None
     cancelled: bool = False
@@ -70,6 +71,7 @@ class Task(BaseModel):
     company_name: str = ""
     position_name: str = ""
     failed_latex_attempts: List[str] = Field(default_factory=list)
+    agent_outputs: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
 

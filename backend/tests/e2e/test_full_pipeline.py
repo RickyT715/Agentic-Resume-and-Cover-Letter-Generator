@@ -7,7 +7,7 @@ They require a running backend or use VCR cassettes for LLM calls.
 import asyncio
 
 import pytest
-from httpx import ASIOTransport, AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 from main import app
 
@@ -17,7 +17,7 @@ BASE = "http://test"
 @pytest.fixture
 async def client():
     """Create an async test client."""
-    transport = ASIOTransport(app=app)
+    transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url=BASE) as c:
         yield c
 

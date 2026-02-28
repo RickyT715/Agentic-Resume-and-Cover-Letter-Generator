@@ -1,0 +1,735 @@
+[
+  {
+    "label": "Software Engineer (Backend)",
+    "jd": "Software Engineer - Backend\n\nCompany: TechVista Inc.\nLocation: San Francisco, CA (Hybrid)\n\nAbout the Role:\nWe are looking for a Backend Software Engineer to join our platform team. You will design and build scalable microservices that power our real-time data processing pipeline serving 10M+ daily active users.\n\nRequirements:\n- 3+ years of backend development experience\n- Strong proficiency in Python, Go, or Java\n- Experience with distributed systems and microservices architecture\n- Familiarity with PostgreSQL, Redis, and message queues (Kafka/RabbitMQ)\n- Knowledge of RESTful API design and gRPC\n- Experience with Docker, Kubernetes, and CI/CD pipelines\n- Strong understanding of data structures and algorithms\n\nNice to Have:\n- Experience with event-driven architecture\n- Familiarity with AWS or GCP cloud services\n- Contributions to open-source projects\n- Experience with monitoring tools (Prometheus, Grafana, Datadog)\n\nWhat We Offer:\n- Competitive salary ($150K-$200K)\n- Equity package\n- Flexible work schedule\n- Learning & development budget\n",
+    "status": "failed",
+    "total_time_ms": 196881.0384273529,
+    "company_name": "",
+    "position_name": "",
+    "latex_source": null,
+    "error_message": "LaTeX compilation failed after 3 attempts",
+    "agent_outputs": {
+      "jd_analyzer": {
+        "latency_ms": 3543,
+        "skills_found": 24,
+        "prompt_chars": 1641,
+        "token_usage": {
+          "input_tokens": 384,
+          "output_tokens": 266,
+          "total_tokens": 893
+        }
+      },
+      "relevance_matcher": {
+        "latency_ms": 26836,
+        "match_score": 0.5,
+        "prompt_chars": 17643,
+        "token_usage": {
+          "input_tokens": 4086,
+          "output_tokens": 923,
+          "total_tokens": 9906
+        }
+      },
+      "auto_company_research": {
+        "latency_ms": 14924,
+        "has_context": true,
+        "context_length": 3199,
+        "company_name": "TechVista Inc."
+      },
+      "resume_writer": {
+        "latency_ms": 32464,
+        "latex_length": 8959,
+        "attempt": 2,
+        "prompt_chars": 27840,
+        "token_usage": {
+          "input_tokens": 6562,
+          "output_tokens": 2449,
+          "total_tokens": 13965
+        }
+      }
+    },
+    "task_id": "7da67d0d",
+    "task_number": 108,
+    "response_files_summary": [
+      {
+        "filename": "task_108_company_research_20260227_151043.txt",
+        "response_type": "company_research",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 739,
+        "response_chars": 6930
+      },
+      {
+        "filename": "task_108_jd_analysis_20260227_151001.txt",
+        "response_type": "jd_analysis",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 1723,
+        "response_chars": 1229
+      },
+      {
+        "filename": "task_108_relevance_match_20260227_151028.txt",
+        "response_type": "relevance_match",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 17725,
+        "response_chars": 4313
+      },
+      {
+        "filename": "task_108_resume_retry_attempt_2_20260227_151245.txt",
+        "response_type": "resume_retry_attempt_2",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30178,
+        "response_chars": 8523
+      },
+      {
+        "filename": "task_108_resume_retry_attempt_3_20260227_151312.txt",
+        "response_type": "resume_retry_attempt_3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30178,
+        "response_chars": 7720
+      },
+      {
+        "filename": "task_108_resume_v3_attempt_1_20260227_151124.txt",
+        "response_type": "resume_v3_attempt_1",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 27172,
+        "response_chars": 8103
+      },
+      {
+        "filename": "task_108_resume_v3_attempt_2_20260227_151157.txt",
+        "response_type": "resume_v3_attempt_2",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 27922,
+        "response_chars": 9414
+      }
+    ]
+  },
+  {
+    "label": "Data Scientist (ML)",
+    "jd": "Senior Data Scientist - Machine Learning\n\nCompany: DataDriven Analytics\nLocation: New York, NY (Remote-friendly)\n\nRole Summary:\nJoin our ML team to build predictive models that drive business decisions for Fortune 500 clients. You'll work on NLP, recommendation systems, and time-series forecasting.\n\nQualifications:\n- MS or PhD in Computer Science, Statistics, or related quantitative field\n- 4+ years of industry experience in data science or machine learning\n- Expert-level Python skills with scikit-learn, TensorFlow, or PyTorch\n- Experience with NLP (transformers, BERT, GPT fine-tuning)\n- Strong SQL skills and experience with large-scale data processing (Spark, Hadoop)\n- Proficiency in statistical modeling and A/B testing\n- Experience deploying ML models to production (MLflow, SageMaker, or similar)\n\nPreferred:\n- Experience with recommendation systems\n- Knowledge of causal inference methods\n- Published research or conference papers\n- Experience with LLM applications and RAG architectures\n\nCompensation: $170K-$220K base + bonus\n",
+    "status": "failed",
+    "total_time_ms": 117413.98859024048,
+    "company_name": "",
+    "position_name": "",
+    "latex_source": null,
+    "error_message": "LaTeX compilation failed after 3 attempts",
+    "agent_outputs": {
+      "jd_analyzer": {
+        "latency_ms": 4554,
+        "skills_found": 22,
+        "prompt_chars": 1630,
+        "token_usage": {
+          "input_tokens": 376,
+          "output_tokens": 269,
+          "total_tokens": 1493
+        }
+      },
+      "relevance_matcher": {
+        "latency_ms": 20410,
+        "match_score": 0.5,
+        "prompt_chars": 17670,
+        "token_usage": {
+          "input_tokens": 4091,
+          "output_tokens": 784,
+          "total_tokens": 8366
+        }
+      },
+      "auto_company_research": {
+        "latency_ms": 16639,
+        "has_context": true,
+        "context_length": 1781,
+        "company_name": "DataDriven Analytics"
+      },
+      "resume_writer": {
+        "latency_ms": 27047,
+        "latex_length": 7674,
+        "attempt": 1,
+        "prompt_chars": 26879,
+        "token_usage": {
+          "input_tokens": 6287,
+          "output_tokens": 2204,
+          "total_tokens": 12971
+        }
+      }
+    },
+    "task_id": "2dfd48d6",
+    "task_number": 109,
+    "response_files_summary": [
+      {
+        "filename": "task_109_company_research_20260227_151356.txt",
+        "response_type": "company_research",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 758,
+        "response_chars": 2951
+      },
+      {
+        "filename": "task_109_jd_analysis_20260227_151319.txt",
+        "response_type": "jd_analysis",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 1712,
+        "response_chars": 1261
+      },
+      {
+        "filename": "task_109_relevance_match_20260227_151339.txt",
+        "response_type": "relevance_match",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 17752,
+        "response_chars": 3946
+      },
+      {
+        "filename": "task_109_resume_retry_attempt_2_20260227_151448.txt",
+        "response_type": "resume_retry_attempt_2",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30167,
+        "response_chars": 8358
+      },
+      {
+        "filename": "task_109_resume_retry_attempt_3_20260227_151509.txt",
+        "response_type": "resume_retry_attempt_3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30167,
+        "response_chars": 8464
+      },
+      {
+        "filename": "task_109_resume_v3_attempt_1_20260227_151423.txt",
+        "response_type": "resume_v3_attempt_1",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 26961,
+        "response_chars": 8148
+      }
+    ]
+  },
+  {
+    "label": "Frontend Developer (React)",
+    "jd": "Frontend Developer\n\nCompany: PixelCraft Design Studio\nLocation: Austin, TX (On-site)\n\nWe're looking for a talented Frontend Developer to create beautiful, responsive web applications for our agency clients spanning e-commerce, SaaS, and media industries.\n\nWhat You'll Do:\n- Build pixel-perfect UIs from Figma designs\n- Develop interactive web applications using React and TypeScript\n- Optimize performance (Core Web Vitals, lazy loading, code splitting)\n- Implement responsive designs and ensure cross-browser compatibility\n- Collaborate with designers and backend engineers\n\nMust Have:\n- 2+ years of professional frontend development\n- Proficiency in React, TypeScript, and modern CSS (Tailwind CSS, CSS Modules)\n- Experience with state management (Redux, Zustand, or React Context)\n- Familiarity with testing frameworks (Jest, React Testing Library, Cypress)\n- Understanding of web accessibility standards (WCAG 2.1)\n- Experience with Git and agile development workflows\n\nBonus Points:\n- Experience with Next.js or Remix\n- Animation libraries (Framer Motion, GSAP)\n- Design systems and component libraries (Storybook)\n- GraphQL experience\n\nSalary: $110K-$150K\n",
+    "status": "completed",
+    "total_time_ms": 243749.00317192078,
+    "company_name": "PixelCraft Design Studio",
+    "position_name": "Frontend Developer",
+    "latex_source": "\\documentclass[letterpaper,10pt]{article}\n\n\n\\usepackage{latexsym}\n\\usepackage[empty]{fullpage}\n\\usepackage{titlesec}\n\\usepackage{marvosym}\n\\usepackage[usenames,dvipsnames]{color}\n\\usepackage{verbatim}\n\\usepackage{enumitem}\n\\usepackage[pdftex]{hyperref}\n\\usepackage{fancyhdr}\n\n\n\\pagestyle{fancy}\n\\fancyhf{} % clear all header and footer fields\n\\fancyfoot{}\n\\renewcommand{\\headrulewidth}{0pt}\n\\renewcommand{\\footrulewidth}{0pt}\n\n\n% Adjust margins\n\\addtolength{\\oddsidemargin}{-0.375in}\n\\addtolength{\\evensidemargin}{-0.375in}\n\\addtolength{\\textwidth}{1in}\n\\addtolength{\\topmargin}{-.5in}\n\\addtolength{\\textheight}{1.0in}\n\n\n\\urlstyle{same}\n\n\n\\raggedbottom\n\\raggedright\n\\setlength{\\tabcolsep}{0in}\n\n\n% Sections formatting\n\\titleformat{\\section}{\n  \\vspace{-4pt}\\scshape\\raggedright\\large\n}{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]\n\n\n%-------------------------\n% Custom commands\n\\newcommand{\\resumeItem}[2]{\n  \\item\\small{\n    \\textbf{#1}{#2 \\vspace{-2pt}}\n  }\n}\n\n\n\\newcommand{\\resumeSubheading}[4]{\n  \\vspace{-1pt}\\item\n    \\begin{tabular*}{0.97\\textwidth}{l@{\\extracolsep{\\fill}}r}\n      \\textbf{#1} & #2 \\\\\n      \\textit{\\small#3} & \\textit{\\small #4} \\\\\n    \\end{tabular*}\\vspace{-5pt}\n}\n\n\n\\newcommand{\\resumeSubItem}[2]{\\resumeItem{#1}{#2}\\vspace{-4pt}}\n\n\n\\renewcommand{\\labelitemii}{$\\circ$}\n\n\n\\newcommand{\\resumeSubHeadingListStart}{\\begin{itemize}[leftmargin=*]}\n\\newcommand{\\resumeSubHeadingListEnd}{\\end{itemize}}\n\\newcommand{\\resumeItemListStart}{\\begin{itemize}}\n\\newcommand{\\resumeItemListEnd}{\\end{itemize}\\vspace{-5pt}}\n\n\n\\begin{document}\n\n\\begin{tabular*}{\\textwidth}{l@{\\extracolsep{\\fill}}r}\n  \\textbf{\\href{https://www.linkedin.com/in/ruiqi-tian-a53159249/}{\\Large Ruiqi Tian}} & Email : \\href{mailto:ruiqitian@outlook.com}{ruiqitian@outlook.com}\\\\\n  \\href{https://www.linkedin.com/in/ruiqi-tian-a53159249/}{linkedin.com/in/ruiqi-tian} \\textbar \\ \\href{https://github.com/RickyT715}{github.com/RickyT715} & Mobile : +1-236-989-3086 \\\\\n\\end{tabular*}\n\n\n\\section{Education}\n  \\resumeSubHeadingListStart\n    \\resumeSubheading\n      {Master of Engineering in Electrical and Computer Engineering}{Waterloo, ON}\n      {University of Waterloo}{Sept. 2024 \u2013 Oct. 2025 (Expected)}\n      \\resumeItemListStart\n        \\resumeItem{GPA \\& Specialization: }{3.9/4.0, Software Engineering, Full-stack Development, LLM, DevOps}\n      \\resumeItemListEnd\n    \\resumeSubheading\n      {Bachelor of Applied Science in Computer Engineering}{Vancouver, BC}\n      {University of British Columbia}{Sept. 2020 \u2013 May. 2024}\n      \\resumeItemListStart\n        \\resumeItem{GPA \\& Specialization: }{3.7/4.0, Software Engineering, Full-stack Development, Computer Graphics, Deep Learning}\n        \\resumeItem{Award: }{2022, 2023, 2024 Dean's Honor List}\n      \\resumeItemListEnd\n  \\resumeSubHeadingListEnd\n\n\n\\section{Experience}\n  \\resumeSubHeadingListStart\n    \\resumeSubheading\n      {Software Engineer Intern}{Nanjing, Jiangsu, China}\n      {Disanji Technology Institute}{Jun 2024 \u2013 Aug 2024}\n      \\resumeItemListStart\n        \\resumeItem{Deployed }{a production-grade RAG system via Docker Compose, FastAPI, and Redis semantic caching, reducing API calls by 60\\%.}\n        \\resumeItem{Architected }{an end-to-end RAG pipeline (LangChain LCEL) over 500+ documents, improving retrieval precision by 35\\% via hybrid search.}\n        \\resumeItem{Built }{an automated RAGAS evaluation pipeline with 100-question dataset, reducing hallucination rate from 15\\% to 4\\%.}\n        \\resumeItem{Developed }{a backend server for AWS resource connection and LLM utilization using JavaScript and REST API endpoints.}\n      \\resumeItemListEnd\n  \\resumeSubHeadingListEnd\n\n\n\\section{Projects}\n  \\resumeSubHeadingListStart\n    \\resumeSubheading\n      {AI Agent-powered Resume \\& Cover Letter Generator}{Oct 2025 \u2013 Feb 2026}\n      {}{Full-stack AI System}\n      \\resumeItemListStart\n        \\resumeItem{Developed }{a full-stack application using \\textbf{React/TypeScript}, Zustand, and \\texttt{shadcn/ui} for a pixel-perfect, responsive UI.}\n        \\resumeItem{Engineered }{a FastAPI backend with PostgreSQL and \\textbf{WebSocket} for real-time multi-agent progress tracking and task persistence.}\n        \\resumeItem{Implemented }{\\texttt{react-pdf} for inline PDF previews and \\texttt{Recharts} for skill visualization, enhancing UX and feature set.}\n        \\resumeItem{Architected }{a 4-agent LangGraph pipeline for tailored content generation, integrating a RAG system with ChromaDB and BGE-M3.}\n        \\resumeItem{Ensured }{high code quality with Docker multi-stage builds and GitHub Actions CI/CD, achieving 80\\%+ test coverage.}\n      \\resumeItemListEnd\n    \\resumeSubheading\n      {Aerial Drone Footage \u2013 Lost Hiker Challenge}{Sep 2023 \u2013 Apr 2024}\n      {}{Deep Learning Model}\n      \\resumeItemListStart\n        \\resumeItem{Developed }{a full-stack application with a \\textbf{React.js} frontend and Python backend for drone footage analysis.}\n        \\resumeItem{Designed }{a responsive webpage for users to upload footage, preview processing, and receive alerts with geo-coordinates.}\n        \\resumeItem{Implemented }{a Slicing-Aided Hyper Inference (SAHI) pipeline, improving small object detection in 4K video by 20\\%.}\n      \\resumeItemListEnd\n  \\resumeSubHeadingListEnd\n\n\n\\section{Programming Skills}\n  \\resumeItemListStart\n    \\resumeItem{Languages: }{JavaScript (ES6+), TypeScript, Python, C++, SQL, Java, HTML5, CSS3}\n    \\resumeItem{Frontend: }{React.js, Zustand, \\texttt{shadcn/ui}, Tailwind CSS, Responsive Design, \\texttt{react-pdf}, Recharts, Webpack, Babel}\n    \\resumeItem{Backend/DevOps: }{FastAPI, Node.js, PostgreSQL, MongoDB, Docker, Git, AWS, CI/CD (GitHub Actions), REST APIs, WebSocket}\n    \\resumeItem{AI/ML: }{LLMs, LangChain, RAG, NLP, Computer Vision, Deep Learning, PyTorch}\n  \\resumeItemListEnd\n\n\n\\end{document}",
+    "error_message": null,
+    "agent_outputs": {
+      "jd_analyzer": {
+        "latency_ms": 2695,
+        "skills_found": 27,
+        "prompt_chars": 1750,
+        "token_usage": {
+          "input_tokens": 405,
+          "output_tokens": 333,
+          "total_tokens": 946
+        }
+      },
+      "relevance_matcher": {
+        "latency_ms": 24096,
+        "match_score": 0.5,
+        "prompt_chars": 17888,
+        "token_usage": {
+          "input_tokens": 4122,
+          "output_tokens": 951,
+          "total_tokens": 9354
+        }
+      },
+      "auto_company_research": {
+        "latency_ms": 20527,
+        "has_context": true,
+        "context_length": 3135,
+        "company_name": "PixelCraft Design Studio"
+      },
+      "resume_writer": {
+        "latency_ms": 39771,
+        "latex_length": 6839,
+        "attempt": 3,
+        "prompt_chars": 27902,
+        "token_usage": {
+          "input_tokens": 6553,
+          "output_tokens": 1916,
+          "total_tokens": 16296
+        }
+      },
+      "compile_latex": {
+        "latency_ms": 67570
+      },
+      "cover_letter_writer": {
+        "latency_ms": 13590,
+        "text_length": 2520,
+        "prompt_chars": 10802,
+        "token_usage": {
+          "input_tokens": 2455,
+          "output_tokens": 489,
+          "total_tokens": 5365
+        }
+      },
+      "create_cover_pdf": {
+        "latency_ms": 3
+      }
+    },
+    "task_id": "4163be1d",
+    "task_number": 110,
+    "evaluation": {
+      "ats_score": 0.582,
+      "ats_breakdown": {
+        "keyword_match": 0.15384615384615385,
+        "experience_alignment": 0.6,
+        "format_score": 1.0,
+        "action_verbs": 1.0,
+        "readability": 1.0,
+        "section_completeness": 1.0
+      },
+      "matched_keywords": [
+        "design",
+        "tailwind",
+        "typescript",
+        "perfect",
+        "zustand",
+        "css",
+        "development",
+        "react",
+        "responsive",
+        "git",
+        "pixel",
+        "code",
+        "backend",
+        "frontend"
+      ],
+      "missing_keywords": [
+        "vitals",
+        "saas",
+        "animation",
+        "commerce",
+        "gsap",
+        "performance",
+        "redux",
+        "agile",
+        "cypress",
+        "pixelcraft"
+      ],
+      "llm_score": null,
+      "llm_breakdown": null,
+      "combined_score": 0.582,
+      "feedback": "Previous attempt scored 0.58/1.0.\n\n## Missing Keywords (incorporate naturally)\n- vitals\n- saas\n- animation\n- commerce\n- gsap\n- performance\n- redux\n- agile\n\n## Score Breakdown\n- Keyword Match: 15%\n- Experience Alignment: 60%\n- Format Quality: 100%\n- Action Verbs: 100%\n- Quantified Results: 100%\n- Section Completeness: 100%\n\nPlease regenerate the resume addressing ALL of the above feedback.",
+      "passed": false
+    },
+    "ats_score": 0.582,
+    "response_files_summary": [
+      {
+        "filename": "task_110_company_research_20260227_151559.txt",
+        "response_type": "company_research",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 740,
+        "response_chars": 5900
+      },
+      {
+        "filename": "task_110_cover_letter_v3_20260227_151913.txt",
+        "response_type": "cover_letter_v3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 10884,
+        "response_chars": 2899
+      },
+      {
+        "filename": "task_110_jd_analysis_20260227_151514.txt",
+        "response_type": "jd_analysis",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 1832,
+        "response_chars": 1542
+      },
+      {
+        "filename": "task_110_relevance_match_20260227_151539.txt",
+        "response_type": "relevance_match",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 17970,
+        "response_chars": 4795
+      },
+      {
+        "filename": "task_110_resume_retry_attempt_2_20260227_151829.txt",
+        "response_type": "resume_retry_attempt_2",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30287,
+        "response_chars": 6979
+      },
+      {
+        "filename": "task_110_resume_retry_attempt_3_20260227_151859.txt",
+        "response_type": "resume_retry_attempt_3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30287,
+        "response_chars": 6047
+      },
+      {
+        "filename": "task_110_resume_v3_attempt_1_20260227_151633.txt",
+        "response_type": "resume_v3_attempt_1",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 27282,
+        "response_chars": 6223
+      },
+      {
+        "filename": "task_110_resume_v3_attempt_2_20260227_151712.txt",
+        "response_type": "resume_v3_attempt_2",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 28151,
+        "response_chars": 7394
+      },
+      {
+        "filename": "task_110_resume_v3_attempt_3_20260227_151752.txt",
+        "response_type": "resume_v3_attempt_3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 27984,
+        "response_chars": 7295
+      }
+    ]
+  },
+  {
+    "label": "DevOps Engineer",
+    "jd": "DevOps / Site Reliability Engineer\n\nCompany: CloudScale Systems\nLocation: Seattle, WA (Hybrid)\n\nAbout the Position:\nWe need a DevOps/SRE to maintain and scale our cloud infrastructure supporting a multi-region SaaS platform with 99.99% uptime requirements.\n\nKey Responsibilities:\n- Design and manage cloud infrastructure on AWS (EC2, ECS, Lambda, S3, RDS)\n- Build and maintain CI/CD pipelines (GitHub Actions, Jenkins, ArgoCD)\n- Implement Infrastructure as Code (Terraform, CloudFormation, Pulumi)\n- Monitor system health with Prometheus, Grafana, PagerDuty, and ELK stack\n- Manage Kubernetes clusters and containerized workloads\n- Implement security best practices (IAM, VPC, secrets management)\n- Automate operational tasks with Python and Bash scripting\n- Participate in on-call rotation\n\nRequirements:\n- 3-5 years of DevOps/SRE experience\n- Deep knowledge of AWS services\n- Strong experience with Kubernetes and Docker\n- Proficiency in Terraform or equivalent IaC tools\n- Experience with Linux system administration\n- Scripting skills in Python and/or Bash\n- Understanding of networking concepts (DNS, load balancing, CDN)\n- Experience with database management (PostgreSQL, DynamoDB)\n\nCompensation: $140K-$185K + on-call bonus\n",
+    "status": "completed",
+    "total_time_ms": 213613.59453201294,
+    "company_name": "CloudScale Systems",
+    "position_name": "DevOps / Site Reliability Engineer",
+    "latex_source": "\\documentclass[letterpaper,10pt]{article}\n\n\n\\usepackage{latexsym}\n\\usepackage[empty]{fullpage}\n\\usepackage{titlesec}\n\\usepackage{marvosym}\n\\usepackage[usenames,dvipsnames]{color}\n\\usepackage{verbatim}\n\\usepackage{enumitem}\n\\usepackage[pdftex]{hyperref}\n\\usepackage{fancyhdr}\n\n\n\\pagestyle{fancy}\n\\fancyhf{} % clear all header and footer fields\n\\fancyfoot{}\n\\renewcommand{\\headrulewidth}{0pt}\n\\renewcommand{\\footrulewidth}{0pt}\n\n\n% Adjust margins\n\\addtolength{\\oddsidemargin}{-0.375in}\n\\addtolength{\\evensidemargin}{-0.375in}\n\\addtolength{\\textwidth}{1in}\n\\addtolength{\\topmargin}{-.5in}\n\\addtolength{\\textheight}{1.0in}\n\n\n\\urlstyle{same}\n\n\n\\raggedbottom\n\\raggedright\n\\setlength{\\tabcolsep}{0in}\n\n\n% Sections formatting\n\\titleformat{\\section}{\n  \\vspace{-4pt}\\scshape\\raggedright\\large\n}{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]\n\n\n%-------------------------\n% Custom commands\n\\newcommand{\\resumeItem}[2]{\n  \\item\\small{\n    \\textbf{#1}{#2 \\vspace{-2pt}}\n  }\n}\n\n\n\\newcommand{\\resumeSubheading}[4]{\n  \\vspace{-1pt}\\item\n    \\begin{tabular*}{0.97\\textwidth}{l@{\\extracolsep{\\fill}}r}\n      \\textbf{#1} & #2 \\\\\n      \\textit{\\small#3} & \\textit{\\small #4} \\\\\n    \\end{tabular*}\\vspace{-5pt}\n}\n\n\n\\newcommand{\\resumeSubItem}[2]{\\resumeItem{#1}{#2}\\vspace{-4pt}}\n\n\n\\renewcommand{\\labelitemii}{$\\circ$}\n\n\n\\newcommand{\\resumeSubHeadingListStart}{\\begin{itemize}[leftmargin=*]}\n\\newcommand{\\resumeSubHeadingListEnd}{\\end{itemize}}\n\\newcommand{\\resumeItemListStart}{\\begin{itemize}}\n\\newcommand{\\resumeItemListEnd}{\\end{itemize}\\vspace{-5pt}}\n\n\n\\begin{document}\n\n\\begin{tabular*}{\\textwidth}{l@{\\extracolsep{\\fill}}r}\n  \\textbf{\\href{https://github.com/RickyT715}{\\Large Ruiqi Tian}} & Email : \\href{mailto:ruiqitian@outlook.com}{ruiqitian@outlook.com}\\\\\n  \\href{https://www.linkedin.com/in/ruiqi-tian-a53159249/}{linkedin.com/in/ruiqi-tian-a53159249} & Mobile : +1-236-989-3086 \\\\\n\\end{tabular*}\n\n\n\\section{Education}\n  \\resumeSubHeadingListStart\n    \\resumeSubheading\n      {Master of Engineering in Electrical and Computer Engineering}{Waterloo, ON}\n      {University of Waterloo}{Sept. 2024 \u2013 Oct. 2025}\n      \\resumeItemListStart\n        \\resumeItem{GPA \\& Specialization: }{3.9/4.0, Software Engineering, DevOps, Performance Test, LLM}\n      \\resumeItemListEnd\n    \\resumeSubheading\n      {Bachelor of Applied Science in Computer Engineering}{Vancouver, BC}\n      {University of British Columbia}{Sept. 2020 \u2013 May. 2024}\n      \\resumeItemListStart\n        \\resumeItem{GPA \\& Specialization: }{3.7/4.0, Software Engineering, Full-stack Development, Operating System}\n        \\resumeItem{Award}{Dean\u2019s Honor List (2022, 2023, 2024)}\n      \\resumeItemListEnd\n  \\resumeSubHeadingListEnd\n\n\n\\section{Experience}\n  \\resumeSubHeadingListStart\n    \\resumeSubheading\n      {Software Engineer Intern}{Nanjing, China}\n      {Disanji Technology Institute}{Jun 2024 \u2013 Aug 2024}\n      \\resumeItemListStart\n        \\resumeItem{}{Deployed a production-grade RAG system on AWS (EC2, S3, Redis), leveraging Docker Compose for containerization to achieve P95 latency under 2 seconds.}\n        \\resumeItem{}{Architected an end-to-end RAG pipeline for an online QA platform over 500+ Chinese documents, supporting modular retrieval and streaming generation.}\n        \\resumeItem{}{Managed backend server for AWS resource connections, establishing REST API endpoints with JavaScript to facilitate scalable LLM utilization.}\n      \\resumeItemListEnd\n  \\resumeSubHeadingListEnd\n\n\n\\section{Projects}\n  \\resumeSubHeadingListStart\n    \\resumeSubheading\n      {AI Agent-powered Resume \\& Cover Letter Generator}{}\n      {Personal Project}{Oct 2025 \u2013 Feb 2026}\n      \\resumeItemListStart\n        \\resumeItem{}{Developed a full-stack AI resume generator with FastAPI backend, PostgreSQL, and React/TypeScript frontend, ensuring task persistence and version control.}\n        \\resumeItem{}{Implemented robust CI/CD pipelines using GitHub Actions for Docker multi-stage builds, enforcing Ruff linting, MyPy type checking, and 80\\% Pytest code coverage.}\n        \\resumeItem{}{Architected a 4-agent LangGraph pipeline with quality-gated routing, enabling automated LaTeX compilation with retry logic for resilient document generation.}\n      \\resumeItemListEnd\n    \\resumeSubheading\n      {Aerial Drone Footage \u2013 Lost Hiker Challenge}{}\n      {Academic Project}{Sep 2023 \u2013 Apr 2024}\n      \\resumeItemListStart\n        \\resumeItem{}{Engineered a deep learning-based object detection system using YOLOv8 on AWS, accurately detecting lost hikers in 4K drone footage.}\n        \\resumeItem{}{Managed end-to-end data lifecycle, including custom dataset annotation via Roboflow and extensive augmentation to enhance model robustness.}\n        \\resumeItem{}{Built a Python inference script with OpenCV to process video feeds, generating alerts and sending geographic coordinates to a React frontend for rapid SAR review.}\n      \\resumeItemListEnd\n  \\resumeSubHeadingListEnd\n\n\n\\section{Programming Skills}\n  \\begin{itemize}[leftmargin=0.15in, label={}]\n    \\small{\\item\n      \\textbf{Cloud \\& DevOps:} AWS (EC2, S3, RDS), Docker, GitHub Actions, CI/CD, Linux, Redis, PostgreSQL, FastAPI, Node.js, REST APIs, Git \\\\\n      \\textbf{Languages:} Python, JavaScript, SQL, C++, Java \\\\\n      \\textbf{Libraries \\& Tools:} React, PyTorch, LangChain, NLP, LLM, Computer Vision, OpenCV, scikit-learn\n    }\n  \\end{itemize}\n\n\n\\end{document}",
+    "error_message": null,
+    "agent_outputs": {
+      "jd_analyzer": {
+        "latency_ms": 2544,
+        "skills_found": 18,
+        "prompt_chars": 1819,
+        "token_usage": {
+          "input_tokens": 433,
+          "output_tokens": 351,
+          "total_tokens": 979
+        }
+      },
+      "relevance_matcher": {
+        "latency_ms": 24239,
+        "match_score": 0.5,
+        "prompt_chars": 18048,
+        "token_usage": {
+          "input_tokens": 4175,
+          "output_tokens": 749,
+          "total_tokens": 9662
+        }
+      },
+      "auto_company_research": {
+        "latency_ms": 14318,
+        "has_context": false,
+        "context_length": 0,
+        "company_name": "CloudScale Systems"
+      },
+      "resume_writer": {
+        "latency_ms": 43804,
+        "latex_length": 6397,
+        "attempt": 2,
+        "prompt_chars": 26106,
+        "token_usage": {
+          "input_tokens": 6257,
+          "output_tokens": 1811,
+          "total_tokens": 16185
+        }
+      },
+      "compile_latex": {
+        "latency_ms": 84733
+      },
+      "cover_letter_writer": {
+        "latency_ms": 16144,
+        "text_length": 2121,
+        "prompt_chars": 8495,
+        "token_usage": {
+          "input_tokens": 1984,
+          "output_tokens": 427,
+          "total_tokens": 5616
+        }
+      },
+      "create_cover_pdf": {
+        "latency_ms": 3
+      }
+    },
+    "task_id": "f85e0088",
+    "task_number": 111,
+    "evaluation": {
+      "ats_score": 0.527,
+      "ats_breakdown": {
+        "keyword_match": 0.21875,
+        "experience_alignment": 0.6,
+        "format_score": 1.0,
+        "action_verbs": 1.0,
+        "readability": 0.2,
+        "section_completeness": 1.0
+      },
+      "matched_keywords": [
+        "stack",
+        "postgresql",
+        "aws",
+        "cloud",
+        "code",
+        "rds",
+        "system",
+        "multi",
+        "linux",
+        "platform",
+        "docker",
+        "pipelines",
+        "engineer",
+        "supporting",
+        "python",
+        "actions",
+        "devops",
+        "github",
+        "skills",
+        "deep"
+      ],
+      "missing_keywords": [
+        "clusters",
+        "participate",
+        "ecs",
+        "key",
+        "dynamodb",
+        "bash",
+        "manage",
+        "compensation",
+        "reliability",
+        "workloads"
+      ],
+      "llm_score": null,
+      "llm_breakdown": null,
+      "combined_score": 0.527,
+      "feedback": "Previous attempt scored 0.53/1.0.\n\n## ATS Evaluation Feedback\n- Add more quantified achievements (numbers, percentages, metrics)\n\n## Missing Keywords (incorporate naturally)\n- clusters\n- participate\n- ecs\n- key\n- dynamodb\n- bash\n- manage\n- compensation\n\n## Score Breakdown\n- Keyword Match: 22%\n- Experience Alignment: 60%\n- Format Quality: 100%\n- Action Verbs: 100%\n- Quantified Results: 20%\n- Section Completeness: 100%\n\nPlease regenerate the resume addressing ALL of the above feedback.",
+      "passed": false
+    },
+    "ats_score": 0.527,
+    "response_files_summary": [
+      {
+        "filename": "task_111_company_research_20260227_151957.txt",
+        "response_type": "company_research",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 750,
+        "response_chars": 702
+      },
+      {
+        "filename": "task_111_cover_letter_v3_20260227_152248.txt",
+        "response_type": "cover_letter_v3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 8577,
+        "response_chars": 2500
+      },
+      {
+        "filename": "task_111_jd_analysis_20260227_151918.txt",
+        "response_type": "jd_analysis",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 1901,
+        "response_chars": 1634
+      },
+      {
+        "filename": "task_111_relevance_match_20260227_151942.txt",
+        "response_type": "relevance_match",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 18130,
+        "response_chars": 3811
+      },
+      {
+        "filename": "task_111_resume_retry_attempt_2_20260227_152143.txt",
+        "response_type": "resume_retry_attempt_2",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30356,
+        "response_chars": 5857
+      },
+      {
+        "filename": "task_111_resume_retry_attempt_3_20260227_152231.txt",
+        "response_type": "resume_retry_attempt_3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30356,
+        "response_chars": 5614
+      },
+      {
+        "filename": "task_111_resume_v3_attempt_1_20260227_152023.txt",
+        "response_type": "resume_v3_attempt_1",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 25269,
+        "response_chars": 6411
+      },
+      {
+        "filename": "task_111_resume_v3_attempt_2_20260227_152107.txt",
+        "response_type": "resume_v3_attempt_2",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 26188,
+        "response_chars": 6863
+      }
+    ]
+  },
+  {
+    "label": "Product Manager (Technical)",
+    "jd": "Senior Technical Product Manager\n\nCompany: InnovateTech Solutions\nLocation: Chicago, IL (Remote)\n\nRole Overview:\nLead the product strategy and roadmap for our developer tools platform. You'll work at the intersection of technology and business, translating customer needs into product features that delight developers.\n\nWhat You'll Do:\n- Define and prioritize product roadmap based on customer feedback and market analysis\n- Write detailed PRDs and user stories with clear acceptance criteria\n- Work closely with engineering teams to scope and deliver features\n- Analyze product metrics and user behavior to inform decisions\n- Conduct user research, competitive analysis, and market sizing\n- Present product strategy to executive stakeholders\n- Manage cross-functional relationships (Engineering, Design, Marketing, Sales)\n\nQualifications:\n- 5+ years of product management experience, 2+ in developer tools or platforms\n- Technical background (CS degree or prior engineering experience)\n- Strong analytical skills with experience in data analysis tools (SQL, Amplitude, Mixpanel)\n- Excellent written and verbal communication skills\n- Experience with agile/scrum methodologies\n- Track record of shipping successful products\n\nNice to Have:\n- Experience with API products or developer ecosystems\n- Understanding of cloud computing and SaaS business models\n- MBA or equivalent business education\n- Public speaking or content creation experience\n\nSalary Range: $160K-$210K + equity\n",
+    "status": "completed",
+    "total_time_ms": 279864.2511367798,
+    "company_name": "InnovateTech Solutions",
+    "position_name": "Senior Technical Product Manager",
+    "latex_source": "\\documentclass[letterpaper,10pt]{article}\n\n\n\\usepackage{latexsym}\n\\usepackage[empty]{fullpage}\n\\usepackage{titlesec}\n\\usepackage{marvosym}\n\\usepackage[usenames,dvipsnames]{color}\n\\usepackage{verbatim}\n\\usepackage{enumitem}\n\\usepackage[pdftex]{hyperref}\n\\usepackage{fancyhdr}\n\n\n\\pagestyle{fancy}\n\\fancyhf{} % clear all header and footer fields\n\\fancyfoot{}\n\\renewcommand{\\headrulewidth}{0pt}\n\\renewcommand{\\footrulewidth}{0pt}\n\n\n% Adjust margins\n\\addtolength{\\oddsidemargin}{-0.375in}\n\\addtolength{\\evensidemargin}{-0.375in}\n\\addtolength{\\textwidth}{1in}\n\\addtolength{\\topmargin}{-.5in}\n\\addtolength{\\textheight}{1.0in}\n\n\n\\urlstyle{same}\n\n\n\\raggedbottom\n\\raggedright\n\\setlength{\\tabcolsep}{0in}\n\n\n% Sections formatting\n\\titleformat{\\section}{\n  \\vspace{-4pt}\\scshape\\raggedright\\large\n}{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]\n\n\n%-------------------------\n% Custom commands\n\\newcommand{\\resumeItem}[2]{\n  \\item\\small{\n    \\textbf{#1}{#2 \\vspace{-2pt}}\n  }\n}\n\n\n\\newcommand{\\resumeSubheading}[4]{\n  \\vspace{-1pt}\\item\n    \\begin{tabular*}{0.97\\textwidth}{l@{\\extracolsep{\\fill}}r}\n      \\textbf{#1} & #2 \\\\\n      \\textit{\\small#3} & \\textit{\\small #4} \\\\\n    \\end{tabular*}\\vspace{-5pt}\n}\n\n\n\\newcommand{\\resumeSubItem}[2]{\\resumeItem{#1}{#2}\\vspace{-4pt}}\n\n\n\\renewcommand{\\labelitemii}{$\\circ$}\n\n\n\\newcommand{\\resumeSubHeadingListStart}{\\begin{itemize}[leftmargin=*]}\n\\newcommand{\\resumeSubHeadingListEnd}{\\end{itemize}}\n\\newcommand{\\resumeItemListStart}{\\begin{itemize}}\n\\newcommand{\\resumeItemListEnd}{\\end{itemize}\\vspace{-5pt}}\n\n\n\\begin{document}\n\n\\begin{tabular*}{\\textwidth}{l@{\\extracolsep{\\fill}}r}\n  \\textbf{\\href{https://www.linkedin.com/in/ruiqi-tian-a53159249/}{\\Large Ruiqi Tian}} & Email : \\href{mailto:ruiqitian@outlook.com}{ruiqitian@outlook.com}\\\\\n  \\href{https://www.linkedin.com/in/ruiqi-tian-a53159249/}{linkedin.com/in/ruiqi-tian-a53159249} & Mobile : +1-236-989-3086 \\\\\n\\end{tabular*}\n\n\n\\section{Education}\n  \\resumeSubHeadingListStart\n    \\resumeSubheading\n      {Master of Engineering in Electrical and Computer Engineering}{Waterloo, ON}\n      {University of Waterloo}{Sept. 2024\u2013 Oct. 2025}\n      \\resumeItemListStart\n        \\item\\small{\\textbf{GPA \\& Specialization:} 3.9/4.0, Software Engineering, LLM, DevOps, Performance Test}\n      \\resumeItemListEnd\n    \\resumeSubheading\n      {Bachelor of Applied Science in Computer Engineering}{Vancouver, BC}\n      {University of British Columbia}{Sept. 2020\u2013 May. 2024}\n      \\resumeItemListStart\n        \\item\\small{\\textbf{GPA \\& Specialization:} 3.7/4.0, Software Engineering, Deep Learning, Embedded Development}\n        \\item\\small{\\textbf{Honors:} 2022, 2023, 2024 Dean\u2019s Honor List}\n      \\resumeItemListEnd\n  \\resumeSubHeadingListEnd\n\n\n\\section{Experience}\n  \\resumeSubHeadingListStart\n    \\resumeSubheading\n      {Software Engineer Intern}{Nanjing, China}\n      {Disanji Technology Institute}{Jun 2024 \u2013 Aug 2024}\n      \\resumeItemListStart\n        \\item\\small{Architected an end-to-end RAG pipeline using LangChain for online QA over 500+ Chinese documents, enabling natural language queries with source-cited answers.}\n        \\item\\small{Implemented hybrid retrieval (BM25 + BGE-M3 vectors, RRF fusion) with cross-encoder re-ranking, boosting retrieval precision by 35\\% and NDCG@5 by 12 points.}\n        \\item\\small{Developed an automated RAGAS evaluation pipeline with a 100-question golden dataset, achieving 0.84 context recall and reducing hallucination rate from 15\\% to 4\\%.}\n        \\item\\small{Deployed via Docker Compose with FastAPI, SSE streaming, Redis semantic caching (reduced API calls by 60\\%), and Langfuse tracing for P95 latency \\textless 2s.}\n        \\item\\small{Built a backend server for AWS resource connection and REST API endpoints, facilitating seamless LLM utilization and cloud platform integration.}\n      \\resumeItemListEnd\n    \\resumeSubheading\n      {Software Engineer Intern}{Suzhou, China}\n      {GuoLing Technology Institute}{Apr 2023 \u2013 May 2023}\n      \\resumeItemListStart\n        \\item\\small{Designed and trained 4 YOLOv8 models for automated visual inspection of PIM inductors, detecting 20 defect types with 91\\% mAP@50 at 15ms/frame.}\n        \\item\\small{Engineered a data pipeline for 5,000+ images from 7 cameras, incorporating CLAHE, CVAT, and custom Albumentations augmentation, expanding effective training data 5x.}\n        \\item\\small{Addressed severe class imbalance with Copy-Paste augmentation, Focal Loss, and class-weighted sampling, improving rare-defect recall by 8\\% mAP.}\n      \\resumeItemListEnd\n    \\resumeSubheading\n      {Research Assistant}{Nanjing, China}\n      {Nanjing University}{Jun 2023 \u2013 Aug 2023}\n      \\resumeItemListStart\n        \\item\\small{Co-developed Dual Branches Video Modeling (DBVM) pipeline, combining Knowledge Graphs and Video-Language Models for multimodal QA on 90-min movies.}\n        \\item\\small{Designed a cross-matching strategy fusing T2V/V2T similarity matrices, improving description-scene retrieval accuracy from 0.52 to 0.76 on the DVUC benchmark.}\n        \\item\\small{Published ``Deep Video Understanding with Video-Language Model'' in ACM MM '23 proceedings, showcasing technical communication and research impact.}\n      \\resumeItemListEnd\n  \\resumeSubHeadingListEnd\n\n\n\\section{Projects}\n  \\resumeSubHeadingListStart\n    \\resumeSubItem{AI Agent-powered Resume \\& Cover Letter Generator}{\\emph{Oct 2025 \u2013 Feb 2026}}\n      \\resumeItemListStart\n        \\item\\small{Architected a 4-agent LangGraph pipeline with Pydantic v2 structured outputs for schema-driven resume and cover letter generation from job descriptions.}\n        \\item\\small{Engineered a RAG pipeline leveraging ChromaDB and BGE-M3 embeddings over scraped company data, reducing manual research effort by 97\\% for users.}\n        \\item\\small{Developed a dual-layer evaluation framework combining ATS keyword scoring (spaCy/TF-IDF) with an LLM-as-a-judge self-critique loop, achieving 0.85+ quality correlation.}\n        \\item\\small{Shipped a full-stack application with FastAPI, React/TypeScript, PostgreSQL, WebSocket streaming, Docker, and GitHub Actions CI/CD with 80\\%+ test coverage.}\n      \\resumeItemListEnd\n    \\resumeSubItem{Aerial Drone Footage \u2013 Lost Hiker Challenge}{\\emph{Sep 2023 \u2013 Apr 2024}}\n      \\resumeItemListStart\n        \\item\\small{Developed a deep learning model using YOLOv8 to detect lost hikers and survival items in 4K aerial drone footage, accelerating search and rescue operations.}\n        \\item\\small{Implemented a Slicing-Aided Hyper Inference (SAHI) pipeline with OpenCV, boosting detection recall of small, distant objects by 25\\% over standard methods.}\n        \\item\\small{Built a full-stack system with a Python backend and JavaScript frontend, providing real-time alerts with timestamps and geographic coordinates for SAR operators.}\n      \\resumeItemListEnd\n    \\resumeSubItem{Eloquent phone app}{\\emph{May 2022 \u2013 Aug 2022}}\n      \\resumeItemListStart\n        \\item\\small{Developed a full-stack phone application for presentation management, utilizing Node.js backend with MongoDB, and Android Studio for frontend.}\n        \\item\\small{Designed and implemented RESTful APIs and a WebSocket server to support real-time collaborative editing of cue card sets for multiple users.}\n      \\resumeItemListEnd\n  \\resumeSubHeadingListEnd\n\n\n\\section{Skills}\n  \\resumeItemListStart\n    \\item\\small{\\textbf{Programming Languages:} Python, JavaScript, C++, SQL, Java, Verilog, VHDL}\n    \\item\\small{\\textbf{AI/ML/NLP:} Large Language Models (LLM), RAG, LangChain, Transformers, Prompt Engineering, Computer Vision, Deep Learning, Machine Learning, NLP, Word Embeddings, PyTorch, YOLO}\n    \\item\\small{\\textbf{Web Development:} FastAPI, React.js, Node.js, REST APIs, WebSocket, Full-Stack Development, AWS, Docker, PostgreSQL, MongoDB, Git, CI/CD (GitHub Actions)}\n    \\item\\small{\\textbf{Data \\& Analytics:} SQL, Data Pipelines, Metrics Analysis, Information Retrieval, Vector Databases (Milvus, ChromaDB), Redis}\n    \\item\\small{\\textbf{Methodologies \\& Tools:} Agile/Scrum, DevOps, Performance Testing, Product Roadmapping, User Stories, PRD, Git, Linux, Android Studio}\n  \\resumeItemListEnd\n\n\n\\end{document}",
+    "error_message": null,
+    "agent_outputs": {
+      "jd_analyzer": {
+        "latency_ms": 4331,
+        "skills_found": 16,
+        "prompt_chars": 2065,
+        "token_usage": {
+          "input_tokens": 433,
+          "output_tokens": 326,
+          "total_tokens": 1399
+        }
+      },
+      "relevance_matcher": {
+        "latency_ms": 17815,
+        "match_score": 0.5,
+        "prompt_chars": 18212,
+        "token_usage": {
+          "input_tokens": 4156,
+          "output_tokens": 831,
+          "total_tokens": 7962
+        }
+      },
+      "auto_company_research": {
+        "latency_ms": 8861,
+        "has_context": false,
+        "context_length": 0,
+        "company_name": "InnovateTech Solutions"
+      },
+      "resume_writer": {
+        "latency_ms": 34009,
+        "latex_length": 7595,
+        "attempt": 3,
+        "prompt_chars": 26480,
+        "token_usage": {
+          "input_tokens": 6269,
+          "output_tokens": 2153,
+          "total_tokens": 14521
+        }
+      },
+      "compile_latex": {
+        "latency_ms": 86060
+      },
+      "cover_letter_writer": {
+        "latency_ms": 24295,
+        "text_length": 6175,
+        "prompt_chars": 11019,
+        "token_usage": {
+          "input_tokens": 2592,
+          "output_tokens": 1274,
+          "total_tokens": 12801
+        }
+      },
+      "create_cover_pdf": {
+        "latency_ms": 13
+      }
+    },
+    "task_id": "7aa525f4",
+    "task_number": 112,
+    "evaluation": {
+      "ats_score": 0.57,
+      "ats_breakdown": {
+        "keyword_match": 0.25,
+        "experience_alignment": 0.6,
+        "format_score": 1.0,
+        "action_verbs": 0.5,
+        "readability": 1.0,
+        "section_completeness": 1.0
+      },
+      "matched_keywords": [
+        "technical",
+        "clear",
+        "technology",
+        "data",
+        "cloud",
+        "analysis",
+        "models",
+        "user",
+        "cross",
+        "agile",
+        "communication",
+        "scrum",
+        "management",
+        "product",
+        "platform",
+        "api",
+        "company",
+        "stories",
+        "understanding",
+        "research"
+      ],
+      "missing_keywords": [
+        "successful",
+        "roadmap",
+        "speaking",
+        "customer",
+        "saas",
+        "feedback",
+        "decisions",
+        "relationships",
+        "ecosystems",
+        "computing"
+      ],
+      "llm_score": null,
+      "llm_breakdown": null,
+      "combined_score": 0.57,
+      "feedback": "Previous attempt scored 0.57/1.0.\n\n## ATS Evaluation Feedback\n- Use more action verbs (4 found, aim for 8+). Try: achieved, built, created, delivered, designed\n\n## Missing Keywords (incorporate naturally)\n- successful\n- roadmap\n- speaking\n- customer\n- saas\n- feedback\n- decisions\n- relationships\n\n## Score Breakdown\n- Keyword Match: 25%\n- Experience Alignment: 60%\n- Format Quality: 100%\n- Action Verbs: 50%\n- Quantified Results: 100%\n- Section Completeness: 100%\n\nPlease regenerate the resume addressing ALL of the above feedback.",
+      "passed": false
+    },
+    "ats_score": 0.57,
+    "response_files_summary": [
+      {
+        "filename": "task_112_company_research_20260227_152320.txt",
+        "response_type": "company_research",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 752,
+        "response_chars": 733
+      },
+      {
+        "filename": "task_112_cover_letter_v3_20260227_152728.txt",
+        "response_type": "cover_letter_v3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 11101,
+        "response_chars": 6763
+      },
+      {
+        "filename": "task_112_jd_analysis_20260227_152254.txt",
+        "response_type": "jd_analysis",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 2147,
+        "response_chars": 1788
+      },
+      {
+        "filename": "task_112_relevance_match_20260227_152311.txt",
+        "response_type": "relevance_match",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 18294,
+        "response_chars": 4222
+      },
+      {
+        "filename": "task_112_resume_retry_attempt_2_20260227_152620.txt",
+        "response_type": "resume_retry_attempt_2",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30602,
+        "response_chars": 7809
+      },
+      {
+        "filename": "task_112_resume_retry_attempt_3_20260227_152703.txt",
+        "response_type": "resume_retry_attempt_3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 30602,
+        "response_chars": 8416
+      },
+      {
+        "filename": "task_112_resume_v3_attempt_1_20260227_152408.txt",
+        "response_type": "resume_v3_attempt_1",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 25517,
+        "response_chars": 8793
+      },
+      {
+        "filename": "task_112_resume_v3_attempt_2_20260227_152504.txt",
+        "response_type": "resume_v3_attempt_2",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 26595,
+        "response_chars": 8710
+      },
+      {
+        "filename": "task_112_resume_v3_attempt_3_20260227_152538.txt",
+        "response_type": "resume_v3_attempt_3",
+        "model": "gemini-2.5-flash",
+        "prompt_chars": 26562,
+        "response_chars": 8063
+      }
+    ]
+  }
+]

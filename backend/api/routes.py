@@ -330,6 +330,17 @@ async def download_cover_letter(task_id: str, inline: bool = Query(False)):
     )
 
 
+@router.get("/tasks/{task_id}/cover-letter-text")
+async def get_cover_letter_text(task_id: str):
+    """Get the raw cover letter text for copy-pasting."""
+    task = task_manager.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if not task.cover_letter_text:
+        raise HTTPException(status_code=404, detail="Cover letter text not available")
+    return {"text": task.cover_letter_text}
+
+
 @router.get("/tasks/{task_id}/latex")
 async def download_latex(task_id: str):
     task = task_manager.get_task(task_id)
@@ -402,6 +413,15 @@ async def delete_question(task_id: str, question_id: str):
 
 # ============== Evaluation Endpoints ==============
 
+def _extract_jd_analysis(task) -> dict | None:
+    """Extract JD analysis from task's agent_outputs (v3 pipeline)."""
+    outputs = getattr(task, "agent_outputs", None) or {}
+    jd = outputs.get("jd_analyzer")
+    if isinstance(jd, dict):
+        return jd
+    return None
+
+
 @router.get("/tasks/{task_id}/evaluation")
 async def get_evaluation(task_id: str):
     """Get ATS evaluation score breakdown for a completed task."""
@@ -416,6 +436,7 @@ async def get_evaluation(task_id: str):
     result = await evaluate_resume(
         resume_latex=task.latex_source,
         job_description=task.job_description,
+        jd_analysis=_extract_jd_analysis(task),
         use_llm_judge=False,  # GET endpoint uses fast ATS-only scoring
     )
     return result
@@ -435,6 +456,7 @@ async def evaluate_task(task_id: str):
     result = await evaluate_resume(
         resume_latex=task.latex_source,
         job_description=task.job_description,
+        jd_analysis=_extract_jd_analysis(task),
         provider_name=task.provider,
         task_id=task.id,
         task_number=task.task_number,

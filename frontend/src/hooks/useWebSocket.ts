@@ -5,7 +5,7 @@ import { WebSocketMessage } from '../types/task';
 const getWsUrl = () => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const host = window.location.hostname;
-  const port = import.meta.env.DEV ? '8000' : window.location.port;
+  const port = import.meta.env.DEV ? (import.meta.env.VITE_BACKEND_PORT || '48765') : window.location.port;
   return `${protocol}//${host}:${port}/ws`;
 };
 

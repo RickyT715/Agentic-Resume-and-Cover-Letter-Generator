@@ -1,11 +1,21 @@
 # Agentic Resume & Cover Letter Generator
 
+[中文文档](README_zh.md)
+
 An AI-powered system that generates tailored resumes, cover letters, and application question answers using a **multi-agent LangGraph pipeline** with automated evaluation, company research (RAG), and multiple LLM providers. Built with FastAPI, React, and TypeScript.
 
-## What's New in v3.0
+## What's New in v3.1
+
+- **Hybrid Multi-Method ATS Scorer** — 6 complementary scoring methods (BM25, semantic embeddings, skill coverage, fuzzy matching, quality heuristics, section-aware bonus) with sigmoid calibration and synonym normalization. See [ATS Scoring System](#ats-scoring-system) for details.
+- **ATS-Optimized Prompts** — Resume generation prompt now instructs the AI to use dual-form keywords (e.g., "Machine Learning (ML)"), distribute keywords across multiple sections, and use standard ATS-recognized section headers.
+- **Cover Letter Text Preview** — Copy-pasteable plain text view of cover letters (no line breaks from PDF rendering)
+- **Task Cancellation** — Cancel running tasks mid-pipeline with partial result preservation
+- **AI Expert Review Fix** — LLM-as-judge results now correctly cached and displayed
+
+### v3.0
 
 - **Multi-Agent Pipeline** — LangGraph StateGraph with JD analysis, relevance matching, quality-gated retries, and structured outputs
-- **Automated Evaluation** — Deterministic ATS scoring (keyword match, action verbs, section completeness) + LLM-as-a-judge with self-critique feedback loop
+- **Automated Evaluation** — Hybrid ATS scoring + LLM-as-a-judge with self-critique feedback loop
 - **Company Research (RAG)** — Scrape company websites, index in ChromaDB, inject relevant context into resume and cover letter generation
 - **Modern Frontend** — shadcn/ui components, TanStack Query v5 for server state, Zod schema validation, ATS score visualizations, agent pipeline progress UI
 - **Production Ready** — Docker multi-stage builds, PostgreSQL support, GitHub Actions CI/CD, rate limiting, security scanning
@@ -32,10 +42,10 @@ JD Analyzer → Relevance Matcher → [Company Research] → Resume Writer → Q
 
 ### Automated Evaluation
 
-- **ATS Score Breakdown** — 6 sub-scores: keyword match (40%), experience alignment (20%), format quality (10%), action verbs (10%), quantified results (10%), section completeness (10%)
+- **Hybrid ATS Scorer** — 6 complementary methods with research-backed weights (see [ATS Scoring System](#ats-scoring-system) below)
 - **LLM-as-a-Judge** — 5-rubric evaluation: keyword alignment, professional tone, quantified achievements, relevance, ATS compliance + reasoning and improvement suggestions
 - **Self-Critique Loop** — low scores generate actionable feedback that's appended to the retry prompt
-- **Visual Dashboard** — score bars, matched/missing keyword badges, expert review display
+- **Visual Dashboard** — score bars with collapsible quality details, matched/missing keyword badges, expert review display
 
 ### Company Research (RAG)
 
@@ -53,6 +63,41 @@ JD Analyzer → Relevance Matcher → [Company Research] → Resume Writer → Q
 - **Claude Code Proxy** — Claude models via local proxy with SSE streaming
 - **OpenAI-Compatible** — Any OpenAI-compatible API (Ollama, LM Studio, vLLM, etc.)
 - Per-task provider override or global default
+
+### ATS Scoring System
+
+The evaluation module uses a **hybrid multi-method ATS scorer** combining 6 complementary approaches, based on research into real ATS systems (Workday, iCIMS, Taleo) and open-source implementations. Each method captures a different aspect of resume-JD alignment:
+
+| Method | Weight | Library | What It Measures |
+|--------|--------|---------|------------------|
+| **BM25 Keyword Relevance** | 20% | `rank-bm25` | Document-level keyword relevance with term frequency saturation and length normalization (superior to TF-IDF) |
+| **Semantic Embedding Similarity** | 20% | `sentence-transformers` | Meaning beyond exact words — captures synonyms, paraphrases, and conceptual overlap |
+| **Skill Coverage** | 30% | `spaCy` PhraseMatcher | Explicit skill overlap from a 550+ curated skill taxonomy across 15 categories |
+| **Fuzzy Keyword Matching** | 10% | `rapidfuzz` | Catches abbreviations, typos, and variations (e.g., K8s → Kubernetes) |
+| **Resume Quality Heuristics** | 10% | regex | Action verbs, quantified achievements, section completeness, format quality |
+| **Section-Aware Bonus** | 10% | regex | Rewards keyword placement in high-impact sections (Skills 35%, Experience 30%, Summary 15%) |
+
+**Key design decisions:**
+- **BM25 over TF-IDF** — BM25Plus handles term frequency saturation (repeated words don't over-inflate scores) and document length normalization (fair comparison for different resume lengths)
+- **Synonym normalization** — A pre-processing layer expands 60+ abbreviations (AWS → Amazon Web Services, ML → Machine Learning) so both forms are matched regardless of which appears in the JD or resume
+- **Sigmoid calibration** — Raw similarity scores are mapped through a sigmoid curve rather than linear scaling, providing better discrimination in the typical 0.1–0.5 score range
+- **Skill coverage weighted highest (30%)** — Research from commercial ATS tools (Jobscan, ResumeWorded) and HR studies consistently shows hard skill matching is the strongest predictor of interview callbacks
+- **Section-aware scoring** — Real ATS systems weight the Skills section higher than body text; this method rewards resumes that distribute keywords across Summary, Skills, and Experience sections
+
+**Scoring pipeline:**
+
+```
+Resume LaTeX → Text Extraction → Synonym Normalization →
+  ├─ BM25 scoring (resume sentences as corpus, JD as query)
+  ├─ Semantic embedding (chunked average cosine similarity)
+  ├─ Skill coverage (PhraseMatcher + taxonomy + required skill weighting)
+  ├─ Fuzzy matching (token_set_ratio against JD skills)
+  ├─ Quality heuristics (action verbs, metrics, sections, format)
+  └─ Section bonus (keyword density per LaTeX section, weighted by section importance)
+  → Sigmoid calibration per method → Weighted sum → Overall score (0–1)
+```
+
+The skill taxonomy (`evaluation/skills_taxonomy.py`) contains 550+ skills organized into 15 categories: Programming Languages, Frontend, Backend, Databases, Cloud, DevOps, Data Science, Data Engineering, Security, Mobile, Testing, Architecture, Methodologies, Soft Skills, and Tools.
 
 ### Resume & Cover Letter Generation
 
@@ -145,7 +190,7 @@ cp backend/.env.example backend/.env
 docker-compose up --build
 ```
 
-The app opens at **http://localhost:3000** (frontend) with the API at **http://localhost:8000**.
+The app opens at **http://localhost:3000** (frontend) with the API at **http://localhost:48765**.
 
 ### Option 2: Windows Installer
 
@@ -153,7 +198,7 @@ The app opens at **http://localhost:3000** (frontend) with the API at **http://l
 2. Edit `backend/.env` with your API key
 3. Run `start.bat`
 
-The app opens at **http://localhost:5173**.
+The app opens at **http://localhost:45173**.
 
 ### Option 3: Manual Installation
 
@@ -209,7 +254,7 @@ cd backend && python main.py
 cd frontend && npm run dev
 ```
 
-Open **http://localhost:5173**.
+Open **http://localhost:45173**.
 
 ## Usage
 
@@ -243,9 +288,29 @@ All settings are configurable from the **Settings** panel in the UI and persiste
 |-----------|---------|-------------|
 | Temperature | `1.0` | Creativity (0.0–2.0) |
 | Max Output Tokens | Model default | Maximum response length |
-| Thinking Level | `high` | Gemini 3+ reasoning depth: minimal, low, medium, high |
+| Thinking Level | `high` | Gemini 3+ reasoning depth: `low`, `high` |
 | Google Search | `false` | Web search grounding for company research |
 | Max LaTeX Retries | `3` | Auto-retry LaTeX compilation on errors |
+
+### Server Ports
+
+Default ports are chosen to avoid common conflicts (`8000`, `5173`):
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `PORT` | `48765` | Backend API server port |
+| `FRONTEND_PORT` | `45173` | Frontend dev server port (also used for CORS) |
+
+Override in `backend/.env`:
+```env
+PORT=9999
+FRONTEND_PORT=9998
+```
+
+For the frontend Vite proxy, set `VITE_BACKEND_PORT` if backend uses a custom port:
+```bash
+VITE_BACKEND_PORT=9999 npm run dev
+```
 
 ### Prompt Templates
 
@@ -283,6 +348,7 @@ Edit via the **Prompts** panel in the UI or directly in `backend/prompts/`:
 | `GET` | `/api/tasks/{id}/resume` | Download resume PDF |
 | `GET` | `/api/tasks/{id}/cover-letter` | Download cover letter PDF |
 | `GET` | `/api/tasks/{id}/latex` | Download LaTeX source |
+| `GET` | `/api/tasks/{id}/cover-letter-text` | Get cover letter plain text (for copy-paste) |
 
 ### Evaluation
 
@@ -340,7 +406,8 @@ backend/
 │   ├── cover_letter_writer.py # Cover letter generation agent
 │   └── finalize.py            # LaTeX compilation + PDF output
 ├── evaluation/                # Automated resume evaluation
-│   ├── ats_scorer.py          # Deterministic ATS scoring (6 sub-scores)
+│   ├── ats_scorer.py          # Hybrid 6-method ATS scoring (BM25, semantic, skills, fuzzy, quality, section-aware)
+│   ├── skills_taxonomy.py     # 550+ curated tech skills + synonym normalization
 │   ├── llm_judge.py           # LLM-as-a-judge (5-rubric evaluation)
 │   ├── feedback_generator.py  # Score-to-feedback conversion
 │   └── metrics.py             # Combined evaluation pipeline
@@ -362,20 +429,39 @@ backend/
 │   ├── task_manager.py        # Task orchestration and persistence
 │   ├── langgraph_executor.py  # v3 pipeline executor
 │   ├── provider_registry.py   # AI provider factory
+│   ├── ai_client_base.py      # Abstract base class for AI providers
 │   ├── gemini_client.py       # Google Gemini provider
 │   ├── claude_client.py       # Anthropic Claude provider
+│   ├── claude_proxy_client.py # Claude via local proxy (SSE streaming)
 │   ├── openai_compat_client.py# OpenAI-compatible provider
 │   ├── prompt_manager.py      # Prompt loading and substitution
 │   ├── settings_manager.py    # Settings persistence
-│   └── latex_compiler.py      # LaTeX to PDF compilation
+│   ├── latex_compiler.py      # LaTeX to PDF compilation
+│   ├── latex_utils.py         # LaTeX response parsing and cleanup
+│   ├── pdf_extractor.py       # PDF text extraction (fitz/PyMuPDF)
+│   ├── pdf_page_counter.py    # PDF page count validation
+│   └── text_to_pdf.py         # Plain-text to PDF fallback (ReportLab)
 ├── middleware/
 │   └── rate_limit.py          # slowapi rate limiting
 ├── alembic/                   # Database migrations
 ├── prompts/                   # Prompt template files
 ├── templates/                 # Resume style templates
 ├── tests/
-│   ├── unit/                  # Unit tests (agents, evaluation, RAG, routes)
-│   ├── integration/           # Graph flow and routing tests
+│   ├── unit/
+│   │   ├── agents/            # Agent unit tests (jd_analyzer, relevance_matcher, resume_writer, cover_letter_writer, finalize)
+│   │   ├── test_ai_clients.py
+│   │   ├── test_evaluation.py
+│   │   ├── test_latex_compiler.py
+│   │   ├── test_latex_utils.py
+│   │   ├── test_pdf_extractor.py
+│   │   ├── test_pdf_page_counter.py
+│   │   ├── test_provider_registry.py
+│   │   ├── test_rag.py
+│   │   ├── test_routes.py
+│   │   ├── test_settings_manager.py
+│   │   ├── test_task_manager.py
+│   │   └── test_websocket_manager.py
+│   ├── integration/           # Graph flow, LangGraph executor, mocked pipeline, state machine tests
 │   └── e2e/                   # Full API lifecycle tests
 ├── config.py                  # Pydantic settings
 ├── main.py                    # FastAPI app with lifespan
@@ -404,6 +490,16 @@ frontend/
 │   ├── lib/utils.ts           # cn() utility (clsx + tailwind-merge)
 │   ├── types/task.ts          # TypeScript type definitions
 │   └── tests/                 # Vitest + Testing Library tests
+│       ├── App.test.tsx
+│       ├── taskStore.test.ts
+│       ├── useWebSocket.test.ts
+│       ├── TaskSidebar.test.tsx
+│       ├── TaskPanel.test.tsx
+│       ├── SettingsPanel.test.tsx
+│       ├── ProgressDisplay.test.tsx
+│       ├── QuestionsSection.test.tsx
+│       ├── schemas.test.ts
+│       └── utils.test.ts
 ├── Dockerfile                 # Multi-stage Docker build (Vite → nginx)
 ├── nginx.conf                 # nginx config with API proxy
 ├── vitest.config.ts           # Test runner config
@@ -421,7 +517,7 @@ commitlint.config.js           # Conventional commit enforcement
 
 ### Running Tests
 
-**Backend:**
+**Backend** (350+ tests):
 ```bash
 cd backend
 
@@ -430,9 +526,15 @@ uv run pytest --cov --cov-report=term-missing
 
 # With pip
 pytest --cov --cov-report=term-missing
+
+# Run specific test categories
+pytest tests/unit/                         # Unit tests only
+pytest tests/integration/                  # Integration tests only
+pytest tests/unit/agents/                  # Agent tests only
+pytest tests/unit/test_latex_compiler.py   # Single file
 ```
 
-**Frontend:**
+**Frontend** (110+ tests):
 ```bash
 cd frontend
 npm test              # Single run
@@ -472,8 +574,8 @@ docs(readme): update architecture diagram
 |---------|----------|
 | `pdflatex not found` | Install MiKTeX (Windows) or texlive (Linux/Mac) |
 | `pdflatex timed out` | Open MiKTeX Console, set "Install missing packages" to "Always" |
-| WebSocket connection failed | Ensure backend is running on port 8000 |
-| `Errno 10048: port already in use` | Kill the existing process: `netstat -ano \| findstr :8000`, then `taskkill /PID <pid> /F` |
+| WebSocket connection failed | Ensure backend is running on port 48765 |
+| `Errno 10048: port already in use` | Kill the existing process: `netstat -ano \| findstr :48765`, then `taskkill /PID <pid> /F` |
 | Proxy response truncation | The Claude Code Proxy client uses SSE streaming by default |
 | `Thinking level not supported` | Use a Gemini 3+ model (e.g., `gemini-3.1-pro-preview`) |
 | ChromaDB import error | Install with `pip install chromadb` (optional — RAG features disabled without it) |
@@ -485,7 +587,7 @@ docs(readme): update architecture diagram
 |-------|-----------|
 | Agent Orchestration | LangGraph (StateGraph with conditional edges) |
 | LLM Providers | Gemini, Claude, OpenAI-compatible |
-| Evaluation | Custom ATS scorer + LLM-as-a-Judge |
+| Evaluation | Hybrid ATS scorer (BM25, spaCy, sentence-transformers, rapidfuzz) + LLM-as-a-Judge |
 | RAG | ChromaDB + httpx/BeautifulSoup + sentence-transformers |
 | Backend | FastAPI + SQLAlchemy 2.0 async + Pydantic v2 |
 | Frontend | React 18 + TypeScript + Vite |

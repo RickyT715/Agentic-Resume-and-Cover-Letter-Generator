@@ -46,12 +46,16 @@ def generate_feedback(
 
     # Score breakdown
     sections.append("## Score Breakdown")
-    sections.append(f"- Keyword Match: {ats_score.keyword_match:.0%}")
-    sections.append(f"- Experience Alignment: {ats_score.experience_alignment:.0%}")
-    sections.append(f"- Format Quality: {ats_score.format_score:.0%}")
-    sections.append(f"- Action Verbs: {ats_score.action_verbs:.0%}")
-    sections.append(f"- Quantified Results: {ats_score.readability:.0%}")
-    sections.append(f"- Section Completeness: {ats_score.section_completeness:.0%}")
+    sections.append(f"- Keyword Relevance (BM25): {ats_score.keyword_similarity:.0%}")
+    sections.append(f"- Semantic Match: {ats_score.semantic_similarity:.0%}")
+    sections.append(f"- Skill Coverage: {ats_score.skill_coverage:.0%}")
+    sections.append(f"- Fuzzy Match: {ats_score.fuzzy_match:.0%}")
+    sections.append(f"- Resume Quality: {ats_score.resume_quality:.0%}")
+    sections.append(f"- Section Placement: {ats_score.section_bonus:.0%}")
+    sections.append(f"  - Action Verbs: {ats_score.action_verbs_score:.0%}")
+    sections.append(f"  - Quantified Results: {ats_score.quantified_score:.0%}")
+    sections.append(f"  - Sections: {ats_score.section_score:.0%}")
+    sections.append(f"  - Format: {ats_score.format_score:.0%}")
 
     # LLM judge feedback
     if llm_judge and llm_judge.improvements:

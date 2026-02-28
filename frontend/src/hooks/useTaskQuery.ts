@@ -79,6 +79,15 @@ export function usePromptsQuery() {
   })
 }
 
+export function useCoverLetterTextQuery(taskId: string | undefined, enabled: boolean) {
+  return useQuery<{ text: string }>({
+    queryKey: ["cover-letter-text", taskId],
+    queryFn: () => fetchJSON<{ text: string }>(`${API_URL}/tasks/${taskId}/cover-letter-text`),
+    enabled: !!taskId && enabled,
+    staleTime: Infinity,
+  })
+}
+
 export function useEvaluationQuery(taskId: string | undefined) {
   return useQuery({
     queryKey: ["evaluation", taskId],
@@ -159,8 +168,10 @@ export function useEvaluateTaskMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (taskId: string) => postJSON(`${API_URL}/tasks/${taskId}/evaluate`),
-    onSuccess: (_, taskId) => {
-      queryClient.invalidateQueries({ queryKey: ["evaluation", taskId] })
+    onSuccess: (data, taskId) => {
+      // Store the full response (including llm_breakdown) directly into cache.
+      // Do NOT just invalidate — that triggers a GET refetch without llm_breakdown.
+      queryClient.setQueryData(["evaluation", taskId], data)
     },
   })
 }

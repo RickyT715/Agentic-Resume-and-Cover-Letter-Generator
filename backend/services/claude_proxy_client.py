@@ -23,6 +23,7 @@ class ClaudeProxyClient(AIClientBase):
         self._client = None
         self._current_api_key = None
         self._current_base_url = None
+        self.last_token_usage = None  # Token usage from the most recent API call
         logger.info("ClaudeProxyClient initialized (settings read dynamically per request)")
 
     def _get_client(self):
@@ -113,6 +114,23 @@ class ClaudeProxyClient(AIClientBase):
 
             elapsed = (datetime.now() - start_time).total_seconds()
             logger.info(f"Claude Proxy response received in {elapsed:.2f} seconds")
+
+            # Extract token usage from response
+            usage = getattr(response, 'usage', None)
+            if usage:
+                input_tokens = getattr(usage, 'input_tokens', 0) or 0
+                output_tokens = getattr(usage, 'output_tokens', 0) or 0
+                total_tokens = input_tokens + output_tokens
+                logger.info(
+                    f"Token usage: input={input_tokens}, output={output_tokens}, total={total_tokens}"
+                )
+                self.last_token_usage = {
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "total_tokens": total_tokens,
+                }
+            else:
+                self.last_token_usage = None
 
             # Extract text from response content blocks
             text_parts = []

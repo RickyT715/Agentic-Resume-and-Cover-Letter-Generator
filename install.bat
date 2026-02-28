@@ -1,6 +1,6 @@
 @echo off
 echo ============================================================
-echo   Resume & Cover Letter Generator - Installation Script
+echo   Resume ^& Cover Letter Generator v3.0 - Installation
 echo ============================================================
 echo.
 
@@ -9,12 +9,12 @@ echo [1/4] Checking Python installation...
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo [ERROR] Python is not installed or not in PATH.
-    echo Please install Python 3.10+ from https://www.python.org/downloads/
+    echo Please install Python 3.11+ from https://www.python.org/downloads/
     pause
     exit /b 1
 )
-python --version
-echo [OK] Python found.
+for /f "tokens=2 delims= " %%v in ('python --version 2^>^&1') do set PYVER=%%v
+echo [OK] Python %PYVER% found.
 echo.
 
 :: Check for Node.js
@@ -26,8 +26,8 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-node --version
-echo [OK] Node.js found.
+for /f %%v in ('node --version 2^>^&1') do set NODEVER=%%v
+echo [OK] Node.js %NODEVER% found.
 echo.
 
 :: Check for pdflatex
@@ -55,18 +55,38 @@ echo [4/4] Installing dependencies...
 echo.
 echo Installing backend Python packages...
 cd /d "%~dp0backend"
-if not exist "venv" (
-    echo Creating Python virtual environment...
-    python -m venv venv
+
+:: Try uv first (recommended), fall back to pip
+uv --version >nul 2>&1
+if %errorlevel% equ 0 (
+    echo Using uv (recommended)...
+    uv sync
+    if %errorlevel% neq 0 (
+        echo [ERROR] Failed to install Python packages with uv.
+        pause
+        exit /b 1
+    )
+    echo Downloading spaCy English model...
+    uv run python -m spacy download en_core_web_sm
+    echo [OK] Backend dependencies installed via uv.
+) else (
+    echo uv not found, using pip...
+    echo   (Tip: install uv for faster installs: pip install uv)
+    if not exist "venv" (
+        echo Creating Python virtual environment...
+        python -m venv venv
+    )
+    call venv\Scripts\activate.bat
+    pip install -r requirements.txt
+    if %errorlevel% neq 0 (
+        echo [ERROR] Failed to install Python packages.
+        pause
+        exit /b 1
+    )
+    echo Downloading spaCy English model...
+    python -m spacy download en_core_web_sm
+    echo [OK] Backend dependencies installed via pip.
 )
-call venv\Scripts\activate.bat
-pip install -r requirements.txt
-if %errorlevel% neq 0 (
-    echo [ERROR] Failed to install Python packages.
-    pause
-    exit /b 1
-)
-echo [OK] Backend dependencies installed.
 echo.
 
 :: Install frontend dependencies
@@ -89,13 +109,18 @@ if not exist ".env" (
     copy .env.example .env
     echo.
     echo ============================================================
-    echo   IMPORTANT: You need to add your Gemini API key!
+    echo   IMPORTANT: Configure at least one AI provider API key!
     echo ============================================================
     echo.
     echo   1. Open backend\.env in a text editor
-    echo   2. Replace 'your_gemini_api_key_here' with your actual key
-    echo   3. Get your API key from: https://aistudio.google.com/
+    echo   2. Add your API key for one or more providers:
+    echo      - Gemini:  https://aistudio.google.com/
+    echo      - Claude:  https://console.anthropic.com/
+    echo      - OpenAI-compatible: any local or remote endpoint
+    echo   3. Configure via the Settings panel in the UI after launch
     echo.
+) else (
+    echo [OK] .env file already exists.
 )
 
 echo.
@@ -104,7 +129,8 @@ echo   Installation Complete!
 echo ============================================================
 echo.
 echo Next steps:
-echo   1. Make sure you have set your GEMINI_API_KEY in backend\.env
+echo   1. Ensure at least one AI provider API key is set in backend\.env
+echo      or configure it later in the Settings panel
 echo   2. Run 'start.bat' to launch the application
 echo.
 pause
