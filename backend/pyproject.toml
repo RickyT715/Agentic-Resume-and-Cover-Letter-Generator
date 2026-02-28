@@ -75,8 +75,6 @@ packages = [
     "evaluation",
     "models",
     "services",
-    "prompts",
-    "templates",
 ]
 
 [tool.pytest.ini_options]
