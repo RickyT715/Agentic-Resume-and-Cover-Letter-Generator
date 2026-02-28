@@ -60,9 +60,10 @@ interface ProgressDisplayProps {
 }
 
 export function ProgressDisplay({ task }: ProgressDisplayProps) {
-  const taskStartedAt = task.steps.find((s) => s.started_at)?.started_at;
+  const steps = task.steps || [];
+  const taskStartedAt = steps.find((s) => s.started_at)?.started_at;
   const isTaskRunning = task.status === 'running';
-  const lastCompletedStep = [...task.steps].reverse().find(
+  const lastCompletedStep = [...steps].reverse().find(
     (s) => s.status === 'completed' || s.status === 'failed'
   );
   const totalElapsed = useElapsedTime(
@@ -101,10 +102,10 @@ export function ProgressDisplay({ task }: ProgressDisplayProps) {
     }
   };
 
-  const completedSteps = task.steps.filter(
+  const completedSteps = steps.filter(
     (s) => s.status === 'completed'
   ).length;
-  const totalSteps = task.steps.length;
+  const totalSteps = steps.length;
   const progressPercent = Math.round((completedSteps / totalSteps) * 100);
 
   return (
@@ -133,7 +134,7 @@ export function ProgressDisplay({ task }: ProgressDisplayProps) {
       </div>
 
       <div className="p-4 space-y-3">
-        {task.steps.map((step, index) => (
+        {steps.map((step, index) => (
           <StepRow key={step.step} step={step} index={index} getStepIcon={getStepIcon} getStepStyles={getStepStyles} />
         ))}
       </div>

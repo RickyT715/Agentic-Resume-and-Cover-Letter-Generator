@@ -271,7 +271,7 @@ export function QuestionsSection({ taskId, questions, jobDescription }: Question
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button
                         onClick={() => handleGenerate(q.id)}
-                        disabled={generatingIds.has(q.id) || generatingAll || !jobDescription.trim()}
+                        disabled={generatingIds.has(q.id) || generatingAll || !(jobDescription || '').trim()}
                         className="p-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         title={q.answer ? 'Regenerate answer' : 'Generate answer'}
                       >
@@ -333,7 +333,7 @@ export function QuestionsSection({ taskId, questions, jobDescription }: Question
           {questions.length > 0 && unansweredCount > 0 && (
             <button
               onClick={handleGenerateAll}
-              disabled={generatingAll || !jobDescription.trim()}
+              disabled={generatingAll || !(jobDescription || '').trim()}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors text-sm font-medium"
             >
               {generatingAll ? (
@@ -350,7 +350,7 @@ export function QuestionsSection({ taskId, questions, jobDescription }: Question
             </button>
           )}
 
-          {!jobDescription.trim() && questions.length > 0 && (
+          {!(jobDescription || '').trim() && questions.length > 0 && (
             <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
               A job description is required to generate answers.
             </p>
