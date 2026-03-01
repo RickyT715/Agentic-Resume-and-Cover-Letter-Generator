@@ -138,4 +138,6 @@ class TestAvailableProviders:
         assert "claude" in ids
         assert "openai_compat" in ids
         assert "claude_proxy" in ids
-        assert len(AVAILABLE_PROVIDERS) == 4
+        assert "deepseek" in ids
+        assert "qwen" in ids
+        assert len(AVAILABLE_PROVIDERS) == 6

@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     claude_proxy_base_url: str = "http://localhost:42069"
     claude_proxy_model: str = "claude-sonnet-4-5-20250929"
 
+    # API Configuration - DeepSeek
+    deepseek_api_key: str = ""
+    deepseek_model: str = "deepseek-chat"
+
+    # API Configuration - Qwen (Alibaba DashScope)
+    qwen_api_key: str = ""
+    qwen_model: str = "qwen-plus"
+
     # Retry Configuration
     max_latex_retries: int = 3
 
@@ -61,6 +69,8 @@ class Settings(BaseSettings):
     # PDF Generation Settings
     cover_letter_font: str = "Helvetica"
     cover_letter_font_size: int = 11
+    cover_letter_font_zh: str = "SimSun"
+    cover_letter_font_zh_fallback: str = "Helvetica"
 
     # Logging Configuration
     log_level: str = "INFO"

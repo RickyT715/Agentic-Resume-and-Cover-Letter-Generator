@@ -25,6 +25,29 @@ Now generate the resume following the instructions below:
 
 """
 
+RESUME_ENHANCEMENT_PREFIX_ZH = """## 针对目标岗位的简历优化指令
+
+根据职位描述分析结果，按照以下要点优化简历：
+
+**目标岗位：** {company_name} - {job_title}
+**需要突出的匹配技能：** {matched_skills}
+**需要融入的缺失技能（合理体现）：** {missing_skills}
+**经验要求：** {experience_level}
+**重点突出方向：** {emphasis_points}
+
+**ATS关键词优化要求**：以上列出的所有技能（匹配的和缺失的）必须在简历中原文出现——可以放在技能栏、工作经历的描述中或项目描述里。中国主流ATS系统（北森、Moka等）进行精确关键词匹配，因此"Kubernetes"必须写成"Kubernetes"而非仅写"K8s"，中文技能同理。
+
+**中文简历写作要求**：
+- 使用强动词开头（主导、设计、架构、优化、搭建），避免弱动词（参与、协助、了解）
+- 每条经历包含量化成果（提升X%、降低Xs、服务X万用户等）
+- 技术栈使用中英文双语标注（如"微服务架构(Microservices)"）
+
+{company_context_section}{feedback_section}
+
+现在按照以下指令生成简历：
+
+"""
+
 
 async def resume_writer_agent(state: ResumeState) -> dict:
     """Generate a LaTeX resume using the existing prompt system + agent intelligence.
@@ -71,7 +94,9 @@ async def resume_writer_agent(state: ResumeState) -> dict:
             f"{state['company_context'][:2000]}\n\n"
         )
 
-    enhancement = RESUME_ENHANCEMENT_PREFIX.format(
+    language = state.get("language", "en")
+    prefix_template = RESUME_ENHANCEMENT_PREFIX_ZH if language == "zh" else RESUME_ENHANCEMENT_PREFIX
+    enhancement = prefix_template.format(
         job_title=jd.get("job_title", "the target role"),
         company_name=jd.get("company_name", "the company"),
         matched_skills=", ".join(relevance.get("matched_skills", [])) or "N/A",

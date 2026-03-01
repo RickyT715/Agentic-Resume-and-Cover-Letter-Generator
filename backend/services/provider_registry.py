@@ -34,6 +34,16 @@ AVAILABLE_PROVIDERS: list[dict] = [
         "name": "Claude Code Proxy",
         "description": "Claude via local claude-code-proxy (Anthropic API)",
     },
+    {
+        "id": "deepseek",
+        "name": "DeepSeek",
+        "description": "DeepSeek V3 — top-tier Chinese language quality, OpenAI-compatible API",
+    },
+    {
+        "id": "qwen",
+        "name": "Qwen (Alibaba)",
+        "description": "Qwen models via DashScope — strong Chinese generation, 1M context",
+    },
 ]
 
 
@@ -69,6 +79,14 @@ def get_provider(name: str) -> AIClientBase:
         from services.claude_proxy_client import ClaudeProxyClient
 
         client = ClaudeProxyClient()
+    elif name == "deepseek":
+        from services.deepseek_client import DeepSeekClient
+
+        client = DeepSeekClient()
+    elif name == "qwen":
+        from services.qwen_client import QwenClient
+
+        client = QwenClient()
     else:
         raise ValueError(f"Unknown provider '{name}'. Available: {[p['id'] for p in AVAILABLE_PROVIDERS]}")
 

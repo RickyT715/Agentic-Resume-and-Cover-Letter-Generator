@@ -31,6 +31,27 @@ Return a JSON object with exactly these fields:
 
 Return ONLY the JSON object, no other text."""
 
+RELEVANCE_MATCH_PROMPT_ZH = """你是一位资深职业顾问。根据候选人的背景资料和职位分析结果，评估候选人与目标岗位的匹配程度。
+
+候选人资料：
+{user_information}
+
+职位分析：
+- 职位名称：{job_title}
+- 必需技能：{required_skills}
+- 加分技能：{preferred_skills}
+- 经验要求：{experience_level}
+- 主要职责：{responsibilities}
+
+返回一个JSON对象，包含以下字段：
+- "matched_skills": 候选人与JD匹配的技能列表
+- "missing_skills": 候选人缺少的JD技能列表
+- "relevant_experiences": 与目标岗位最相关的候选人经历
+- "emphasis_points": 简历中应重点突出的方面
+- "match_score": 综合匹配度评分（0.0到1.0）
+
+仅返回JSON对象，不要包含其他文字。"""
+
 
 async def relevance_matcher_agent(state: ResumeState) -> dict:
     """Match user profile against job requirements.
@@ -45,8 +66,10 @@ async def relevance_matcher_agent(state: ResumeState) -> dict:
 
     jd = state["jd_analysis"]
     provider = get_provider_for_agent("relevance_matcher", state["provider_name"])
+    language = state.get("language", "en")
+    prompt_template = RELEVANCE_MATCH_PROMPT_ZH if language == "zh" else RELEVANCE_MATCH_PROMPT
 
-    prompt = RELEVANCE_MATCH_PROMPT.format(
+    prompt = prompt_template.format(
         user_information=state.get("user_information", ""),
         job_title=jd.get("job_title", ""),
         required_skills=", ".join(jd.get("required_skills", [])),

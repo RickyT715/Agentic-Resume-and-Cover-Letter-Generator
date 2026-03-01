@@ -18,6 +18,21 @@ Write a cover letter for the following role:
 
 """
 
+COVER_LETTER_ENHANCEMENT_PREFIX_ZH = """## 针对目标岗位的求职信写作指令
+
+为以下岗位撰写求职信：
+**目标岗位：** {company_name} - {job_title}
+**需要展示的核心竞争力：** {emphasis_points}
+**行业领域：** {industry}
+
+{company_context_section}**写作要求：**
+- 用中文撰写，语言专业得体，避免翻译腔
+- 重点展示候选人的相关经历如何匹配岗位需求
+- 体现对公司和行业的了解
+- 控制篇幅在一页以内
+
+"""
+
 
 async def cover_letter_writer_agent(state: ResumeState) -> dict:
     """Generate a cover letter based on resume content and JD analysis.
@@ -53,7 +68,9 @@ async def cover_letter_writer_agent(state: ResumeState) -> dict:
             f"{state['company_context'][:2000]}\n\n"
         )
 
-    enhancement = COVER_LETTER_ENHANCEMENT_PREFIX.format(
+    language = state.get("language", "en")
+    prefix_template = COVER_LETTER_ENHANCEMENT_PREFIX_ZH if language == "zh" else COVER_LETTER_ENHANCEMENT_PREFIX
+    enhancement = prefix_template.format(
         job_title=jd.get("job_title", "the target role"),
         company_name=jd.get("company_name", "the company"),
         emphasis_points=", ".join(relevance.get("emphasis_points", [])) or "the candidate's strengths",

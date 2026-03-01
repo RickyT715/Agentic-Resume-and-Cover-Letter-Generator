@@ -22,6 +22,17 @@ Keep the response factual and concise (under 800 words). Focus on information us
 
 If you cannot find reliable information about this company, say "No reliable information found." and nothing else."""
 
+COMPANY_RESEARCH_PROMPT_ZH = """调研公司"{company_name}"，提供简要概况，涵盖以下方面：
+
+1. **公司业务**：核心产品/服务、所处行业、市场地位
+2. **技术栈**：已知使用的技术、编程语言、框架
+3. **企业文化**：公司文化、使命愿景、工作环境
+4. **最新动态**：近期重要发展、融资情况、新产品发布
+
+请用中文回答，内容准确简练（800字以内）。重点关注对求职{job_title}岗位有帮助的信息。
+
+如果无法找到该公司的可靠信息，仅回复"未找到可靠信息。"，不要添加其他内容。"""
+
 
 async def auto_company_research_agent(state: ResumeState) -> dict:
     """Research company using search grounding when no vector store data exists.
@@ -43,8 +54,10 @@ async def auto_company_research_agent(state: ResumeState) -> dict:
 
     logger.info(f"Task {task_number}: Auto-researching company '{company_name}'")
 
+    language = state.get("language", "en")
     provider = get_provider_for_agent("company_researcher", state["provider_name"])
-    prompt = COMPANY_RESEARCH_PROMPT.format(
+    prompt_template = COMPANY_RESEARCH_PROMPT_ZH if language == "zh" else COMPANY_RESEARCH_PROMPT
+    prompt = prompt_template.format(
         company_name=company_name,
         job_title=job_title,
     )
@@ -73,7 +86,8 @@ async def auto_company_research_agent(state: ResumeState) -> dict:
 
     # If the model couldn't find info, treat as no context
     context = None
-    if raw and "no reliable information found" not in raw.strip().lower():
+    raw_stripped = raw.strip().lower() if raw else ""
+    if raw and "no reliable information found" not in raw_stripped and "未找到可靠信息" not in raw_stripped:
         context = raw.strip()
 
     agent_outputs = state.get("agent_outputs", {})

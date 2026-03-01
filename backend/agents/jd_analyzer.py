@@ -25,6 +25,22 @@ Job Description:
 
 Return ONLY the JSON object, no other text."""
 
+JD_ANALYSIS_PROMPT_ZH = """分析以下职位描述，提取结构化信息。
+
+返回一个JSON对象，包含以下字段：
+- "job_title": 职位名称
+- "company_name": 公司名称（未找到则为空字符串）
+- "required_skills": 必需的技术和软技能列表
+- "preferred_skills": 加分技能列表
+- "experience_level": 要求的工作经验（如"3-5年"、"资深"、"初级"）
+- "key_responsibilities": 主要工作职责列表
+- "industry": 行业领域（如"互联网"、"金融科技"、"人工智能"）
+
+职位描述：
+{job_description}
+
+仅返回JSON对象，不要包含其他文字。"""
+
 
 async def jd_analyzer_agent(state: ResumeState) -> dict:
     """Extract structured information from a job description.
@@ -38,7 +54,9 @@ async def jd_analyzer_agent(state: ResumeState) -> dict:
     start = time.time()
 
     provider = get_provider_for_agent("jd_analyzer", state["provider_name"])
-    prompt = JD_ANALYSIS_PROMPT.format(job_description=state["job_description"])
+    language = state.get("language", "en")
+    prompt_template = JD_ANALYSIS_PROMPT_ZH if language == "zh" else JD_ANALYSIS_PROMPT
+    prompt = prompt_template.format(job_description=state["job_description"])
 
     raw = await provider.generate(
         prompt,

@@ -33,6 +33,16 @@ interface AppSettings {
   claude_proxy_model: string;
   claude_proxy_temperature: number | null;
   claude_proxy_max_output_tokens: number | null;
+  // DeepSeek
+  deepseek_api_key: string;
+  deepseek_model: string;
+  deepseek_temperature: number | null;
+  deepseek_max_output_tokens: number | null;
+  // Qwen (Alibaba)
+  qwen_api_key: string;
+  qwen_model: string;
+  qwen_temperature: number | null;
+  qwen_max_output_tokens: number | null;
   // General
   enforce_resume_one_page: boolean;
   enforce_cover_letter_one_page: boolean;
@@ -62,6 +72,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     claude: false,
     openai_compat: false,
     claude_proxy: false,
+    deepseek: false,
+    qwen: false,
     generation: true,
     validation: true,
   });
@@ -207,6 +219,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       <option value="claude">Anthropic Claude</option>
                       <option value="openai_compat">OpenAI-Compatible Proxy</option>
                       <option value="claude_proxy">Claude Code Proxy</option>
+                      <option value="deepseek">DeepSeek</option>
+                      <option value="qwen">Qwen (Alibaba)</option>
                     </select>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Provider used for new tasks by default. Individual tasks can override this.
@@ -575,6 +589,147 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         onChange={(e) => updateSetting('claude_proxy_max_output_tokens', e.target.value ? parseInt(e.target.value) : null)}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                         placeholder="Leave empty for default (16384)"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* DeepSeek Settings Section */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+                <button
+                  onClick={() => toggleSection('deepseek')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
+                >
+                  <span className="font-medium">DeepSeek</span>
+                  {expandedSections.deepseek ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedSections.deepseek && (
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        DeepSeek API Key
+                      </label>
+                      <input
+                        type="password"
+                        value={settings.deepseek_api_key || ''}
+                        onChange={(e) => updateSetting('deepseek_api_key', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        placeholder="Enter your DeepSeek API key"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Get your key at platform.deepseek.com — best Chinese language quality
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Model
+                      </label>
+                      <select
+                        value={settings.deepseek_model || 'deepseek-chat'}
+                        onChange={(e) => updateSetting('deepseek_model', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                      >
+                        <option value="deepseek-chat">DeepSeek V3 (Chat)</option>
+                        <option value="deepseek-reasoner">DeepSeek R1 (Reasoner)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Temperature (0.0 - 2.0)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="2"
+                        value={settings.deepseek_temperature ?? ''}
+                        onChange={(e) => updateSetting('deepseek_temperature', e.target.value ? parseFloat(e.target.value) : null)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        placeholder="Leave empty for default"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Max Output Tokens
+                      </label>
+                      <input
+                        type="number"
+                        value={settings.deepseek_max_output_tokens ?? ''}
+                        onChange={(e) => updateSetting('deepseek_max_output_tokens', e.target.value ? parseInt(e.target.value) : null)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        placeholder="Leave empty for default"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Qwen Settings Section */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+                <button
+                  onClick={() => toggleSection('qwen')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
+                >
+                  <span className="font-medium">Qwen (Alibaba)</span>
+                  {expandedSections.qwen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedSections.qwen && (
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Qwen API Key (DashScope)
+                      </label>
+                      <input
+                        type="password"
+                        value={settings.qwen_api_key || ''}
+                        onChange={(e) => updateSetting('qwen_api_key', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        placeholder="Enter your DashScope API key"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Get your key at dashscope.aliyun.com — strong Chinese generation, 1M context
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Model
+                      </label>
+                      <select
+                        value={settings.qwen_model || 'qwen-plus'}
+                        onChange={(e) => updateSetting('qwen_model', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                      >
+                        <option value="qwen-plus">Qwen Plus (Balanced)</option>
+                        <option value="qwen-max">Qwen Max (Best Quality)</option>
+                        <option value="qwen-turbo">Qwen Turbo (Fastest)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Temperature (0.0 - 2.0)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="2"
+                        value={settings.qwen_temperature ?? ''}
+                        onChange={(e) => updateSetting('qwen_temperature', e.target.value ? parseFloat(e.target.value) : null)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        placeholder="Leave empty for default"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Max Output Tokens
+                      </label>
+                      <input
+                        type="number"
+                        value={settings.qwen_max_output_tokens ?? ''}
+                        onChange={(e) => updateSetting('qwen_max_output_tokens', e.target.value ? parseInt(e.target.value) : null)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        placeholder="Leave empty for default"
                       />
                     </div>
                   </div>

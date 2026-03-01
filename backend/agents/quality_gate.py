@@ -16,7 +16,7 @@ QUALITY_THRESHOLD = 0.7
 MAX_RETRIES = 2
 
 
-def _heuristic_score(latex_source: str, jd_analysis: dict) -> tuple[float, str]:
+def _heuristic_score(latex_source: str, jd_analysis: dict, language: str = "en") -> tuple[float, str]:
     """Compute a heuristic quality score for a LaTeX resume.
 
     Returns (score, feedback) where score is 0-1.
@@ -31,19 +31,29 @@ def _heuristic_score(latex_source: str, jd_analysis: dict) -> tuple[float, str]:
         "formatting": 0.25,
     }
 
-    # 1. Structure check (25%) - has required LaTeX sections
-    sections_found = 0
-    expected_sections = ["experience", "education", "skill", "project", "summary"]
     lower_latex = latex_source.lower()
-    for section in expected_sections:
-        if section in lower_latex:
-            sections_found += 1
-    structure_score = min(sections_found / 3, 1.0)  # At least 3 of 5
-    score += structure_score * weights["structure"]
-    if sections_found < 3:
-        feedback_items.append(
-            f"Resume has only {sections_found} of expected sections (experience, education, skills, etc.)"
-        )
+
+    # 1. Structure check (25%) - has required LaTeX sections
+    if language == "zh":
+        from evaluation.skills_taxonomy import ALL_SECTION_NAMES_ZH
+
+        sections_found = sum(1 for s in ALL_SECTION_NAMES_ZH if s in latex_source)
+        structure_score = min(sections_found / 3, 1.0)
+        score += structure_score * weights["structure"]
+        if sections_found < 3:
+            feedback_items.append(f"简历只有{sections_found}个必要板块（建议包含：工作经历、教育背景、专业技能等）")
+    else:
+        sections_found = 0
+        expected_sections = ["experience", "education", "skill", "project", "summary"]
+        for section in expected_sections:
+            if section in lower_latex:
+                sections_found += 1
+        structure_score = min(sections_found / 3, 1.0)
+        score += structure_score * weights["structure"]
+        if sections_found < 3:
+            feedback_items.append(
+                f"Resume has only {sections_found} of expected sections (experience, education, skills, etc.)"
+            )
 
     # 2. Keyword match (35%) - JD required skills found in resume
     required_skills = jd_analysis.get("required_skills", [])
@@ -53,7 +63,10 @@ def _heuristic_score(latex_source: str, jd_analysis: dict) -> tuple[float, str]:
         score += keyword_score * weights["keyword_match"]
         if keyword_score < 0.5:
             missing = [s for s in required_skills if s.lower() not in lower_latex]
-            feedback_items.append(f"Missing key skills from JD: {', '.join(missing[:5])}")
+            if language == "zh":
+                feedback_items.append(f"缺少JD中的关键技能：{', '.join(missing[:5])}")
+            else:
+                feedback_items.append(f"Missing key skills from JD: {', '.join(missing[:5])}")
     else:
         score += 0.7 * weights["keyword_match"]
 
@@ -63,46 +76,63 @@ def _heuristic_score(latex_source: str, jd_analysis: dict) -> tuple[float, str]:
         length_score = 1.0
     elif char_count < 1000:
         length_score = 0.3
-        feedback_items.append("Resume is too short - add more detail to experience and projects")
+        if language == "zh":
+            feedback_items.append("简历内容过少，建议补充工作经历和项目描述的细节")
+        else:
+            feedback_items.append("Resume is too short - add more detail to experience and projects")
     elif char_count > 10000:
         length_score = 0.5
-        feedback_items.append("Resume is too long - condense to fit one page")
+        if language == "zh":
+            feedback_items.append("简历内容过多，建议精简至一页")
+        else:
+            feedback_items.append("Resume is too long - condense to fit one page")
     else:
         length_score = 0.7
     score += length_score * weights["length"]
 
     # 4. Formatting quality (25%) - action verbs, quantified achievements
-    action_verbs = [
-        "led",
-        "developed",
-        "implemented",
-        "designed",
-        "built",
-        "managed",
-        "increased",
-        "reduced",
-        "improved",
-        "created",
-        "launched",
-        "optimized",
-        "achieved",
-        "delivered",
-    ]
-    verb_count = sum(1 for verb in action_verbs if re.search(rf"\b{verb}\b", lower_latex))
-    verb_score = min(verb_count / 5, 1.0)
+    if language == "zh":
+        from evaluation.skills_taxonomy import ACTION_VERBS_ZH_STRONG
 
-    # Check for quantified achievements (numbers in bullet points)
-    numbers = re.findall(r"\d+[%x+]|\$[\d,]+|\d+\+?\s*(?:users|customers|projects|team)", lower_latex)
-    quant_score = min(len(numbers) / 3, 1.0)
+        verb_count = sum(1 for verb in ACTION_VERBS_ZH_STRONG if verb in latex_source)
+        verb_score = min(verb_count / 5, 1.0)
 
-    format_score = (verb_score + quant_score) / 2
-    score += format_score * weights["formatting"]
-    if verb_count < 3:
-        feedback_items.append("Use more action verbs (led, developed, implemented, etc.)")
-    if len(numbers) < 2:
-        feedback_items.append("Add quantified achievements (percentages, numbers, metrics)")
+        zh_quant_patterns = [
+            r"\d+%", r"\d+倍", r"\d+万", r"\d+亿",
+            r"(?:提升|降低|缩短|增加|减少|优化)[\d.]+",
+        ]
+        numbers_count = sum(len(re.findall(p, latex_source)) for p in zh_quant_patterns)
+        quant_score = min(numbers_count / 3, 1.0)
 
-    feedback = "; ".join(feedback_items) if feedback_items else "Resume meets quality standards"
+        format_score = (verb_score + quant_score) / 2
+        score += format_score * weights["formatting"]
+        if verb_count < 3:
+            feedback_items.append("建议使用更多强动词（主导、设计、架构、优化等）")
+        if numbers_count < 2:
+            feedback_items.append("建议添加量化成果（百分比、数据指标等）")
+    else:
+        action_verbs = [
+            "led", "developed", "implemented", "designed", "built", "managed",
+            "increased", "reduced", "improved", "created", "launched", "optimized",
+            "achieved", "delivered",
+        ]
+        verb_count = sum(1 for verb in action_verbs if re.search(rf"\b{verb}\b", lower_latex))
+        verb_score = min(verb_count / 5, 1.0)
+
+        numbers = re.findall(r"\d+[%x+]|\$[\d,]+|\d+\+?\s*(?:users|customers|projects|team)", lower_latex)
+        quant_score = min(len(numbers) / 3, 1.0)
+
+        format_score = (verb_score + quant_score) / 2
+        score += format_score * weights["formatting"]
+        if verb_count < 3:
+            feedback_items.append("Use more action verbs (led, developed, implemented, etc.)")
+        if len(numbers) < 2:
+            feedback_items.append("Add quantified achievements (percentages, numbers, metrics)")
+
+    if language == "zh":
+        feedback = "；".join(feedback_items) if feedback_items else "简历质量达标"
+    else:
+        feedback = "; ".join(feedback_items) if feedback_items else "Resume meets quality standards"
     return round(score, 3), feedback
 
 
@@ -118,6 +148,7 @@ async def quality_gate_node(state: ResumeState) -> dict:
     retry_count = state.get("retry_count", 0)
     latex_source = state.get("latex_source", "")
     jd_analysis = state.get("jd_analysis", {})
+    language = state.get("language", "en")
 
     try:
         from evaluation.ats_scorer import score_resume
@@ -127,12 +158,13 @@ async def quality_gate_node(state: ResumeState) -> dict:
             latex_source,
             state.get("job_description", ""),
             jd_analysis,
+            language=language,
         )
         score = ats_result.overall
-        feedback = generate_feedback(ats_result, None, score)
+        feedback = generate_feedback(ats_result, None, score, language=language)
     except Exception as e:
         logger.warning(f"Evaluation module failed, using heuristic: {e}")
-        score, feedback = _heuristic_score(latex_source, jd_analysis)
+        score, feedback = _heuristic_score(latex_source, jd_analysis, language=language)
 
     passed = score >= QUALITY_THRESHOLD or retry_count >= MAX_RETRIES
 

@@ -40,6 +40,9 @@ dependencies = [
     "rapidfuzz>=3.0.0",
     "rank-bm25>=0.2.2",
 
+    # Chinese NLP
+    "jieba>=0.42.1",
+
     # RAG Pipeline
     "chromadb>=0.5.0",
     "sentence-transformers>=3.0",
