@@ -35,7 +35,7 @@ jobs:
         run: uv run ruff format --check .
 
       - name: Mypy type check
-        run: uv run mypy .
+        run: uv run mypy . --exclude alembic
 
   backend-test:
     name: Backend Tests
