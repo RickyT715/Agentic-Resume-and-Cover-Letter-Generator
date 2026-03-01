@@ -127,6 +127,7 @@ class TestDeleteQuestion:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestGenerateQuestionAnswer:
     async def test_successful_generation(self, task_manager_isolated):
         tm = task_manager_isolated

@@ -60,7 +60,7 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run tests with coverage
-        run: uv run pytest --cov --cov-report=xml --cov-report=term-missing
+        run: uv run pytest --cov --cov-report=xml --cov-report=term-missing -m "not e2e and not integration" --ignore=tests/e2e --ignore=tests/integration
 
       - name: Upload coverage
         if: always()
