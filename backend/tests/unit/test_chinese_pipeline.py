@@ -10,7 +10,6 @@ Covers:
 - DeepSeek/Qwen provider creation
 """
 
-import re
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -217,7 +216,7 @@ class TestChineseATSScoring:
     def test_chinese_quality_scoring(self):
         from evaluation.ats_scorer import _score_quality
 
-        quality, verbs, quant, sections, fmt, feedback = _score_quality(
+        quality, verbs, quant, _sections, _fmt, _feedback = _score_quality(
             "主导设计了微服务架构，优化系统性能提升30%，搭建CI/CD流水线",
             SAMPLE_ZH_RESUME_LATEX,
             language="zh",
@@ -344,7 +343,7 @@ class TestChineseQualityGate:
     def test_heuristic_score_zh(self):
         from agents.quality_gate import _heuristic_score
 
-        score, feedback = _heuristic_score(
+        score, _feedback = _heuristic_score(
             SAMPLE_ZH_RESUME_LATEX,
             SAMPLE_ZH_JD_ANALYSIS,
             language="zh",
@@ -356,7 +355,7 @@ class TestChineseQualityGate:
     def test_heuristic_score_zh_feedback_in_chinese(self):
         from agents.quality_gate import _heuristic_score
 
-        score, feedback = _heuristic_score(
+        _score, feedback = _heuristic_score(
             r"\documentclass{article}\begin{document}简单\end{document}",
             {"required_skills": ["Python", "Go", "Kubernetes"]},
             language="zh",
@@ -370,7 +369,7 @@ class TestChineseQualityGate:
     def test_heuristic_score_en_unchanged(self):
         from agents.quality_gate import _heuristic_score
 
-        score, feedback = _heuristic_score(
+        _score, feedback = _heuristic_score(
             r"\documentclass{article}\begin{document}simple\end{document}",
             {"required_skills": ["Python"]},
             language="en",
@@ -405,7 +404,7 @@ class TestChineseQualityGate:
 class TestChinesePromptSelection:
     @pytest.mark.asyncio
     async def test_jd_analyzer_uses_zh_prompt(self):
-        from agents.jd_analyzer import JD_ANALYSIS_PROMPT_ZH, jd_analyzer_agent
+        from agents.jd_analyzer import jd_analyzer_agent
 
         mock_provider = AsyncMock()
         mock_provider.generate = AsyncMock(return_value='{"job_title": "后端工程师", "company_name": "字节跳动", "required_skills": ["Python"], "preferred_skills": [], "experience_level": "3年", "key_responsibilities": [], "industry": "互联网"}')

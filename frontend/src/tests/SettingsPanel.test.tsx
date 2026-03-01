@@ -29,12 +29,21 @@ const mockSettings = {
   claude_proxy_model: 'claude-sonnet-4-5-20250929',
   claude_proxy_temperature: null,
   claude_proxy_max_output_tokens: null,
+  deepseek_api_key: '',
+  deepseek_model: 'deepseek-chat',
+  deepseek_temperature: null,
+  deepseek_max_output_tokens: null,
+  qwen_api_key: '',
+  qwen_model: 'qwen-plus',
+  qwen_temperature: null,
+  qwen_max_output_tokens: null,
   enforce_resume_one_page: true,
   enforce_cover_letter_one_page: true,
   max_page_retry_attempts: 3,
   generate_cover_letter: true,
   max_latex_retries: 3,
   default_template_id: 'classic',
+  agent_providers: {},
 };
 
 describe('SettingsPanel', () => {
