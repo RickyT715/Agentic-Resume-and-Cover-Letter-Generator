@@ -2,16 +2,16 @@
 Prompt Manager Service
 Handles loading, saving, and template substitution for prompts.
 """
+
 import logging
 from pathlib import Path
-from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class PromptManager:
     """Manages prompt templates with file persistence and template substitution."""
-    
+
     PROMPT_FILES = {
         "resume_prompt": "Resume_prompts.txt",
         "cover_letter_prompt": "Cover_letter_prompt.txt",
@@ -24,28 +24,28 @@ class PromptManager:
         "resume_format_zh": "Resume_format_prompts_zh.txt",
         "application_question_prompt_zh": "Application_question_prompt_zh.txt",
     }
-    
+
     def __init__(self, prompts_dir: Path = None):
         """
         Initialize the prompt manager.
-        
+
         Args:
             prompts_dir: Directory containing prompt files
         """
         if prompts_dir is None:
             prompts_dir = Path(__file__).parent.parent / "prompts"
-        
+
         self.prompts_dir = prompts_dir
-        self._cache: Dict[str, str] = {}
+        self._cache: dict[str, str] = {}
         self._load_all_prompts()
-    
+
     def _load_all_prompts(self) -> None:
         """Load all prompts from files into cache."""
         for prompt_key, filename in self.PROMPT_FILES.items():
             filepath = self.prompts_dir / filename
             if filepath.exists():
                 try:
-                    self._cache[prompt_key] = filepath.read_text(encoding='utf-8')
+                    self._cache[prompt_key] = filepath.read_text(encoding="utf-8")
                     logger.info(f"Loaded prompt: {prompt_key} from {filename}")
                 except Exception as e:
                     logger.error(f"Failed to load prompt {prompt_key}: {e}")
@@ -53,51 +53,53 @@ class PromptManager:
             else:
                 logger.warning(f"Prompt file not found: {filepath}")
                 self._cache[prompt_key] = ""
-    
+
     def get_prompt(self, prompt_key: str) -> str:
         """
         Get a prompt by key.
-        
+
         Args:
             prompt_key: Key of the prompt (resume_prompt, cover_letter_prompt, etc.)
-            
+
         Returns:
             Prompt content
         """
         return self._cache.get(prompt_key, "")
-    
-    def get_all_prompts(self) -> Dict[str, str]:
+
+    def get_all_prompts(self) -> dict[str, str]:
         """Get all prompts as a dictionary."""
         return self._cache.copy()
-    
+
     def update_prompt(self, prompt_key: str, content: str) -> bool:
         """
         Update a prompt and save to file.
-        
+
         Args:
             prompt_key: Key of the prompt to update
             content: New content
-            
+
         Returns:
             True if successful, False otherwise
         """
         if prompt_key not in self.PROMPT_FILES:
             logger.error(f"Invalid prompt key: {prompt_key}")
             return False
-        
+
         filename = self.PROMPT_FILES[prompt_key]
         filepath = self.prompts_dir / filename
-        
+
         try:
-            filepath.write_text(content, encoding='utf-8')
+            filepath.write_text(content, encoding="utf-8")
             self._cache[prompt_key] = content
             logger.info(f"Updated prompt: {prompt_key}")
             return True
         except Exception as e:
             logger.error(f"Failed to save prompt {prompt_key}: {e}")
             return False
-    
-    def get_resume_prompt_with_substitutions(self, job_description: str, template_id: str = "classic", language: str = "en") -> str:
+
+    def get_resume_prompt_with_substitutions(
+        self, job_description: str, template_id: str = "classic", language: str = "en"
+    ) -> str:
         """
         Get the resume prompt with all template substitutions applied.
 
@@ -136,6 +138,7 @@ class PromptManager:
     def _load_template_instructions(self, template_id: str) -> str:
         """Load template style instructions from the templates directory."""
         from config import settings
+
         template_file = settings.templates_dir / f"{template_id}.txt"
         if template_file.exists():
             try:
@@ -143,12 +146,9 @@ class PromptManager:
             except Exception as e:
                 logger.error(f"Failed to load template {template_id}: {e}")
         return ""
-    
+
     def get_cover_letter_prompt_with_substitutions(
-        self,
-        resume_content: str,
-        job_description: str,
-        language: str = "en"
+        self, resume_content: str, job_description: str, language: str = "en"
     ) -> str:
         """
         Get the cover letter prompt with all template substitutions applied.
@@ -167,20 +167,16 @@ class PromptManager:
         """
         suffix = "_zh" if language == "zh" else ""
         prompt = self.get_prompt(f"cover_letter_prompt{suffix}")
-        
+
         # Perform substitutions
         prompt = prompt.replace("{{RESUME_CONTENT}}", resume_content)
         prompt = prompt.replace("{{JOB_DESCRIPTION}}", job_description)
-        
+
         logger.debug("Applied template substitutions to cover letter prompt")
         return prompt
-    
+
     def get_question_prompt_with_substitutions(
-        self,
-        question: str,
-        job_description: str,
-        word_limit: int = 150,
-        language: str = "en"
+        self, question: str, job_description: str, word_limit: int = 150, language: str = "en"
     ) -> str:
         """
         Get the application question prompt with all template substitutions applied.
@@ -242,7 +238,7 @@ class PromptManager:
 
 
 # Global prompt manager instance
-_prompt_manager: Optional[PromptManager] = None
+_prompt_manager: PromptManager | None = None
 
 
 def get_prompt_manager() -> PromptManager:

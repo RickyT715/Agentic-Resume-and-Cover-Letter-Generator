@@ -1,7 +1,8 @@
 """Tests for PDF text extractor."""
+
+from unittest.mock import MagicMock, patch
+
 import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 
 class TestPDFTextExtractor:

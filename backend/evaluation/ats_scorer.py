@@ -30,14 +30,49 @@ logger = logging.getLogger(__name__)
 # ── Constants ─────────────────────────────────────────────────────────
 
 ACTION_VERBS = [
-    "achieved", "built", "created", "delivered", "designed", "developed",
-    "engineered", "established", "implemented", "improved", "increased",
-    "launched", "led", "managed", "optimized", "orchestrated", "pioneered",
-    "reduced", "refactored", "scaled", "spearheaded", "streamlined",
-    "transformed", "architected", "automated", "collaborated", "contributed",
-    "deployed", "drove", "executed", "facilitated", "generated", "initiated",
-    "integrated", "maintained", "mentored", "migrated", "modernized",
-    "resolved", "restructured", "secured", "shipped", "standardized",
+    "achieved",
+    "built",
+    "created",
+    "delivered",
+    "designed",
+    "developed",
+    "engineered",
+    "established",
+    "implemented",
+    "improved",
+    "increased",
+    "launched",
+    "led",
+    "managed",
+    "optimized",
+    "orchestrated",
+    "pioneered",
+    "reduced",
+    "refactored",
+    "scaled",
+    "spearheaded",
+    "streamlined",
+    "transformed",
+    "architected",
+    "automated",
+    "collaborated",
+    "contributed",
+    "deployed",
+    "drove",
+    "executed",
+    "facilitated",
+    "generated",
+    "initiated",
+    "integrated",
+    "maintained",
+    "mentored",
+    "migrated",
+    "modernized",
+    "resolved",
+    "restructured",
+    "secured",
+    "shipped",
+    "standardized",
 ]
 
 EXPECTED_SECTIONS = ["experience", "education", "skill", "project", "summary", "objective"]
@@ -58,6 +93,7 @@ SECTION_WEIGHTS = {
 # Research shows sigmoid calibration handles score clustering better than
 # linear. Most raw scores cluster around 0.1-0.4, and linear mapping
 # fails to discriminate well in that range.
+
 
 def _sigmoid_calibrate(raw: float, center: float = 0.45, steepness: float = 10.0) -> float:
     """Map raw score through a sigmoid curve centered at `center`.
@@ -91,6 +127,7 @@ def _get_spacy_nlp():
     if _spacy_nlp is None:
         try:
             import spacy
+
             _spacy_nlp = spacy.load("en_core_web_sm")
             logger.info("spaCy en_core_web_sm model loaded")
         except Exception as e:
@@ -105,6 +142,7 @@ def _get_sentence_model():
     if _sentence_model is None:
         try:
             from sentence_transformers import SentenceTransformer
+
             _sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
             logger.info("SentenceTransformer all-MiniLM-L6-v2 loaded")
         except Exception as e:
@@ -115,17 +153,18 @@ def _get_sentence_model():
 
 # ── Data classes ──────────────────────────────────────────────────────
 
+
 @dataclass
 class ATSScoreBreakdown:
     """Detailed ATS score breakdown from the hybrid multi-method scorer."""
 
     # Primary method scores (weights sum to 1.0)
-    keyword_similarity: float = 0.0   # BM25 keyword relevance (was TF-IDF in v1)
+    keyword_similarity: float = 0.0  # BM25 keyword relevance (was TF-IDF in v1)
     semantic_similarity: float = 0.0  # Sentence embedding similarity
-    skill_coverage: float = 0.0       # PhraseMatcher skill overlap
-    fuzzy_match: float = 0.0          # Fuzzy keyword matching
-    resume_quality: float = 0.0       # Heuristic quality score
-    section_bonus: float = 0.0        # Section-aware keyword placement
+    skill_coverage: float = 0.0  # PhraseMatcher skill overlap
+    fuzzy_match: float = 0.0  # Fuzzy keyword matching
+    resume_quality: float = 0.0  # Heuristic quality score
+    section_bonus: float = 0.0  # Section-aware keyword placement
 
     # Quality sub-scores (components of resume_quality)
     action_verbs_score: float = 0.0
@@ -167,6 +206,7 @@ class ATSScoreBreakdown:
 
 # ── Text extraction ───────────────────────────────────────────────────
 
+
 def _extract_text_from_latex(latex: str) -> str:
     """Strip LaTeX commands to get plain text for analysis."""
     text = latex
@@ -200,16 +240,19 @@ def _extract_latex_sections(latex: str) -> dict[str, str]:
 
 # ── Synonym normalization ─────────────────────────────────────────────
 
+
 def _normalize(text: str) -> str:
     """Apply synonym expansion to text for better matching."""
     try:
         from evaluation.skills_taxonomy import normalize_text
+
         return normalize_text(text)
     except ImportError:
         return text
 
 
 # ── Method 1: BM25 Keyword Relevance (20%) ──────────────────────────
+
 
 def _score_bm25(resume_text: str, jd_text: str) -> float:
     """Compute BM25 relevance score between resume and JD.
@@ -231,7 +274,7 @@ def _score_bm25(resume_text: str, jd_text: str) -> float:
         norm_jd = _normalize(jd_text)
 
         # Tokenize resume into sentences/chunks as the "corpus"
-        resume_sentences = [s.strip() for s in re.split(r'[.;!\n]', norm_resume) if s.strip()]
+        resume_sentences = [s.strip() for s in re.split(r"[.;!\n]", norm_resume) if s.strip()]
         if not resume_sentences:
             resume_sentences = [norm_resume]
 
@@ -285,6 +328,7 @@ def _score_tfidf_fallback(resume_text: str, jd_text: str) -> float:
 
 # ── Method 2: Semantic Embedding Similarity (20%) ─────────────────────
 
+
 def _score_semantic(resume_text: str, jd_text: str) -> float:
     """Compute semantic similarity using sentence embeddings."""
     model = _get_sentence_model()
@@ -292,15 +336,15 @@ def _score_semantic(resume_text: str, jd_text: str) -> float:
         return 0.5  # Neutral fallback if model unavailable
 
     try:
-        from sklearn.metrics.pairwise import cosine_similarity
         import numpy as np
+        from sklearn.metrics.pairwise import cosine_similarity
 
         # Chunk long texts into segments for better embedding quality
         def chunk_text(text: str, max_len: int = 512) -> list[str]:
             words = text.split()
             chunks = []
             for i in range(0, len(words), max_len):
-                chunks.append(" ".join(words[i:i + max_len]))
+                chunks.append(" ".join(words[i : i + max_len]))
             return chunks or [text]
 
         resume_chunks = chunk_text(resume_text)
@@ -322,6 +366,7 @@ def _score_semantic(resume_text: str, jd_text: str) -> float:
 
 
 # ── Method 3: Skill Coverage via PhraseMatcher (30%) ──────────────────
+
 
 def _score_skill_coverage(
     resume_text: str,
@@ -419,6 +464,7 @@ def _score_skill_coverage(
 
 # ── Method 4: Fuzzy Keyword Matching (10%) ────────────────────────────
 
+
 def _score_fuzzy(
     resume_text: str,
     jd_analysis: dict | None,
@@ -442,15 +488,72 @@ def _score_fuzzy(
     if not keywords:
         words = set(re.findall(r"\b[a-zA-Z][\w.#+/-]{2,}\b", jd_text))
         stop = {
-            "the", "and", "for", "are", "but", "not", "you", "all", "can",
-            "was", "one", "our", "has", "had", "how", "its", "may", "new",
-            "now", "see", "way", "who", "did", "get", "use", "this", "that",
-            "with", "will", "have", "been", "from", "just", "also", "more",
-            "than", "them", "when", "what", "where", "which", "while",
-            "about", "their", "would", "could", "should", "through",
-            "using", "based", "including", "experience", "team", "ability",
-            "work", "working", "strong", "excellent", "good", "must",
-            "year", "years", "role", "position", "company", "opportunity",
+            "the",
+            "and",
+            "for",
+            "are",
+            "but",
+            "not",
+            "you",
+            "all",
+            "can",
+            "was",
+            "one",
+            "our",
+            "has",
+            "had",
+            "how",
+            "its",
+            "may",
+            "new",
+            "now",
+            "see",
+            "way",
+            "who",
+            "did",
+            "get",
+            "use",
+            "this",
+            "that",
+            "with",
+            "will",
+            "have",
+            "been",
+            "from",
+            "just",
+            "also",
+            "more",
+            "than",
+            "them",
+            "when",
+            "what",
+            "where",
+            "which",
+            "while",
+            "about",
+            "their",
+            "would",
+            "could",
+            "should",
+            "through",
+            "using",
+            "based",
+            "including",
+            "experience",
+            "team",
+            "ability",
+            "work",
+            "working",
+            "strong",
+            "excellent",
+            "good",
+            "must",
+            "year",
+            "years",
+            "role",
+            "position",
+            "company",
+            "opportunity",
         }
         keywords = [w for w in words if w.lower() not in stop]
 
@@ -488,6 +591,7 @@ def _score_fuzzy(
 
 # ── Method 5: Resume Quality Heuristics (10%) ────────────────────────
 
+
 def _score_quality(
     resume_text: str,
     resume_latex: str,
@@ -504,8 +608,7 @@ def _score_quality(
     verbs_score = min(len(found_verbs) / 8, 1.0)
     if len(found_verbs) < 5:
         feedback.append(
-            f"Use more action verbs ({len(found_verbs)} found, aim for 8+). "
-            f"Try: {', '.join(ACTION_VERBS[:5])}"
+            f"Use more action verbs ({len(found_verbs)} found, aim for 8+). Try: {', '.join(ACTION_VERBS[:5])}"
         )
 
     # Quantified Achievements (25% of quality)
@@ -543,6 +646,7 @@ def _score_quality(
 
 # ── Method 6: Section-Aware Bonus (10%) ──────────────────────────────
 
+
 def _score_section_bonus(
     resume_latex: str,
     jd_text: str,
@@ -567,6 +671,7 @@ def _score_section_bonus(
     if not target_keywords:
         # Extract from JD text
         from evaluation.skills_taxonomy import ALL_SKILLS
+
         jd_lower = jd_text.lower()
         for skill in ALL_SKILLS:
             if len(skill) <= 2:
@@ -614,6 +719,7 @@ def _score_section_bonus(
 
 # ── Public API ────────────────────────────────────────────────────────
 
+
 def score_resume(
     resume_latex: str,
     jd_text: str,
@@ -647,8 +753,8 @@ def score_resume(
     result.semantic_similarity = _score_semantic(resume_text, jd_text)
 
     # Method 3: Skill Coverage (30%)
-    result.skill_coverage, result.matched_keywords, result.missing_keywords = (
-        _score_skill_coverage(resume_text, jd_text, jd_analysis)
+    result.skill_coverage, result.matched_keywords, result.missing_keywords = _score_skill_coverage(
+        resume_text, jd_text, jd_analysis
     )
 
     # Method 4: Fuzzy Matching (10%)
@@ -671,8 +777,7 @@ def score_resume(
     # Add skill-gap feedback
     if result.missing_keywords:
         result.feedback.append(
-            f"Missing {len(result.missing_keywords)} required skills: "
-            f"{', '.join(result.missing_keywords[:5])}"
+            f"Missing {len(result.missing_keywords)} required skills: {', '.join(result.missing_keywords[:5])}"
         )
 
     # Weighted overall score (research-backed distribution)

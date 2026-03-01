@@ -1,9 +1,11 @@
 """Integration tests for the LangGraph executor service."""
+
 import sys
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from datetime import datetime
-from unittest.mock import patch, AsyncMock, MagicMock
-from models.task import Task, TaskStatus, TaskStep
+
+from models.task import Task, TaskStatus
 
 # Mock langgraph before importing the executor
 langgraph_mock = MagicMock()
@@ -37,12 +39,14 @@ class TestRunLanggraphPipeline:
             yield {"finalize": {"resume_pdf_path": "/out/resume.pdf", "current_node": "finalize"}}
 
         mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(return_value={
-            "resume_pdf_path": "/out/resume.pdf",
-            "latex_source": "\\documentclass{article}...",
-            "company_name": "TestCo",
-            "position_name": "Engineer",
-        })
+        mock_graph.ainvoke = AsyncMock(
+            return_value={
+                "resume_pdf_path": "/out/resume.pdf",
+                "latex_source": "\\documentclass{article}...",
+                "company_name": "TestCo",
+                "position_name": "Engineer",
+            }
+        )
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -50,9 +54,11 @@ class TestRunLanggraphPipeline:
         mock_pm = MagicMock()
         mock_pm.get_prompt.return_value = "User info"
 
-        with patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph), \
-             patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm), \
-             patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm):
+        with (
+            patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph),
+            patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm),
+            patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm),
+        ):
             result = await run_langgraph_pipeline(task)
 
         assert result.status == TaskStatus.COMPLETED
@@ -71,9 +77,11 @@ class TestRunLanggraphPipeline:
             yield {"jd_analyzer": {"current_node": "jd_analyzer"}}
 
         mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(return_value={
-            "error": "LaTeX compilation failed",
-        })
+        mock_graph.ainvoke = AsyncMock(
+            return_value={
+                "error": "LaTeX compilation failed",
+            }
+        )
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -81,9 +89,11 @@ class TestRunLanggraphPipeline:
         mock_pm = MagicMock()
         mock_pm.get_prompt.return_value = "User info"
 
-        with patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph), \
-             patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm), \
-             patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm):
+        with (
+            patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph),
+            patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm),
+            patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm),
+        ):
             result = await run_langgraph_pipeline(task)
 
         assert result.status == TaskStatus.FAILED
@@ -109,9 +119,11 @@ class TestRunLanggraphPipeline:
         mock_pm = MagicMock()
         mock_pm.get_prompt.return_value = "User info"
 
-        with patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph), \
-             patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm), \
-             patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm):
+        with (
+            patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph),
+            patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm),
+            patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm),
+        ):
             result = await run_langgraph_pipeline(task)
 
         assert result.status == TaskStatus.FAILED
@@ -134,9 +146,11 @@ class TestRunLanggraphPipeline:
             yield {"resume_writer": {"current_node": "resume_writer"}}
 
         mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(return_value={
-            "resume_pdf_path": "/out/resume.pdf",
-        })
+        mock_graph.ainvoke = AsyncMock(
+            return_value={
+                "resume_pdf_path": "/out/resume.pdf",
+            }
+        )
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -144,9 +158,11 @@ class TestRunLanggraphPipeline:
         mock_pm = MagicMock()
         mock_pm.get_prompt.return_value = "User info"
 
-        with patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph), \
-             patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm), \
-             patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm):
+        with (
+            patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph),
+            patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm),
+            patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm),
+        ):
             await run_langgraph_pipeline(task, progress_callback=track_progress)
 
         # Should have progress updates for nodes + final
@@ -165,9 +181,11 @@ class TestRunLanggraphPipeline:
             yield {"compile_latex": {"current_node": "compile_latex"}}
 
         mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(return_value={
-            "resume_pdf_path": "/out/resume.pdf",
-        })
+        mock_graph.ainvoke = AsyncMock(
+            return_value={
+                "resume_pdf_path": "/out/resume.pdf",
+            }
+        )
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -175,9 +193,11 @@ class TestRunLanggraphPipeline:
         mock_pm = MagicMock()
         mock_pm.get_prompt.return_value = "User info"
 
-        with patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph), \
-             patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm), \
-             patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm):
+        with (
+            patch("services.langgraph_executor.get_resume_graph", return_value=mock_graph),
+            patch("services.langgraph_executor.get_settings_manager", return_value=mock_sm),
+            patch("services.langgraph_executor.get_prompt_manager", return_value=mock_pm),
+        ):
             result = await run_langgraph_pipeline(task)
 
         assert result.status == TaskStatus.COMPLETED

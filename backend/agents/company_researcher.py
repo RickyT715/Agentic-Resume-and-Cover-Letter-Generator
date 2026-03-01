@@ -60,8 +60,7 @@ async def auto_company_research_agent(state: ResumeState) -> dict:
     except TypeError:
         # Provider doesn't accept enable_search kwarg — call without it
         logger.debug(
-            f"Provider '{state['provider_name']}' does not support enable_search, "
-            "falling back to standard generation"
+            f"Provider '{state['provider_name']}' does not support enable_search, falling back to standard generation"
         )
         raw = await provider.generate(
             prompt,

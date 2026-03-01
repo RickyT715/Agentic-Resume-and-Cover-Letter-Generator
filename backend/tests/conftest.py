@@ -1,9 +1,11 @@
 """Shared fixtures for tests."""
-import sys
-import json
+
 import asyncio
+import json
+import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 
 # Ensure backend is on sys.path
@@ -26,9 +28,7 @@ def tmp_prompts_dir(tmp_path):
     (prompts_dir / "User_information_prompts.txt").write_text(
         "I am a software engineer with 5 years of experience.", encoding="utf-8"
     )
-    (prompts_dir / "Resume_format_prompts.txt").write_text(
-        "\\documentclass{article}", encoding="utf-8"
-    )
+    (prompts_dir / "Resume_format_prompts.txt").write_text("\\documentclass{article}", encoding="utf-8")
     (prompts_dir / "Application_question_prompt.txt").write_text(
         "Answer: {{USER_INFORMATION}} JD: {{JOB_DESCRIPTION}} Q: {{QUESTION}} Limit: {{WORD_LIMIT}}",
         encoding="utf-8",
@@ -40,9 +40,7 @@ def tmp_prompts_dir(tmp_path):
     (prompts_dir / "Cover_letter_prompt_zh.txt").write_text(
         "中文求职信 {{RESUME_CONTENT}} {{JOB_DESCRIPTION}}", encoding="utf-8"
     )
-    (prompts_dir / "User_information_prompts_zh.txt").write_text(
-        "我是一名有5年经验的软件工程师。", encoding="utf-8"
-    )
+    (prompts_dir / "User_information_prompts_zh.txt").write_text("我是一名有5年经验的软件工程师。", encoding="utf-8")
     (prompts_dir / "Resume_format_prompts_zh.txt").write_text(
         "\\documentclass{article}\\usepackage{xeCJK}", encoding="utf-8"
     )
@@ -57,6 +55,7 @@ def tmp_prompts_dir(tmp_path):
 def prompt_manager(tmp_prompts_dir):
     """A PromptManager instance pointing at temp files."""
     from services.prompt_manager import PromptManager
+
     return PromptManager(prompts_dir=tmp_prompts_dir)
 
 
@@ -74,10 +73,11 @@ def task_manager_isolated(tmp_path, prompt_manager):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
 
-    with patch("services.task_manager.TASKS_FILE", data_dir / "tasks.json"), \
-         patch("services.task_manager.JD_HISTORY_FILE", data_dir / "jd_history.json"), \
-         patch("services.task_manager.settings") as mock_settings:
-
+    with (
+        patch("services.task_manager.TASKS_FILE", data_dir / "tasks.json"),
+        patch("services.task_manager.JD_HISTORY_FILE", data_dir / "jd_history.json"),
+        patch("services.task_manager.settings") as mock_settings,
+    ):
         mock_settings.data_dir = data_dir
         mock_settings.output_dir = tmp_path / "output"
         mock_settings.output_dir.mkdir()
@@ -105,7 +105,6 @@ def task_manager_isolated(tmp_path, prompt_manager):
         tm.settings_manager.get.return_value = True
 
         # Override _save_tasks to write to temp path
-        original_save = tm._save_tasks
         tasks_file = data_dir / "tasks.json"
 
         def patched_save():
@@ -127,6 +126,7 @@ def task_manager_isolated(tmp_path, prompt_manager):
 def settings_manager_isolated(tmp_path):
     """SettingsManager backed by a temp file so tests never touch real settings."""
     from services.settings_manager import SettingsManager
+
     return SettingsManager(settings_file=tmp_path / "settings.json")
 
 
@@ -136,27 +136,23 @@ def mock_ai_provider():
     provider = AsyncMock()
     provider.provider_name = "mock"
     provider.model = "mock-model-1"
-    provider.generate = AsyncMock(return_value=(
-        "% META_COMPANY: TestCo\n"
-        "% META_POSITION: Engineer\n"
-        "\\documentclass[letterpaper,10pt]{article}\n"
-        "\\begin{document}\n"
-        "Hello World\n"
-        "\\end{document}"
-    ))
-    provider.generate_resume = AsyncMock(return_value=(
-        "\\documentclass[letterpaper,10pt]{article}\n"
-        "\\begin{document}\n"
-        "Resume content\n"
-        "\\end{document}"
-    ))
+    provider.generate = AsyncMock(
+        return_value=(
+            "% META_COMPANY: TestCo\n"
+            "% META_POSITION: Engineer\n"
+            "\\documentclass[letterpaper,10pt]{article}\n"
+            "\\begin{document}\n"
+            "Hello World\n"
+            "\\end{document}"
+        )
+    )
+    provider.generate_resume = AsyncMock(
+        return_value=("\\documentclass[letterpaper,10pt]{article}\n\\begin{document}\nResume content\n\\end{document}")
+    )
     provider.generate_cover_letter = AsyncMock(return_value="Dear Hiring Manager,\n\nI am writing...")
-    provider.generate_resume_with_error_feedback = AsyncMock(return_value=(
-        "\\documentclass[letterpaper,10pt]{article}\n"
-        "\\begin{document}\n"
-        "Fixed resume\n"
-        "\\end{document}"
-    ))
+    provider.generate_resume_with_error_feedback = AsyncMock(
+        return_value=("\\documentclass[letterpaper,10pt]{article}\n\\begin{document}\nFixed resume\n\\end{document}")
+    )
     return provider
 
 

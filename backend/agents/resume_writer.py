@@ -97,10 +97,7 @@ async def resume_writer_agent(state: ResumeState) -> dict:
     latex_source = process_latex_response(raw_response)
 
     latency = int((time.time() - start) * 1000)
-    logger.info(
-        f"Task {state['task_number']}: Resume generated - "
-        f"{len(latex_source)} chars, latency={latency}ms"
-    )
+    logger.info(f"Task {state['task_number']}: Resume generated - {len(latex_source)} chars, latency={latency}ms")
 
     agent_outputs = state.get("agent_outputs", {})
     agent_outputs["resume_writer"] = {
@@ -109,7 +106,7 @@ async def resume_writer_agent(state: ResumeState) -> dict:
         "attempt": state.get("retry_count", 0) + 1,
         "prompt_chars": len(full_prompt),
     }
-    if hasattr(provider, 'last_token_usage') and provider.last_token_usage:
+    if hasattr(provider, "last_token_usage") and provider.last_token_usage:
         agent_outputs["resume_writer"]["token_usage"] = provider.last_token_usage
 
     result: dict = {

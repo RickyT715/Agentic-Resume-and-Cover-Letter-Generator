@@ -2,14 +2,14 @@
 Claude (Anthropic) AI provider client.
 Uses the Anthropic SDK with run_in_executor for async compatibility.
 """
+
 import asyncio
 import logging
 from datetime import datetime
-from typing import Optional
 
+from config import settings as app_settings
 from services.ai_client_base import AIClientBase
 from services.settings_manager import get_settings_manager
-from config import settings as app_settings
 
 logger = logging.getLogger(__name__)
 
@@ -26,17 +26,11 @@ class ClaudeClient(AIClientBase):
         try:
             import anthropic
         except ImportError:
-            raise ImportError(
-                "anthropic package is not installed. Run: pip install anthropic"
-            )
+            raise ImportError("anthropic package is not installed. Run: pip install anthropic")
 
-        api_key = self.settings_manager.get("claude_api_key") or getattr(
-            app_settings, "claude_api_key", ""
-        )
+        api_key = self.settings_manager.get("claude_api_key") or getattr(app_settings, "claude_api_key", "")
         if not api_key:
-            raise ValueError(
-                "Claude API key not set. Configure it in Settings or .env file."
-            )
+            raise ValueError("Claude API key not set. Configure it in Settings or .env file.")
 
         if self._client is None or self._current_api_key != api_key:
             self._client = anthropic.Anthropic(api_key=api_key)
@@ -51,12 +45,10 @@ class ClaudeClient(AIClientBase):
 
     @property
     def model(self) -> str:
-        return (
-            self.settings_manager.get("claude_model") or "claude-sonnet-4-5-20250929"
-        )
+        return self.settings_manager.get("claude_model") or "claude-sonnet-4-5-20250929"
 
     @property
-    def _temperature(self) -> Optional[float]:
+    def _temperature(self) -> float | None:
         return self.settings_manager.get("claude_temperature")
 
     @property
@@ -79,9 +71,7 @@ class ClaudeClient(AIClientBase):
         response_type: str = "general",
         **kwargs,
     ) -> str:
-        logger.info(
-            f"Sending request to Claude API (model={self.model}, extended_thinking={self._extended_thinking})"
-        )
+        logger.info(f"Sending request to Claude API (model={self.model}, extended_thinking={self._extended_thinking})")
         logger.debug(f"Prompt length: {len(prompt)} characters")
 
         try:
@@ -110,9 +100,7 @@ class ClaudeClient(AIClientBase):
             loop = asyncio.get_running_loop()
             start_time = datetime.now()
 
-            response = await loop.run_in_executor(
-                None, lambda: client.messages.create(**request_kwargs)
-            )
+            response = await loop.run_in_executor(None, lambda: client.messages.create(**request_kwargs))
 
             elapsed = (datetime.now() - start_time).total_seconds()
             logger.info(f"Claude API response received in {elapsed:.2f} seconds")

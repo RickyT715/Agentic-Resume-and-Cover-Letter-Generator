@@ -1,11 +1,12 @@
-from enum import Enum
-from datetime import datetime
-from typing import Any, Optional, List
-from pydantic import BaseModel, Field
 import uuid
+from datetime import datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     PENDING = "pending"
     QUEUED = "queued"
     RUNNING = "running"
@@ -15,7 +16,7 @@ class TaskStatus(str, Enum):
     SKIPPED = "skipped"
 
 
-class QuestionStatus(str, Enum):
+class QuestionStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -26,14 +27,14 @@ class ApplicationQuestion(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
     question: str
     word_limit: int = 150
-    answer: Optional[str] = None
+    answer: str | None = None
     status: QuestionStatus = QuestionStatus.PENDING
-    error_message: Optional[str] = None
+    error_message: str | None = None
     created_at: datetime = Field(default_factory=datetime.now)
-    answered_at: Optional[datetime] = None
+    answered_at: datetime | None = None
 
 
-class TaskStep(str, Enum):
+class TaskStep(StrEnum):
     GENERATE_RESUME = "generate_resume"
     COMPILE_LATEX = "compile_latex"
     EXTRACT_TEXT = "extract_text"
@@ -46,8 +47,8 @@ class StepProgress(BaseModel):
     status: TaskStatus = TaskStatus.PENDING
     message: str = ""
     attempt: int = 0
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
 
 class Task(BaseModel):
@@ -58,22 +59,22 @@ class Task(BaseModel):
     generate_cover_letter: bool = True
     template_id: str = "classic"
     language: str = "en"
-    provider: Optional[str] = None
+    provider: str | None = None
     pipeline_version: str = "v2"
-    steps: List[StepProgress] = Field(default_factory=list)
-    resume_pdf_path: Optional[str] = None
-    cover_letter_pdf_path: Optional[str] = None
-    cover_letter_text: Optional[str] = None
-    latex_source: Optional[str] = None
-    error_message: Optional[str] = None
+    steps: list[StepProgress] = Field(default_factory=list)
+    resume_pdf_path: str | None = None
+    cover_letter_pdf_path: str | None = None
+    cover_letter_text: str | None = None
+    latex_source: str | None = None
+    error_message: str | None = None
     cancelled: bool = False
-    questions: List[ApplicationQuestion] = Field(default_factory=list)
+    questions: list[ApplicationQuestion] = Field(default_factory=list)
     company_name: str = ""
     position_name: str = ""
-    failed_latex_attempts: List[str] = Field(default_factory=list)
+    failed_latex_attempts: list[str] = Field(default_factory=list)
     agent_outputs: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
     def model_post_init(self, __context):
         if not self.steps:
@@ -85,11 +86,13 @@ class Task(BaseModel):
             StepProgress(step=TaskStep.COMPILE_LATEX),
         ]
         if self.generate_cover_letter:
-            self.steps.extend([
-                StepProgress(step=TaskStep.EXTRACT_TEXT),
-                StepProgress(step=TaskStep.GENERATE_COVER_LETTER),
-                StepProgress(step=TaskStep.CREATE_COVER_PDF),
-            ])
+            self.steps.extend(
+                [
+                    StepProgress(step=TaskStep.EXTRACT_TEXT),
+                    StepProgress(step=TaskStep.GENERATE_COVER_LETTER),
+                    StepProgress(step=TaskStep.CREATE_COVER_PDF),
+                ]
+            )
 
 
 class TaskCreate(BaseModel):
@@ -97,15 +100,15 @@ class TaskCreate(BaseModel):
     generate_cover_letter: bool = True
     template_id: str = "classic"
     language: str = "en"
-    provider: Optional[str] = None
+    provider: str | None = None
 
 
 class TaskUpdate(BaseModel):
-    job_description: Optional[str] = None
-    generate_cover_letter: Optional[bool] = None
-    template_id: Optional[str] = None
-    language: Optional[str] = None
-    provider: Optional[str] = None
+    job_description: str | None = None
+    generate_cover_letter: bool | None = None
+    template_id: str | None = None
+    language: str | None = None
+    provider: str | None = None
 
 
 class TaskProgressUpdate(BaseModel):

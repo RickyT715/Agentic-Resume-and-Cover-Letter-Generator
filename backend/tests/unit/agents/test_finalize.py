@@ -1,26 +1,31 @@
 """Tests for finalize node functions."""
-import pytest
-from pathlib import Path
-from unittest.mock import patch, AsyncMock, MagicMock
 
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # ===================== _sanitize_filename =====================
+
 
 class TestSanitizeFilename:
     def test_basic_sanitization(self):
         from agents.finalize import _sanitize_filename
+
         assert _sanitize_filename("Google") == "Google"
 
     def test_replaces_spaces_with_underscore(self):
         from agents.finalize import _sanitize_filename
+
         assert _sanitize_filename("Software Engineer") == "Software_Engineer"
 
     def test_replaces_hyphens_with_underscore(self):
         from agents.finalize import _sanitize_filename
+
         assert _sanitize_filename("Google-Engineer") == "Google_Engineer"
 
     def test_removes_special_chars(self):
         from agents.finalize import _sanitize_filename
+
         result = _sanitize_filename('File<>:"/\\|?*Name')
         assert "<" not in result
         assert ">" not in result
@@ -28,30 +33,36 @@ class TestSanitizeFilename:
 
     def test_collapses_multiple_underscores(self):
         from agents.finalize import _sanitize_filename
+
         result = _sanitize_filename("Too   Many   Spaces")
         assert "__" not in result
 
     def test_strips_leading_trailing_underscores(self):
         from agents.finalize import _sanitize_filename
+
         result = _sanitize_filename("_test_")
         assert not result.startswith("_")
         assert not result.endswith("_")
 
     def test_truncates_long_names(self):
         from agents.finalize import _sanitize_filename
+
         result = _sanitize_filename("A" * 100)
         assert len(result) <= 50
 
     def test_empty_returns_unknown(self):
         from agents.finalize import _sanitize_filename
+
         assert _sanitize_filename("") == "Unknown"
 
     def test_special_chars_only_returns_unknown(self):
         from agents.finalize import _sanitize_filename
+
         assert _sanitize_filename("<>:?*") == "Unknown"
 
 
 # ===================== compile_latex_node =====================
+
 
 class TestCompileLatexNode:
     @pytest.mark.asyncio
@@ -59,16 +70,12 @@ class TestCompileLatexNode:
         from agents.finalize import compile_latex_node
         from services.latex_compiler import CompilationAttempt
 
-        sample_resume_state["latex_source"] = (
-            "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}"
-        )
+        sample_resume_state["latex_source"] = "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}"
 
         pdf_path = tmp_path / "test.pdf"
         pdf_path.write_bytes(b"%PDF-1.4")
 
-        mock_result = CompilationAttempt(
-            attempt_number=1, latex_code="...", success=True, pdf_path=pdf_path
-        )
+        mock_result = CompilationAttempt(attempt_number=1, latex_code="...", success=True, pdf_path=pdf_path)
         mock_compiler = MagicMock()
         mock_compiler.compile_once = MagicMock(return_value=mock_result)
 
@@ -82,11 +89,13 @@ class TestCompileLatexNode:
             "max_page_retry_attempts": 3,
         }.get(key, default)
 
-        with patch("config.settings", mock_settings), \
-             patch("services.latex_compiler.LaTeXCompiler", return_value=mock_compiler), \
-             patch("services.settings_manager.get_settings_manager", return_value=mock_sm), \
-             patch("services.latex_utils.process_latex_response", side_effect=lambda x: x), \
-             patch("services.pdf_page_counter.validate_single_page", return_value=(True, 1)):
+        with (
+            patch("config.settings", mock_settings),
+            patch("services.latex_compiler.LaTeXCompiler", return_value=mock_compiler),
+            patch("services.settings_manager.get_settings_manager", return_value=mock_sm),
+            patch("services.latex_utils.process_latex_response", side_effect=lambda x: x),
+            patch("services.pdf_page_counter.validate_single_page", return_value=(True, 1)),
+        ):
             result = await compile_latex_node(sample_resume_state)
 
         assert result["resume_pdf_path"] is not None
@@ -97,13 +106,9 @@ class TestCompileLatexNode:
         from agents.finalize import compile_latex_node
         from services.latex_compiler import CompilationAttempt
 
-        sample_resume_state["latex_source"] = (
-            "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}"
-        )
+        sample_resume_state["latex_source"] = "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}"
 
-        mock_result = CompilationAttempt(
-            attempt_number=1, latex_code="...", success=False, error_log="Error"
-        )
+        mock_result = CompilationAttempt(attempt_number=1, latex_code="...", success=False, error_log="Error")
         mock_compiler = MagicMock()
         mock_compiler.compile_once = MagicMock(return_value=mock_result)
 
@@ -117,11 +122,13 @@ class TestCompileLatexNode:
             "max_page_retry_attempts": 1,
         }.get(key, default)
 
-        with patch("config.settings", mock_settings), \
-             patch("services.latex_compiler.LaTeXCompiler", return_value=mock_compiler), \
-             patch("services.settings_manager.get_settings_manager", return_value=mock_sm), \
-             patch("services.latex_utils.process_latex_response", side_effect=lambda x: x), \
-             patch("services.pdf_page_counter.validate_single_page", return_value=(True, 1)):
+        with (
+            patch("config.settings", mock_settings),
+            patch("services.latex_compiler.LaTeXCompiler", return_value=mock_compiler),
+            patch("services.settings_manager.get_settings_manager", return_value=mock_sm),
+            patch("services.latex_utils.process_latex_response", side_effect=lambda x: x),
+            patch("services.pdf_page_counter.validate_single_page", return_value=(True, 1)),
+        ):
             result = await compile_latex_node(sample_resume_state)
 
         assert "error" in result
@@ -129,6 +136,7 @@ class TestCompileLatexNode:
 
 
 # ===================== extract_text_node =====================
+
 
 class TestExtractTextNode:
     @pytest.mark.asyncio
@@ -149,6 +157,7 @@ class TestExtractTextNode:
 
 # ===================== create_cover_letter_pdf_node =====================
 
+
 class TestCreateCoverLetterPdfNode:
     @pytest.mark.asyncio
     async def test_creates_cover_pdf(self, sample_resume_state, tmp_path):
@@ -166,10 +175,12 @@ class TestCreateCoverLetterPdfNode:
         mock_sm = MagicMock()
         mock_sm.get.return_value = False  # don't enforce one page
 
-        with patch("config.settings", mock_settings), \
-             patch("services.text_to_pdf.TextToPDFConverter", return_value=mock_converter), \
-             patch("services.settings_manager.get_settings_manager", return_value=mock_sm), \
-             patch("services.pdf_page_counter.validate_single_page", return_value=(True, 1)):
+        with (
+            patch("config.settings", mock_settings),
+            patch("services.text_to_pdf.TextToPDFConverter", return_value=mock_converter),
+            patch("services.settings_manager.get_settings_manager", return_value=mock_sm),
+            patch("services.pdf_page_counter.validate_single_page", return_value=(True, 1)),
+        ):
             result = await create_cover_letter_pdf_node(sample_resume_state)
 
         assert "cover_letter_pdf_path" in result
@@ -178,6 +189,7 @@ class TestCreateCoverLetterPdfNode:
 
 
 # ===================== finalize_node =====================
+
 
 class TestFinalizeNode:
     @pytest.mark.asyncio

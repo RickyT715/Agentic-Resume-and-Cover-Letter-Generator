@@ -83,7 +83,7 @@ async def jd_analyzer_agent(state: ResumeState) -> dict:
         "prompt_chars": len(prompt),
     }
     # Capture token usage if available
-    if hasattr(provider, 'last_token_usage') and provider.last_token_usage:
+    if hasattr(provider, "last_token_usage") and provider.last_token_usage:
         agent_outputs["jd_analyzer"]["token_usage"] = provider.last_token_usage
 
     return {

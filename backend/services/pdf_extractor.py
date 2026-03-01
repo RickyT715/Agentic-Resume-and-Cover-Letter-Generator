@@ -1,6 +1,7 @@
-import fitz  # PyMuPDF
-from pathlib import Path
 import logging
+from pathlib import Path
+
+import fitz  # PyMuPDF
 
 logger = logging.getLogger(__name__)
 

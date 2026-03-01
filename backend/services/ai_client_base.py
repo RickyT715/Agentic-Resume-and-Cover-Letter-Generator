@@ -2,11 +2,11 @@
 Abstract base class for AI provider clients.
 All providers (Gemini, Claude, OpenAI-compatible) extend this class.
 """
+
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
-import logging
 
 from config import settings
 
@@ -54,23 +54,15 @@ class AIClientBase(ABC):
 
     # ---- Default high-level methods that delegate to generate() ----
 
-    async def generate_resume(
-        self, prompt: str, task_id: str = None, task_number: int = None
-    ) -> str:
+    async def generate_resume(self, prompt: str, task_id: str = None, task_number: int = None) -> str:
         """Generate resume content."""
         logger.info(f"[{self.provider_name}] Generating resume for task {task_number}")
-        return await self.generate(
-            prompt, task_id=task_id, task_number=task_number, response_type="resume"
-        )
+        return await self.generate(prompt, task_id=task_id, task_number=task_number, response_type="resume")
 
-    async def generate_cover_letter(
-        self, prompt: str, task_id: str = None, task_number: int = None
-    ) -> str:
+    async def generate_cover_letter(self, prompt: str, task_id: str = None, task_number: int = None) -> str:
         """Generate cover letter content."""
         logger.info(f"[{self.provider_name}] Generating cover letter for task {task_number}")
-        return await self.generate(
-            prompt, task_id=task_id, task_number=task_number, response_type="cover_letter"
-        )
+        return await self.generate(prompt, task_id=task_id, task_number=task_number, response_type="cover_letter")
 
     async def generate_question_answer(
         self,
@@ -80,9 +72,7 @@ class AIClientBase(ABC):
         question_id: str = None,
     ) -> str:
         """Generate an answer to an application question."""
-        logger.info(
-            f"[{self.provider_name}] Generating question answer for task {task_number}, question {question_id}"
-        )
+        logger.info(f"[{self.provider_name}] Generating question answer for task {task_number}, question {question_id}")
         return await self.generate(
             prompt,
             task_id=task_id,
@@ -139,8 +129,8 @@ Please generate corrected LaTeX code that will compile successfully. Focus on:
         response_type: str,
         prompt: str,
         response: str,
-        extra_metadata: Optional[str] = None,
-    ) -> Optional[Path]:
+        extra_metadata: str | None = None,
+    ) -> Path | None:
         """
         Save AI response to a timestamped text file.
 
@@ -161,9 +151,9 @@ Please generate corrected LaTeX code that will compile successfully. Focus on:
 
         extra_section = f"\n{extra_metadata}" if extra_metadata else ""
 
-        content = f"""{'='*80}
+        content = f"""{"=" * 80}
 {self.provider_name.upper()} API RESPONSE LOG
-{'='*80}
+{"=" * 80}
 
 Task ID: {task_id}
 Task Number: {task_number}
@@ -172,21 +162,21 @@ Provider: {self.provider_name}
 Model: {self.model}
 Timestamp: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
-{'='*80}
+{"=" * 80}
 PROMPT
-{'='*80}
+{"=" * 80}
 
 {prompt}
 
-{'='*80}
+{"=" * 80}
 RESPONSE
-{'='*80}
+{"=" * 80}
 
 {response}
 {extra_section}
-{'='*80}
+{"=" * 80}
 END OF LOG
-{'='*80}
+{"=" * 80}
 """
         try:
             filepath.write_text(content, encoding="utf-8")

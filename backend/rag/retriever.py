@@ -4,7 +4,6 @@ Implements: retrieve -> grade relevance -> optionally rewrite query -> retrieve 
 """
 
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +38,55 @@ def _rewrite_query(original_query: str, context: str = "") -> str:
     """
     # Extract important words (naive approach - good enough without LLM)
     stop_words = {
-        "the", "a", "an", "is", "are", "was", "were", "be", "been",
-        "being", "have", "has", "had", "do", "does", "did", "will",
-        "would", "could", "should", "may", "might", "can", "shall",
-        "for", "and", "nor", "but", "or", "yet", "so", "at", "by",
-        "from", "in", "into", "of", "on", "to", "with", "about",
-        "that", "this", "these", "those", "it", "its", "what", "which",
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "can",
+        "shall",
+        "for",
+        "and",
+        "nor",
+        "but",
+        "or",
+        "yet",
+        "so",
+        "at",
+        "by",
+        "from",
+        "in",
+        "into",
+        "of",
+        "on",
+        "to",
+        "with",
+        "about",
+        "that",
+        "this",
+        "these",
+        "those",
+        "it",
+        "its",
+        "what",
+        "which",
     }
 
     words = original_query.lower().split()
@@ -57,10 +99,10 @@ def _rewrite_query(original_query: str, context: str = "") -> str:
 
 async def retrieve_company_context(
     job_description: str,
-    company_name: Optional[str] = None,
+    company_name: str | None = None,
     max_results: int = 5,
     max_retries: int = 1,
-) -> Optional[str]:
+) -> str | None:
     """Retrieve relevant company context using corrective RAG.
 
     Args:
@@ -169,7 +211,9 @@ async def scrape_and_index_company(company_url: str, company_name: str) -> dict:
     texts = [c["text"] for c in all_chunks]
     metadatas = [c["metadata"] for c in all_chunks]
     ids = [
-        hashlib.sha256(f"{company_name}:{c['metadata']['source_url']}:{c['metadata']['chunk_index']}".encode()).hexdigest()[:16]
+        hashlib.sha256(
+            f"{company_name}:{c['metadata']['source_url']}:{c['metadata']['chunk_index']}".encode()
+        ).hexdigest()[:16]
         for c in all_chunks
     ]
 

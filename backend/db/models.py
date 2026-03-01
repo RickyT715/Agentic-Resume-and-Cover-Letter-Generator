@@ -7,13 +7,11 @@ from typing import Optional
 from sqlalchemy import (
     Boolean,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Integer,
     String,
     Text,
-    func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -51,24 +49,22 @@ class GenerationTask(TimestampMixin, Base):
     generate_cover_letter: Mapped[bool] = mapped_column(Boolean, default=True)
     template_id: Mapped[str] = mapped_column(String(50), default="classic")
     language: Mapped[str] = mapped_column(String(10), default="en")
-    provider: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Results
-    company_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    position_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    latex_source: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    resume_pdf_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    cover_letter_pdf_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    company_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    position_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    latex_source: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resume_pdf_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    cover_letter_pdf_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Timing
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Foreign keys
-    profile_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True
-    )
+    profile_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True)
 
     # Relationships
     profile: Mapped[Optional["Profile"]] = relationship(back_populates="generation_tasks")
@@ -87,16 +83,16 @@ class ResumeVersion(TimestampMixin, Base):
 
     # Content
     latex_source: Mapped[str] = mapped_column(Text, nullable=False)
-    pdf_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    pdf_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Evaluation scores (Phase 2)
-    evaluation_scores: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    ats_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    llm_judge_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    combined_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    evaluation_scores: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    ats_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    llm_judge_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    combined_score: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # Self-critique feedback
-    feedback: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     task: Mapped["GenerationTask"] = relationship(back_populates="resume_versions")
@@ -112,24 +108,24 @@ class LLMGenerationMetadata(TimestampMixin, Base):
 
     # Agent/Node identification
     agent_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    node_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    node_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Provider details
     provider: Mapped[str] = mapped_column(String(50), nullable=False)
     model: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # Token usage
-    input_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    output_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    total_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    total_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Cost & timing
-    cost_usd: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    latency_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    cost_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # I/O
-    prompt_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    response_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    prompt_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    response_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     task: Mapped["GenerationTask"] = relationship(back_populates="llm_metadata")

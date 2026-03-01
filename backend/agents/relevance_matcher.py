@@ -94,7 +94,7 @@ async def relevance_matcher_agent(state: ResumeState) -> dict:
         "match_score": match.match_score,
         "prompt_chars": len(prompt),
     }
-    if hasattr(provider, 'last_token_usage') and provider.last_token_usage:
+    if hasattr(provider, "last_token_usage") and provider.last_token_usage:
         agent_outputs["relevance_matcher"]["token_usage"] = provider.last_token_usage
 
     return {

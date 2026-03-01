@@ -4,8 +4,6 @@ These tests exercise the full API flow: create task -> start -> wait -> download
 They require a running backend or use VCR cassettes for LLM calls.
 """
 
-import asyncio
-
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -68,11 +66,14 @@ class TestTaskLifecycle:
         task = resp.json()
         task_id = task["id"]
 
-        resp = await client.put(f"/api/tasks/{task_id}/settings", json={
-            "generate_cover_letter": False,
-            "template_id": "modern",
-            "language": "zh",
-        })
+        resp = await client.put(
+            f"/api/tasks/{task_id}/settings",
+            json={
+                "generate_cover_letter": False,
+                "template_id": "modern",
+                "language": "zh",
+            },
+        )
         assert resp.status_code == 200
         updated = resp.json()
         assert updated["generate_cover_letter"] is False

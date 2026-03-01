@@ -2,8 +2,8 @@
 Provider registry: factory and cache for AI provider clients.
 Resolves provider by name, caches instances, and handles per-task overrides.
 """
+
 import logging
-from typing import Dict, Optional, List
 
 from services.ai_client_base import AIClientBase
 from services.settings_manager import get_settings_manager
@@ -11,9 +11,9 @@ from services.settings_manager import get_settings_manager
 logger = logging.getLogger(__name__)
 
 # Cached provider instances
-_providers: Dict[str, AIClientBase] = {}
+_providers: dict[str, AIClientBase] = {}
 
-AVAILABLE_PROVIDERS: List[dict] = [
+AVAILABLE_PROVIDERS: list[dict] = [
     {
         "id": "gemini",
         "name": "Google Gemini",
@@ -70,9 +70,7 @@ def get_provider(name: str) -> AIClientBase:
 
         client = ClaudeProxyClient()
     else:
-        raise ValueError(
-            f"Unknown provider '{name}'. Available: {[p['id'] for p in AVAILABLE_PROVIDERS]}"
-        )
+        raise ValueError(f"Unknown provider '{name}'. Available: {[p['id'] for p in AVAILABLE_PROVIDERS]}")
 
     _providers[name] = client
     logger.info(f"Created and cached provider: {name}")
@@ -86,7 +84,7 @@ def get_default_provider() -> AIClientBase:
     return get_provider(default_name)
 
 
-def get_provider_for_task(task_provider: Optional[str]) -> AIClientBase:
+def get_provider_for_task(task_provider: str | None) -> AIClientBase:
     """
     Resolve the provider for a specific task.
 

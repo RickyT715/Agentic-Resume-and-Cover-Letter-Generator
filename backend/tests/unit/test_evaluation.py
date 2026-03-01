@@ -3,13 +3,10 @@
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from evaluation.ats_scorer import ATSScoreBreakdown, score_resume
 from evaluation.feedback_generator import compute_combined_score, generate_feedback
-
 
 GOOD_RESUME_LATEX = r"""
 \documentclass[letterpaper,10pt]{article}

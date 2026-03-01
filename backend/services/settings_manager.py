@@ -3,10 +3,12 @@ Settings Manager Service
 Handles loading, saving, and managing application settings.
 Settings are persisted to a JSON file and can be modified via the UI.
 """
+
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Any
+
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -14,24 +16,25 @@ logger = logging.getLogger(__name__)
 
 class AppSettings(BaseModel):
     """Application settings model."""
+
     # Provider Selection
     default_provider: str = "gemini"
 
     # Gemini API Settings
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3-pro-preview"
-    gemini_temperature: Optional[float] = None
-    gemini_top_k: Optional[int] = None
-    gemini_top_p: Optional[float] = None
-    gemini_max_output_tokens: Optional[int] = None
+    gemini_temperature: float | None = None
+    gemini_top_k: int | None = None
+    gemini_top_p: float | None = None
+    gemini_max_output_tokens: int | None = None
     gemini_thinking_level: str = "high"
     gemini_enable_search: bool = False
 
     # Claude (Anthropic) Settings
     claude_api_key: str = ""
     claude_model: str = "claude-sonnet-4-5-20250929"
-    claude_temperature: Optional[float] = None
-    claude_max_output_tokens: Optional[int] = None
+    claude_temperature: float | None = None
+    claude_max_output_tokens: int | None = None
     claude_extended_thinking: bool = False
     claude_thinking_budget: int = 10000
 
@@ -39,15 +42,15 @@ class AppSettings(BaseModel):
     openai_compat_base_url: str = "http://localhost:3000/v1"
     openai_compat_api_key: str = ""
     openai_compat_model: str = "gpt-4o"
-    openai_compat_temperature: Optional[float] = None
-    openai_compat_max_output_tokens: Optional[int] = None
+    openai_compat_temperature: float | None = None
+    openai_compat_max_output_tokens: int | None = None
 
     # Claude Code Proxy Settings
     claude_proxy_base_url: str = "http://localhost:42069"
     claude_proxy_api_key: str = ""
     claude_proxy_model: str = "claude-sonnet-4-5-20250929"
-    claude_proxy_temperature: Optional[float] = None
-    claude_proxy_max_output_tokens: Optional[int] = None
+    claude_proxy_temperature: float | None = None
+    claude_proxy_max_output_tokens: int | None = None
 
     # Page Length Validation
     enforce_resume_one_page: bool = True
@@ -62,7 +65,7 @@ class AppSettings(BaseModel):
     # Per-Agent Provider Overrides
     # Maps agent name -> provider id. Empty string means "use task default".
     # Agents: jd_analyzer, relevance_matcher, resume_writer, cover_letter_writer, company_researcher
-    agent_providers: Dict[str, str] = {}
+    agent_providers: dict[str, str] = {}
 
 
 class SettingsManager:
@@ -73,14 +76,14 @@ class SettingsManager:
             settings_file = Path(__file__).parent.parent / "settings.json"
 
         self.settings_file = settings_file
-        self._settings: Optional[AppSettings] = None
+        self._settings: AppSettings | None = None
         self._load_settings()
 
     def _load_settings(self) -> None:
         """Load settings from file or create defaults."""
         if self.settings_file.exists():
             try:
-                with open(self.settings_file, 'r') as f:
+                with open(self.settings_file) as f:
                     data = json.load(f)
                 self._settings = AppSettings(**data)
                 logger.info(f"Loaded settings from {self.settings_file}")
@@ -95,7 +98,7 @@ class SettingsManager:
     def _save_settings(self) -> None:
         """Save current settings to file."""
         try:
-            with open(self.settings_file, 'w') as f:
+            with open(self.settings_file, "w") as f:
                 json.dump(self._settings.model_dump(), f, indent=2)
             logger.info(f"Saved settings to {self.settings_file}")
         except Exception as e:
@@ -107,7 +110,7 @@ class SettingsManager:
         """Get current settings."""
         return self._settings
 
-    def get_all(self, mask_api_key: bool = True) -> Dict[str, Any]:
+    def get_all(self, mask_api_key: bool = True) -> dict[str, Any]:
         """Get all settings as a dictionary, optionally masking API keys."""
         data = self._settings.model_dump()
         if mask_api_key:
@@ -122,7 +125,7 @@ class SettingsManager:
 
     _api_key_fields = {"gemini_api_key", "claude_api_key", "openai_compat_api_key", "claude_proxy_api_key"}
 
-    def update(self, updates: Dict[str, Any]) -> AppSettings:
+    def update(self, updates: dict[str, Any]) -> AppSettings:
         """Update settings with new values."""
         current = self._settings.model_dump()
 
@@ -156,7 +159,7 @@ class SettingsManager:
 
 
 # Global settings manager instance
-_settings_manager: Optional[SettingsManager] = None
+_settings_manager: SettingsManager | None = None
 
 
 def get_settings_manager() -> SettingsManager:

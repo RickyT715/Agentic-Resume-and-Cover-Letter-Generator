@@ -1,10 +1,11 @@
 """Tests for PDF inline preview vs attachment download."""
+
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -38,8 +39,9 @@ def app_with_pdf(mock_task_with_pdf):
     mock_tm, task, pdf_path = mock_task_with_pdf
 
     with patch("api.routes.task_manager", mock_tm):
-        from api.routes import router
         from fastapi import FastAPI
+
+        from api.routes import router
 
         app = FastAPI()
         app.include_router(router)

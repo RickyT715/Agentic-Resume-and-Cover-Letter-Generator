@@ -28,7 +28,9 @@ def get_engine():
             pool_size=5,
             max_overflow=10,
         )
-        logger.info(f"Database engine created: {settings.database_url.split('@')[-1] if '@' in settings.database_url else 'local'}")
+        logger.info(
+            f"Database engine created: {settings.database_url.split('@')[-1] if '@' in settings.database_url else 'local'}"
+        )
     return _engine
 
 

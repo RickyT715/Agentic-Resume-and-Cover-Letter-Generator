@@ -12,7 +12,6 @@ This test verifies the full application works end-to-end:
 """
 
 import asyncio
-import shutil
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -20,8 +19,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from main import app
-from services.task_manager import task_manager, TaskManager
-
+from services.task_manager import task_manager
 
 # ---------------------------------------------------------------------------
 # Mock data: realistic LaTeX resume and plain-text cover letter
@@ -119,6 +117,7 @@ Responsibilities:
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def mock_ai_client():
     """Create a mock AI client that returns realistic responses."""
@@ -128,7 +127,9 @@ def mock_ai_client():
     client.generate_resume = AsyncMock(return_value=MOCK_LATEX_RESPONSE)
     client.generate_cover_letter = AsyncMock(return_value=MOCK_COVER_LETTER)
     client.generate_resume_with_error_feedback = AsyncMock(return_value=MOCK_LATEX_RESPONSE)
-    client.generate_question_answer = AsyncMock(return_value="Based on my experience at Acme Corp, I have strong Python skills.")
+    client.generate_question_answer = AsyncMock(
+        return_value="Based on my experience at Acme Corp, I have strong Python skills."
+    )
     return client
 
 
@@ -166,6 +167,7 @@ def cleanup_tasks():
 # Test: API Health & Basics
 # ---------------------------------------------------------------------------
 
+
 class TestAPIBasics:
     """Verify all core API endpoints respond correctly."""
 
@@ -185,7 +187,7 @@ class TestAPIBasics:
         data = resp.json()
         assert isinstance(data, dict)
         # API keys should be masked (format: first4...last4)
-        if "gemini_api_key" in data and data["gemini_api_key"]:
+        if data.get("gemini_api_key"):
             key = data["gemini_api_key"]
             assert "..." in key or key == "****" or key == "", f"API key not masked: {key[:8]}..."
 
@@ -223,17 +225,21 @@ class TestAPIBasics:
 # Test: Task CRUD
 # ---------------------------------------------------------------------------
 
+
 class TestTaskCRUD:
     """Test task creation, reading, updating, and deletion."""
 
     @pytest.mark.asyncio
     async def test_create_task(self, client):
-        resp = await client.post("/api/tasks", json={
-            "job_description": SAMPLE_JD,
-            "generate_cover_letter": True,
-            "template_id": "classic",
-            "language": "en",
-        })
+        resp = await client.post(
+            "/api/tasks",
+            json={
+                "job_description": SAMPLE_JD,
+                "generate_cover_letter": True,
+                "template_id": "classic",
+                "language": "en",
+            },
+        )
         assert resp.status_code == 200
         task = resp.json()
         assert task["status"] == "pending"
@@ -269,12 +275,15 @@ class TestTaskCRUD:
         resp = await client.post("/api/tasks", json={"job_description": "Test JD"})
         task_id = resp.json()["id"]
 
-        resp = await client.put(f"/api/tasks/{task_id}/settings", json={
-            "generate_cover_letter": False,
-            "template_id": "modern",
-            "language": "zh",
-            "provider": "gemini",
-        })
+        resp = await client.put(
+            f"/api/tasks/{task_id}/settings",
+            json={
+                "generate_cover_letter": False,
+                "template_id": "modern",
+                "language": "zh",
+                "provider": "gemini",
+            },
+        )
         assert resp.status_code == 200
         updated = resp.json()
         assert updated["generate_cover_letter"] is False
@@ -307,6 +316,7 @@ class TestTaskCRUD:
 # Test: Application Questions CRUD
 # ---------------------------------------------------------------------------
 
+
 class TestQuestionsCRUD:
     """Test application question endpoints."""
 
@@ -316,21 +326,27 @@ class TestQuestionsCRUD:
         task_id = resp.json()["id"]
 
         # Add questions
-        resp = await client.post(f"/api/tasks/{task_id}/questions", json={
-            "question": "Why do you want to work at Acme Corp?",
-            "word_limit": 200,
-        })
+        resp = await client.post(
+            f"/api/tasks/{task_id}/questions",
+            json={
+                "question": "Why do you want to work at Acme Corp?",
+                "word_limit": 200,
+            },
+        )
         assert resp.status_code == 200
         q1 = resp.json()
         assert q1["question"] == "Why do you want to work at Acme Corp?"
         assert q1["word_limit"] == 200
 
-        resp = await client.post(f"/api/tasks/{task_id}/questions", json={
-            "question": "Describe your Python experience.",
-            "word_limit": 150,
-        })
+        resp = await client.post(
+            f"/api/tasks/{task_id}/questions",
+            json={
+                "question": "Describe your Python experience.",
+                "word_limit": 150,
+            },
+        )
         assert resp.status_code == 200
-        q2 = resp.json()
+        resp.json()
 
         # List
         resp = await client.get(f"/api/tasks/{task_id}/questions")
@@ -343,10 +359,13 @@ class TestQuestionsCRUD:
         resp = await client.post("/api/tasks", json={"job_description": SAMPLE_JD})
         task_id = resp.json()["id"]
 
-        resp = await client.post(f"/api/tasks/{task_id}/questions", json={
-            "question": "To be deleted",
-            "word_limit": 100,
-        })
+        resp = await client.post(
+            f"/api/tasks/{task_id}/questions",
+            json={
+                "question": "To be deleted",
+                "word_limit": 100,
+            },
+        )
         q_id = resp.json()["id"]
 
         resp = await client.delete(f"/api/tasks/{task_id}/questions/{q_id}")
@@ -359,6 +378,7 @@ class TestQuestionsCRUD:
 # ---------------------------------------------------------------------------
 # Test: Full V2 Pipeline (Mocked AI, Real LaTeX + PDF)
 # ---------------------------------------------------------------------------
+
 
 class TestFullV2Pipeline:
     """
@@ -444,24 +464,32 @@ class TestFullV2Pipeline:
 
             # All steps should be completed
             for step in task.steps:
-                assert step.status.value == "completed", f"Step {step.step.value} is {step.status.value}: {step.message}"
+                assert step.status.value == "completed", (
+                    f"Step {step.step.value} is {step.status.value}: {step.message}"
+                )
 
     @pytest.mark.asyncio
     async def test_pipeline_with_questions(self, client, mock_ai_client):
         """Test adding questions and generating answers."""
         with patch("services.task_manager.get_provider_for_task", return_value=mock_ai_client):
             # Create task
-            resp = await client.post("/api/tasks", json={
-                "job_description": SAMPLE_JD,
-                "generate_cover_letter": False,
-            })
+            resp = await client.post(
+                "/api/tasks",
+                json={
+                    "job_description": SAMPLE_JD,
+                    "generate_cover_letter": False,
+                },
+            )
             task_id = resp.json()["id"]
 
             # Add a question
-            resp = await client.post(f"/api/tasks/{task_id}/questions", json={
-                "question": "Why do you want to work at Acme Corp?",
-                "word_limit": 150,
-            })
+            resp = await client.post(
+                f"/api/tasks/{task_id}/questions",
+                json={
+                    "question": "Why do you want to work at Acme Corp?",
+                    "word_limit": 150,
+                },
+            )
             q_id = resp.json()["id"]
 
             # Generate answer
@@ -524,6 +552,7 @@ class TestFullV2Pipeline:
 # Test: Full API Flow (Create → Start → Poll → Download)
 # ---------------------------------------------------------------------------
 
+
 class TestAPIFlow:
     """Test the full API flow: create task, start via endpoint, check result."""
 
@@ -532,11 +561,14 @@ class TestAPIFlow:
         """Create a task via API, start it, poll until done, download results."""
         with patch("services.task_manager.get_provider_for_task", return_value=mock_ai_client):
             # Step 1: Create task
-            resp = await client.post("/api/tasks", json={
-                "job_description": SAMPLE_JD,
-                "generate_cover_letter": True,
-                "template_id": "classic",
-            })
+            resp = await client.post(
+                "/api/tasks",
+                json={
+                    "job_description": SAMPLE_JD,
+                    "generate_cover_letter": True,
+                    "template_id": "classic",
+                },
+            )
             assert resp.status_code == 200
             task_data = resp.json()
             task_id = task_data["id"]
@@ -591,6 +623,7 @@ class TestAPIFlow:
 # Test: Edge Cases
 # ---------------------------------------------------------------------------
 
+
 class TestEdgeCases:
     """Test error handling and edge cases."""
 
@@ -622,10 +655,13 @@ class TestEdgeCases:
     async def test_start_already_started_task(self, client, mock_ai_client):
         """Cannot start a task that's already running/completed."""
         with patch("services.task_manager.get_provider_for_task", return_value=mock_ai_client):
-            resp = await client.post("/api/tasks", json={
-                "job_description": SAMPLE_JD,
-                "generate_cover_letter": False,
-            })
+            resp = await client.post(
+                "/api/tasks",
+                json={
+                    "job_description": SAMPLE_JD,
+                    "generate_cover_letter": False,
+                },
+            )
             task_id = resp.json()["id"]
 
             # Start it
@@ -648,10 +684,13 @@ class TestEdgeCases:
         """Test clearing all completed tasks."""
         with patch("services.task_manager.get_provider_for_task", return_value=mock_ai_client):
             # Create and complete a task
-            resp = await client.post("/api/tasks", json={
-                "job_description": SAMPLE_JD,
-                "generate_cover_letter": False,
-            })
+            resp = await client.post(
+                "/api/tasks",
+                json={
+                    "job_description": SAMPLE_JD,
+                    "generate_cover_letter": False,
+                },
+            )
             task_id = resp.json()["id"]
 
             resp = await client.post(f"/api/tasks/{task_id}/start")

@@ -1,6 +1,6 @@
 """LangGraph state definitions for the resume generation pipeline."""
 
-from typing import Any, Optional
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -62,15 +62,15 @@ class ResumeState(TypedDict, total=False):
     cover_letter_text: str
 
     # ---- Compilation & Output (set by finalize) ----
-    resume_pdf_path: Optional[str]
-    cover_letter_pdf_path: Optional[str]
+    resume_pdf_path: str | None
+    cover_letter_pdf_path: str | None
     company_name: str
     position_name: str
 
     # ---- RAG Context (Phase 4 - optional) ----
-    company_context: Optional[str]
+    company_context: str | None
 
     # ---- Metadata ----
-    error: Optional[str]
+    error: str | None
     agent_outputs: dict[str, Any]  # Per-agent metadata (tokens, latency, etc.)
     current_node: str  # For progress tracking

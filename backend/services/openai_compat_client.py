@@ -2,14 +2,14 @@
 OpenAI-compatible proxy AI provider client.
 Works with Claude Code proxy, Ollama, LM Studio, and any OpenAI-compatible API.
 """
+
 import asyncio
 import logging
 from datetime import datetime
-from typing import Optional
 
+from config import settings as app_settings
 from services.ai_client_base import AIClientBase
 from services.settings_manager import get_settings_manager
-from config import settings as app_settings
 
 logger = logging.getLogger(__name__)
 
@@ -27,22 +27,20 @@ class OpenAICompatClient(AIClientBase):
         try:
             import openai
         except ImportError:
-            raise ImportError(
-                "openai package is not installed. Run: pip install openai"
-            )
+            raise ImportError("openai package is not installed. Run: pip install openai")
 
-        api_key = self.settings_manager.get("openai_compat_api_key") or getattr(
-            app_settings, "openai_compat_api_key", ""
-        ) or "not-needed"
-        base_url = self.settings_manager.get("openai_compat_base_url") or getattr(
-            app_settings, "openai_compat_base_url", ""
-        ) or "http://localhost:3000/v1"
+        api_key = (
+            self.settings_manager.get("openai_compat_api_key")
+            or getattr(app_settings, "openai_compat_api_key", "")
+            or "not-needed"
+        )
+        base_url = (
+            self.settings_manager.get("openai_compat_base_url")
+            or getattr(app_settings, "openai_compat_base_url", "")
+            or "http://localhost:3000/v1"
+        )
 
-        if (
-            self._client is None
-            or self._current_api_key != api_key
-            or self._current_base_url != base_url
-        ):
+        if self._client is None or self._current_api_key != api_key or self._current_base_url != base_url:
             self._client = openai.OpenAI(api_key=api_key, base_url=base_url)
             self._current_api_key = api_key
             self._current_base_url = base_url
@@ -63,11 +61,11 @@ class OpenAICompatClient(AIClientBase):
         )
 
     @property
-    def _temperature(self) -> Optional[float]:
+    def _temperature(self) -> float | None:
         return self.settings_manager.get("openai_compat_temperature")
 
     @property
-    def _max_output_tokens(self) -> Optional[int]:
+    def _max_output_tokens(self) -> int | None:
         return self.settings_manager.get("openai_compat_max_output_tokens")
 
     async def generate(
@@ -79,9 +77,7 @@ class OpenAICompatClient(AIClientBase):
         **kwargs,
     ) -> str:
         base_url = self.settings_manager.get("openai_compat_base_url") or "http://localhost:3000/v1"
-        logger.info(
-            f"Sending request to OpenAI-compatible API (model={self.model}, base_url={base_url})"
-        )
+        logger.info(f"Sending request to OpenAI-compatible API (model={self.model}, base_url={base_url})")
         logger.debug(f"Prompt length: {len(prompt)} characters")
 
         try:
@@ -103,9 +99,7 @@ class OpenAICompatClient(AIClientBase):
             loop = asyncio.get_running_loop()
             start_time = datetime.now()
 
-            response = await loop.run_in_executor(
-                None, lambda: client.chat.completions.create(**request_kwargs)
-            )
+            response = await loop.run_in_executor(None, lambda: client.chat.completions.create(**request_kwargs))
 
             elapsed = (datetime.now() - start_time).total_seconds()
             logger.info(f"OpenAI-compatible API response received in {elapsed:.2f} seconds")

@@ -1,6 +1,5 @@
 """Integration tests for task state machine transitions."""
-import asyncio
-import pytest
+
 from models.task import TaskCreate, TaskStatus
 
 
@@ -17,16 +16,12 @@ class TestTaskCreation:
         assert task.status == TaskStatus.PENDING
 
     def test_create_task_with_cover_letter(self, task_manager_isolated):
-        task = task_manager_isolated.create_task(
-            TaskCreate(job_description="JD", generate_cover_letter=True)
-        )
+        task = task_manager_isolated.create_task(TaskCreate(job_description="JD", generate_cover_letter=True))
         assert task.generate_cover_letter is True
         assert len(task.steps) == 5
 
     def test_create_task_without_cover_letter(self, task_manager_isolated):
-        task = task_manager_isolated.create_task(
-            TaskCreate(job_description="JD", generate_cover_letter=False)
-        )
+        task = task_manager_isolated.create_task(TaskCreate(job_description="JD", generate_cover_letter=False))
         assert task.generate_cover_letter is False
         assert len(task.steps) == 2
 

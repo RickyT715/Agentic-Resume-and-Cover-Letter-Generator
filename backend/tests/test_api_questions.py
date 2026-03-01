@@ -1,10 +1,11 @@
 """Tests for application question API endpoints."""
+
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -12,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 @pytest.fixture
 def mock_task_manager():
     """Create a mock task manager for API tests."""
-    from models.task import Task, TaskCreate, ApplicationQuestion, QuestionStatus
+    from models.task import ApplicationQuestion, Task
 
     mock_tm = MagicMock()
     # Create a real task with questions
@@ -31,8 +32,9 @@ def app_with_mock(mock_task_manager):
     mock_tm, task, q1 = mock_task_manager
 
     with patch("api.routes.task_manager", mock_tm):
-        from api.routes import router
         from fastapi import FastAPI
+
+        from api.routes import router
 
         app = FastAPI()
         app.include_router(router)
@@ -64,6 +66,7 @@ class TestGetQuestions:
 class TestAddQuestion:
     async def test_add_question(self, app_with_mock):
         from models.task import ApplicationQuestion
+
         app, mock_tm, task, q1 = app_with_mock
         new_q = ApplicationQuestion(question="New Q", word_limit=200)
         mock_tm.add_question.return_value = new_q
@@ -81,6 +84,7 @@ class TestAddQuestion:
 
     async def test_add_question_default_word_limit(self, app_with_mock):
         from models.task import ApplicationQuestion
+
         app, mock_tm, task, q1 = app_with_mock
         new_q = ApplicationQuestion(question="Q", word_limit=150)
         mock_tm.add_question.return_value = new_q
@@ -111,6 +115,7 @@ class TestAddQuestion:
 class TestUpdateQuestion:
     async def test_update_question(self, app_with_mock):
         from models.task import ApplicationQuestion
+
         app, mock_tm, task, q1 = app_with_mock
         updated = ApplicationQuestion(id=q1.id, question="Updated Q", word_limit=200)
         mock_tm.update_question.return_value = updated
@@ -163,9 +168,12 @@ class TestDeleteQuestion:
 class TestGenerateQuestionAnswer:
     async def test_generate_answer(self, app_with_mock):
         from models.task import ApplicationQuestion, QuestionStatus
+
         app, mock_tm, task, q1 = app_with_mock
         answered = ApplicationQuestion(
-            id=q1.id, question="Why here?", answer="Because I love it",
+            id=q1.id,
+            question="Why here?",
+            answer="Because I love it",
             status=QuestionStatus.COMPLETED,
         )
         mock_tm.generate_question_answer = AsyncMock(return_value=answered)
@@ -201,9 +209,12 @@ class TestGenerateQuestionAnswer:
 class TestGenerateAllAnswers:
     async def test_generate_all(self, app_with_mock):
         from models.task import ApplicationQuestion, QuestionStatus
+
         app, mock_tm, task, q1 = app_with_mock
         answered = ApplicationQuestion(
-            id=q1.id, question="Why here?", answer="Answer",
+            id=q1.id,
+            question="Why here?",
+            answer="Answer",
             status=QuestionStatus.COMPLETED,
         )
         mock_tm.generate_question_answer = AsyncMock(return_value=answered)

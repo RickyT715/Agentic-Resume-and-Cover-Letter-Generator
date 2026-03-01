@@ -1,7 +1,5 @@
 """Tests for the RAG pipeline components."""
 
-import pytest
-
 
 class TestChunker:
     """Tests for text chunking."""
@@ -23,7 +21,9 @@ class TestChunker:
     def test_long_text_multiple_chunks(self):
         from rag.chunker import chunk_text
 
-        text = "First paragraph about the company.\n\nSecond paragraph about culture.\n\nThird paragraph about tech stack."
+        text = (
+            "First paragraph about the company.\n\nSecond paragraph about culture.\n\nThird paragraph about tech stack."
+        )
         chunks = chunk_text(text, chunk_size=50, chunk_overlap=0)
         assert len(chunks) > 1
 

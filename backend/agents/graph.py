@@ -53,6 +53,7 @@ def _should_retrieve_company(state: ResumeState) -> str:
     # Check vector store first (existing manual RAG path)
     try:
         from rag.vector_store import get_company_info
+
         docs = get_company_info(company_name)
         if docs:
             return "retrieve_company"
@@ -96,6 +97,7 @@ def build_resume_graph() -> StateGraph:
     # Add optional RAG retrieval node
     try:
         from rag.tools import retrieve_company_context_node
+
         graph.add_node("retrieve_company", retrieve_company_context_node)
         has_rag = True
     except ImportError:

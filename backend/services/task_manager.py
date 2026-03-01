@@ -1,22 +1,22 @@
 import asyncio
 import json
-from typing import Dict, List, Callable, Optional
+import logging
+import re
+import shutil
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-import logging
-import shutil
-import re
 
-from models.task import Task, TaskStatus, TaskStep, StepProgress, TaskCreate, ApplicationQuestion, QuestionStatus
-from services.provider_registry import get_provider_for_task
-from services.latex_compiler import LaTeXCompiler, CompilationError, CompilationAttempt
-from services.pdf_extractor import PDFTextExtractor
-from services.text_to_pdf import TextToPDFConverter
-from services.settings_manager import get_settings_manager
-from services.prompt_manager import get_prompt_manager
-from services.pdf_page_counter import validate_single_page
-from services.latex_utils import process_latex_response, extract_metadata
 from config import settings
+from models.task import ApplicationQuestion, QuestionStatus, Task, TaskCreate, TaskStatus, TaskStep
+from services.latex_compiler import CompilationAttempt, CompilationError, LaTeXCompiler
+from services.latex_utils import extract_metadata, process_latex_response
+from services.pdf_extractor import PDFTextExtractor
+from services.pdf_page_counter import validate_single_page
+from services.prompt_manager import get_prompt_manager
+from services.provider_registry import get_provider_for_task
+from services.settings_manager import get_settings_manager
+from services.text_to_pdf import TextToPDFConverter
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +38,9 @@ class TaskManager:
             return
         self._initialized = True
 
-        self.tasks: Dict[str, Task] = {}
+        self.tasks: dict[str, Task] = {}
         self.task_counter = 0
-        self._progress_callbacks: List[Callable] = []
+        self._progress_callbacks: list[Callable] = []
         self._semaphore = asyncio.Semaphore(settings.max_concurrent_tasks)
 
         # Initialize services
@@ -100,16 +100,17 @@ class TaskManager:
             history = self._load_jd_history()
             # Avoid duplicates - remove existing if present, add to front
             history = [jd for jd in history if jd.get("text") != job_description]
-            history.insert(0, {
-                "text": job_description,
-                "preview": job_description[:120].replace("\n", " "),
-                "saved_at": datetime.now().isoformat(),
-            })
+            history.insert(
+                0,
+                {
+                    "text": job_description,
+                    "preview": job_description[:120].replace("\n", " "),
+                    "saved_at": datetime.now().isoformat(),
+                },
+            )
             # Keep last 20
             history = history[:20]
-            JD_HISTORY_FILE.write_text(
-                json.dumps(history, indent=2), encoding="utf-8"
-            )
+            JD_HISTORY_FILE.write_text(json.dumps(history, indent=2), encoding="utf-8")
         except Exception as e:
             logger.error(f"Failed to save JD history: {e}")
 
@@ -175,9 +176,9 @@ class TaskManager:
 
         generate_cover_letter = task_data.generate_cover_letter
         if generate_cover_letter is None:
-            generate_cover_letter = self.settings_manager.get('generate_cover_letter', True)
+            generate_cover_letter = self.settings_manager.get("generate_cover_letter", True)
 
-        template_id = task_data.template_id or self.settings_manager.get('default_template_id', 'classic')
+        template_id = task_data.template_id or self.settings_manager.get("default_template_id", "classic")
 
         task = Task(
             task_number=self.task_counter,
@@ -192,10 +193,10 @@ class TaskManager:
         logger.info(f"Created task {task.task_number} [{task.id}]")
         return task
 
-    def get_task(self, task_id: str) -> Optional[Task]:
+    def get_task(self, task_id: str) -> Task | None:
         return self.tasks.get(task_id)
 
-    def get_all_tasks(self) -> List[Task]:
+    def get_all_tasks(self) -> list[Task]:
         return list(self.tasks.values())
 
     def delete_task(self, task_id: str) -> bool:
@@ -224,14 +225,15 @@ class TaskManager:
     def delete_completed_tasks(self) -> int:
         """Delete all completed tasks. Returns count deleted."""
         to_delete = [
-            tid for tid, t in self.tasks.items()
+            tid
+            for tid, t in self.tasks.items()
             if t.status in (TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED)
         ]
         for tid in to_delete:
             self.delete_task(tid)
         return len(to_delete)
 
-    def retry_task(self, task_id: str) -> Optional[Task]:
+    def retry_task(self, task_id: str) -> Task | None:
         """Reset a failed/cancelled/completed task to pending so it can be re-run."""
         task = self.tasks.get(task_id)
         if not task or task.status not in (TaskStatus.FAILED, TaskStatus.CANCELLED, TaskStatus.COMPLETED):
@@ -250,7 +252,7 @@ class TaskManager:
         logger.info(f"Reset task {task.task_number} [{task_id}] to pending for retry")
         return task
 
-    def cancel_task(self, task_id: str) -> Optional[Task]:
+    def cancel_task(self, task_id: str) -> Task | None:
         """Mark a task for cancellation."""
         task = self.tasks.get(task_id)
         if not task or task.status not in (TaskStatus.RUNNING, TaskStatus.QUEUED, TaskStatus.PENDING):
@@ -265,7 +267,7 @@ class TaskManager:
         logger.info(f"Cancellation requested for task {task.task_number} [{task_id}]")
         return task
 
-    def update_task_job_description(self, task_id: str, job_description: str) -> Optional[Task]:
+    def update_task_job_description(self, task_id: str, job_description: str) -> Task | None:
         task = self.tasks.get(task_id)
         if task and task.status == TaskStatus.PENDING:
             task.job_description = job_description
@@ -273,11 +275,15 @@ class TaskManager:
             return task
         return None
 
-    def update_task_settings(self, task_id: str, job_description: str = None,
-                             generate_cover_letter: bool = None,
-                             template_id: str = None,
-                             language: str = None,
-                             provider: str = None) -> Optional[Task]:
+    def update_task_settings(
+        self,
+        task_id: str,
+        job_description: str = None,
+        generate_cover_letter: bool = None,
+        template_id: str = None,
+        language: str = None,
+        provider: str = None,
+    ) -> Task | None:
         task = self.tasks.get(task_id)
         if task and task.status == TaskStatus.PENDING:
             if job_description is not None:
@@ -297,7 +303,7 @@ class TaskManager:
 
     # ===================== Questions =====================
 
-    def add_question(self, task_id: str, question: str, word_limit: int = 150) -> Optional[ApplicationQuestion]:
+    def add_question(self, task_id: str, question: str, word_limit: int = 150) -> ApplicationQuestion | None:
         """Add an application question to a task."""
         task = self.tasks.get(task_id)
         if not task:
@@ -308,8 +314,9 @@ class TaskManager:
         logger.info(f"Added question {q.id} to task {task.task_number}")
         return q
 
-    def update_question(self, task_id: str, question_id: str,
-                        question: str = None, word_limit: int = None) -> Optional[ApplicationQuestion]:
+    def update_question(
+        self, task_id: str, question_id: str, question: str = None, word_limit: int = None
+    ) -> ApplicationQuestion | None:
         """Update a question's text or word limit. Resets answer if question text changed."""
         task = self.tasks.get(task_id)
         if not task:
@@ -341,7 +348,7 @@ class TaskManager:
             return True
         return False
 
-    async def generate_question_answer(self, task_id: str, question_id: str) -> Optional[ApplicationQuestion]:
+    async def generate_question_answer(self, task_id: str, question_id: str) -> ApplicationQuestion | None:
         """Generate an answer for a single application question."""
         task = self.tasks.get(task_id)
         if not task:
@@ -365,13 +372,10 @@ class TaskManager:
                 question=target_q.question,
                 job_description=task.job_description,
                 word_limit=target_q.word_limit,
-                language=task.language
+                language=task.language,
             )
             answer = await ai_client.generate_question_answer(
-                prompt,
-                task_id=task.id,
-                task_number=task.task_number,
-                question_id=target_q.id
+                prompt, task_id=task.id, task_number=task.task_number, question_id=target_q.id
             )
             target_q.answer = answer.strip()
             target_q.status = QuestionStatus.COMPLETED
@@ -388,10 +392,14 @@ class TaskManager:
 
     # ===================== Templates =====================
 
-    def get_available_templates(self) -> List[dict]:
+    def get_available_templates(self) -> list[dict]:
         """Return list of available resume templates."""
         templates = [
-            {"id": "classic", "name": "Classic", "description": "Traditional single-column resume with clean formatting"},
+            {
+                "id": "classic",
+                "name": "Classic",
+                "description": "Traditional single-column resume with clean formatting",
+            },
             {"id": "modern", "name": "Modern", "description": "Two-column layout with a skills sidebar"},
             {"id": "minimal", "name": "Minimal", "description": "Clean, spacious design with minimal styling"},
         ]
@@ -409,9 +417,7 @@ class TaskManager:
         self._save_tasks()
 
         # Broadcast queued status
-        await self._notify_progress(
-            task, task.steps[0].step, TaskStatus.PENDING, "Waiting in queue..."
-        )
+        await self._notify_progress(task, task.steps[0].step, TaskStatus.PENDING, "Waiting in queue...")
 
         async with self._semaphore:
             if task.cancelled:
@@ -430,9 +436,7 @@ class TaskManager:
         task.pipeline_version = "v3"
         self._save_tasks()
 
-        await self._notify_progress(
-            task, task.steps[0].step, TaskStatus.PENDING, "Waiting in queue (v3 pipeline)..."
-        )
+        await self._notify_progress(task, task.steps[0].step, TaskStatus.PENDING, "Waiting in queue (v3 pipeline)...")
 
         async with self._semaphore:
             if task.cancelled:
@@ -468,16 +472,16 @@ class TaskManager:
         ai_client = get_provider_for_task(task.provider)
         provider_label = f"{ai_client.provider_name}/{ai_client.model}"
 
-        enforce_resume_one_page = self.settings_manager.get('enforce_resume_one_page', True)
-        enforce_cover_letter_one_page = self.settings_manager.get('enforce_cover_letter_one_page', True)
-        max_page_retry_attempts = self.settings_manager.get('max_page_retry_attempts', 3)
+        enforce_resume_one_page = self.settings_manager.get("enforce_resume_one_page", True)
+        enforce_cover_letter_one_page = self.settings_manager.get("enforce_cover_letter_one_page", True)
+        max_page_retry_attempts = self.settings_manager.get("max_page_retry_attempts", 3)
 
-        logger.info(f"{'='*60}")
+        logger.info(f"{'=' * 60}")
         logger.info(f"Starting task {task.task_number} [{task_id}]")
         logger.info(f"Provider: {provider_label}")
         logger.info(f"Generate cover letter: {task.generate_cover_letter}")
         logger.info(f"Template: {task.template_id}")
-        logger.info(f"{'='*60}")
+        logger.info(f"{'=' * 60}")
 
         # Save JD to history
         self._save_jd_to_history(task.job_description)
@@ -490,16 +494,16 @@ class TaskManager:
             # ---- Step 1: Generate Resume ----
             self._check_cancelled(task)
             await self._notify_progress(
-                task, TaskStep.GENERATE_RESUME, TaskStatus.RUNNING,
+                task,
+                TaskStep.GENERATE_RESUME,
+                TaskStatus.RUNNING,
                 f"Generating resume with {provider_label}...",
             )
 
             resume_prompt = self.prompt_manager.get_resume_prompt_with_substitutions(
                 task.job_description, template_id=task.template_id, language=task.language
             )
-            raw_response = await ai_client.generate_resume(
-                resume_prompt, task_id=task.id, task_number=task.task_number
-            )
+            raw_response = await ai_client.generate_resume(resume_prompt, task_id=task.id, task_number=task.task_number)
             # Extract company/position metadata before stripping to \documentclass
             metadata = extract_metadata(raw_response)
             if metadata["company_name"]:
@@ -510,14 +514,18 @@ class TaskManager:
             latex_code = process_latex_response(raw_response)
             task.latex_source = latex_code
             await self._notify_progress(
-                task, TaskStep.GENERATE_RESUME, TaskStatus.COMPLETED,
+                task,
+                TaskStep.GENERATE_RESUME,
+                TaskStatus.COMPLETED,
                 "Resume LaTeX generated",
             )
 
             # ---- Step 2: Compile LaTeX ----
             self._check_cancelled(task)
             await self._notify_progress(
-                task, TaskStep.COMPILE_LATEX, TaskStatus.RUNNING,
+                task,
+                TaskStep.COMPILE_LATEX,
+                TaskStatus.RUNNING,
                 "Compiling LaTeX to PDF...",
             )
 
@@ -525,9 +533,7 @@ class TaskManager:
                 task, latex_code, enforce_resume_one_page, max_page_retry_attempts, ai_client
             )
 
-            await self._notify_progress(
-                task, TaskStep.COMPILE_LATEX, TaskStatus.COMPLETED, "Resume PDF created"
-            )
+            await self._notify_progress(task, TaskStep.COMPILE_LATEX, TaskStatus.COMPLETED, "Resume PDF created")
 
         except _TaskCancelled:
             task.status = TaskStatus.CANCELLED
@@ -571,19 +577,25 @@ class TaskManager:
                 # Step 3: Extract Text
                 self._check_cancelled(task)
                 await self._notify_progress(
-                    task, TaskStep.EXTRACT_TEXT, TaskStatus.RUNNING,
+                    task,
+                    TaskStep.EXTRACT_TEXT,
+                    TaskStatus.RUNNING,
                     "Extracting text from PDF...",
                 )
                 resume_text = self.pdf_extractor.extract(resume_pdf_path)
                 await self._notify_progress(
-                    task, TaskStep.EXTRACT_TEXT, TaskStatus.COMPLETED,
+                    task,
+                    TaskStep.EXTRACT_TEXT,
+                    TaskStatus.COMPLETED,
                     f"Extracted {len(resume_text)} characters",
                 )
 
                 # Step 4: Generate Cover Letter
                 self._check_cancelled(task)
                 await self._notify_progress(
-                    task, TaskStep.GENERATE_COVER_LETTER, TaskStatus.RUNNING,
+                    task,
+                    TaskStep.GENERATE_COVER_LETTER,
+                    TaskStatus.RUNNING,
                     f"Generating cover letter with {provider_label}...",
                 )
                 cover_letter_prompt = self.prompt_manager.get_cover_letter_prompt_with_substitutions(
@@ -602,22 +614,33 @@ class TaskManager:
                         file_label = task.company_name
                     safe_company_name = self._sanitize_filename(file_label if task.company_name else "Resume")
                 await self._notify_progress(
-                    task, TaskStep.GENERATE_COVER_LETTER, TaskStatus.COMPLETED,
+                    task,
+                    TaskStep.GENERATE_COVER_LETTER,
+                    TaskStatus.COMPLETED,
                     "Cover letter generated",
                 )
 
                 # Step 5: Create Cover Letter PDF
                 self._check_cancelled(task)
                 await self._notify_progress(
-                    task, TaskStep.CREATE_COVER_PDF, TaskStatus.RUNNING,
+                    task,
+                    TaskStep.CREATE_COVER_PDF,
+                    TaskStatus.RUNNING,
                     "Creating cover letter PDF...",
                 )
                 cover_letter_pdf_path = await self._create_cover_letter_with_page_check(
-                    task, cover_letter_text, resume_text, safe_company_name,
-                    enforce_cover_letter_one_page, max_page_retry_attempts, ai_client
+                    task,
+                    cover_letter_text,
+                    resume_text,
+                    safe_company_name,
+                    enforce_cover_letter_one_page,
+                    max_page_retry_attempts,
+                    ai_client,
                 )
                 await self._notify_progress(
-                    task, TaskStep.CREATE_COVER_PDF, TaskStatus.COMPLETED,
+                    task,
+                    TaskStep.CREATE_COVER_PDF,
+                    TaskStatus.COMPLETED,
                     "Cover letter PDF created",
                 )
 
@@ -665,7 +688,10 @@ class TaskManager:
 
         final_step = TaskStep.CREATE_COVER_PDF if task.generate_cover_letter else TaskStep.COMPILE_LATEX
         await self._notify_progress(
-            task, final_step, TaskStatus.COMPLETED, "All files generated successfully",
+            task,
+            final_step,
+            TaskStatus.COMPLETED,
+            "All files generated successfully",
         )
 
     # ===================== Cancellation =====================
@@ -679,15 +705,12 @@ class TaskManager:
             if step.status in (TaskStatus.PENDING, TaskStatus.RUNNING):
                 step.status = TaskStatus.CANCELLED
                 step.message = "Task cancelled"
-        await self._notify_progress(
-            task, task.steps[0].step, TaskStatus.CANCELLED, "Task cancelled by user"
-        )
+        await self._notify_progress(task, task.steps[0].step, TaskStatus.CANCELLED, "Task cancelled by user")
 
     # ===================== LaTeX Compilation =====================
 
     async def _compile_latex_with_retry_and_page_check(
-        self, task: Task, initial_latex: str,
-        enforce_one_page: bool, max_page_retries: int, ai_client=None
+        self, task: Task, initial_latex: str, enforce_one_page: bool, max_page_retries: int, ai_client=None
     ):
         self.latex_compiler.clear_attempts()
         current_latex = initial_latex
@@ -697,17 +720,22 @@ class TaskManager:
             self._check_cancelled(task)
 
             await self._notify_progress(
-                task, TaskStep.COMPILE_LATEX, TaskStatus.RUNNING,
-                f"Compilation attempt {attempt}/{max_attempts}"
-                + (" (with feedback)" if attempt > 1 else ""),
+                task,
+                TaskStep.COMPILE_LATEX,
+                TaskStatus.RUNNING,
+                f"Compilation attempt {attempt}/{max_attempts}" + (" (with feedback)" if attempt > 1 else ""),
                 attempt=attempt,
             )
 
             compiler = "xelatex" if task.language == "zh" else "pdflatex"
             loop = asyncio.get_running_loop()
             result: CompilationAttempt = await loop.run_in_executor(
-                None, self.latex_compiler.compile_once, current_latex,
-                f"resume_task_{task.task_number}", attempt, compiler,
+                None,
+                self.latex_compiler.compile_once,
+                current_latex,
+                f"resume_task_{task.task_number}",
+                attempt,
+                compiler,
             )
 
             result.used_error_feedback = attempt > 1
@@ -722,7 +750,9 @@ class TaskManager:
 
                         if attempt < max_attempts:
                             await self._notify_progress(
-                                task, TaskStep.COMPILE_LATEX, TaskStatus.RUNNING,
+                                task,
+                                TaskStep.COMPILE_LATEX,
+                                TaskStatus.RUNNING,
                                 f"Resume is {page_count} pages. Regenerating to fit 1 page...",
                                 attempt=attempt,
                             )
@@ -741,8 +771,12 @@ class TaskManager:
                                     task.job_description, template_id=task.template_id, language=task.language
                                 )
                                 raw = await ai_client.generate_resume_with_error_feedback(
-                                    resume_prompt, page_feedback, current_latex,
-                                    task_id=task.id, task_number=task.task_number, attempt=attempt + 1
+                                    resume_prompt,
+                                    page_feedback,
+                                    current_latex,
+                                    task_id=task.id,
+                                    task_number=task.task_number,
+                                    attempt=attempt + 1,
                                 )
                                 current_latex = process_latex_response(raw)
                                 task.latex_source = current_latex
@@ -759,7 +793,9 @@ class TaskManager:
 
             if attempt < max_attempts:
                 await self._notify_progress(
-                    task, TaskStep.COMPILE_LATEX, TaskStatus.RUNNING,
+                    task,
+                    TaskStep.COMPILE_LATEX,
+                    TaskStatus.RUNNING,
                     "Regenerating LaTeX with error feedback...",
                     attempt=attempt,
                 )
@@ -768,8 +804,12 @@ class TaskManager:
                         task.job_description, template_id=task.template_id, language=task.language
                     )
                     raw = await ai_client.generate_resume_with_error_feedback(
-                        resume_prompt, last_error, current_latex,
-                        task_id=task.id, task_number=task.task_number, attempt=attempt + 1
+                        resume_prompt,
+                        last_error,
+                        current_latex,
+                        task_id=task.id,
+                        task_number=task.task_number,
+                        attempt=attempt + 1,
                     )
                     current_latex = process_latex_response(raw)
                     task.latex_source = current_latex
@@ -783,17 +823,21 @@ class TaskManager:
         )
 
     async def _create_cover_letter_with_page_check(
-        self, task: Task, cover_letter_text: str, resume_text: str,
-        safe_company_name: str, enforce_one_page: bool, max_retries: int, ai_client=None
+        self,
+        task: Task,
+        cover_letter_text: str,
+        resume_text: str,
+        safe_company_name: str,
+        enforce_one_page: bool,
+        max_retries: int,
+        ai_client=None,
     ):
         current_text = cover_letter_text
 
         for attempt in range(1, max_retries + 1):
             self._check_cancelled(task)
 
-            cover_letter_pdf_path = self._get_unique_output_path(
-                f"cover_letter_{safe_company_name}", ".pdf"
-            )
+            cover_letter_pdf_path = self._get_unique_output_path(f"cover_letter_{safe_company_name}", ".pdf")
             self.text_to_pdf.convert(current_text, cover_letter_pdf_path)
 
             if enforce_one_page:
@@ -802,7 +846,9 @@ class TaskManager:
                 if not is_single_page and page_count > 0:
                     if attempt < max_retries:
                         await self._notify_progress(
-                            task, TaskStep.CREATE_COVER_PDF, TaskStatus.RUNNING,
+                            task,
+                            TaskStep.CREATE_COVER_PDF,
+                            TaskStatus.RUNNING,
                             f"Cover letter is {page_count} pages. Regenerating shorter...",
                         )
                         page_feedback_prompt = self.prompt_manager.get_cover_letter_prompt_with_substitutions(
@@ -835,24 +881,30 @@ class TaskManager:
         return settings.output_dir / f"{base_name}_{timestamp}{extension}"
 
     def _extract_company_name(self, cover_letter_text: str) -> str:
-        lines = cover_letter_text.strip().split('\n')
+        lines = cover_letter_text.strip().split("\n")
         non_empty_lines = [line.strip() for line in lines if line.strip()]
 
         if len(non_empty_lines) >= 6:
             company_name = non_empty_lines[5].strip()
-            if not company_name.lower().startswith('dear') and len(company_name) < 100:
+            if not company_name.lower().startswith("dear") and len(company_name) < 100:
                 return company_name
 
         found_date = False
         for line in non_empty_lines:
             line = line.strip()
-            if re.search(r'\d{4}|January|February|March|April|May|June|July|August|September|October|November|December', line, re.IGNORECASE):
+            if re.search(
+                r"\d{4}|January|February|March|April|May|June|July|August|September|October|November|December",
+                line,
+                re.IGNORECASE,
+            ):
                 found_date = True
                 continue
             if found_date:
-                if any(title in line.lower() for title in ['hiring manager', 'recruiter', 'hr ', 'human resources', 'dear']):
+                if any(
+                    title in line.lower() for title in ["hiring manager", "recruiter", "hr ", "human resources", "dear"]
+                ):
                     continue
-                if re.search(r'\b[A-Z]{2}\b|,\s*[A-Z]{2}\s*\d{5}', line):
+                if re.search(r"\b[A-Z]{2}\b|,\s*[A-Z]{2}\s*\d{5}", line):
                     continue
                 if 2 < len(line) < 100:
                     return line
@@ -860,18 +912,19 @@ class TaskManager:
         return "Unknown_Company"
 
     def _sanitize_filename(self, name: str) -> str:
-        safe_name = re.sub(r'[\s\-]+', '_', name)
-        safe_name = re.sub(r'[<>:"/\\|?*]', '', safe_name)
-        safe_name = re.sub(r'[^\w\.]', '_', safe_name)
-        safe_name = re.sub(r'_+', '_', safe_name)
-        safe_name = safe_name.strip('_')
+        safe_name = re.sub(r"[\s\-]+", "_", name)
+        safe_name = re.sub(r'[<>:"/\\|?*]', "", safe_name)
+        safe_name = re.sub(r"[^\w\.]", "_", safe_name)
+        safe_name = re.sub(r"_+", "_", safe_name)
+        safe_name = safe_name.strip("_")
         if len(safe_name) > 50:
-            safe_name = safe_name[:50].rstrip('_')
+            safe_name = safe_name[:50].rstrip("_")
         return safe_name or "Unknown_Company"
 
 
 class _TaskCancelled(Exception):
     """Internal exception for task cancellation flow."""
+
     pass
 
 

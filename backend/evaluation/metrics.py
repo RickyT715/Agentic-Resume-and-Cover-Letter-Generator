@@ -2,9 +2,9 @@
 
 import logging
 
-from evaluation.ats_scorer import ATSScoreBreakdown, score_resume
+from evaluation.ats_scorer import score_resume
 from evaluation.feedback_generator import compute_combined_score, generate_feedback
-from evaluation.llm_judge import LLMJudgeResult, evaluate_with_llm
+from evaluation.llm_judge import evaluate_with_llm
 
 logger = logging.getLogger(__name__)
 

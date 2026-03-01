@@ -44,6 +44,7 @@ NODE_DESCRIPTIONS = {
 
 class _TaskCancelled(Exception):
     """Raised when a task's cancelled flag is detected during v3 execution."""
+
     pass
 
 
@@ -113,15 +114,17 @@ async def run_langgraph_pipeline(
 
             # Broadcast progress
             if progress_callback:
-                await progress_callback({
-                    "task_id": task.id,
-                    "task_number": task.task_number,
-                    "step": step.value,
-                    "status": TaskStatus.RUNNING.value,
-                    "message": description,
-                    "node": node_name,
-                    "pipeline_version": "v3",
-                })
+                await progress_callback(
+                    {
+                        "task_id": task.id,
+                        "task_number": task.task_number,
+                        "step": step.value,
+                        "status": TaskStatus.RUNNING.value,
+                        "message": description,
+                        "node": node_name,
+                        "pipeline_version": "v3",
+                    }
+                )
 
             # Update step progress on the task
             for s in task.steps:
@@ -201,20 +204,20 @@ async def run_langgraph_pipeline(
 
     task.completed_at = datetime.now()
     elapsed = (task.completed_at - start_time).total_seconds()
-    logger.info(
-        f"Task {task.task_number}: Pipeline {task.status.value} in {elapsed:.2f}s"
-    )
+    logger.info(f"Task {task.task_number}: Pipeline {task.status.value} in {elapsed:.2f}s")
 
     # Broadcast final status
     if progress_callback:
         final_step = task.steps[-1].step if task.steps else TaskStep.COMPILE_LATEX
-        await progress_callback({
-            "task_id": task.id,
-            "task_number": task.task_number,
-            "step": final_step.value,
-            "status": task.status.value,
-            "message": f"Pipeline {task.status.value}",
-            "pipeline_version": "v3",
-        })
+        await progress_callback(
+            {
+                "task_id": task.id,
+                "task_number": task.task_number,
+                "step": final_step.value,
+                "status": task.status.value,
+                "message": f"Pipeline {task.status.value}",
+                "pipeline_version": "v3",
+            }
+        )
 
     return task

@@ -1,70 +1,71 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
-from fastapi.responses import FileResponse, PlainTextResponse
-from typing import List, Dict, Any
 from pathlib import Path
-from pydantic import BaseModel
-from typing import Optional
+from typing import Any
 
-from models.task import Task, TaskCreate, TaskUpdate, ApplicationQuestion
-from services.task_manager import task_manager
-from services.settings_manager import get_settings_manager
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi.responses import FileResponse, PlainTextResponse
+from pydantic import BaseModel
+
+from models.task import ApplicationQuestion, Task, TaskCreate
 from services.prompt_manager import get_prompt_manager
+from services.settings_manager import get_settings_manager
+from services.task_manager import task_manager
 
 router = APIRouter(prefix="/api")
 
 
 # ============== Request Models ==============
 
+
 class JobDescriptionUpdate(BaseModel):
     job_description: str
 
 
 class TaskSettingsUpdate(BaseModel):
-    job_description: Optional[str] = None
-    generate_cover_letter: Optional[bool] = None
-    template_id: Optional[str] = None
-    language: Optional[str] = None
-    provider: Optional[str] = None
+    job_description: str | None = None
+    generate_cover_letter: bool | None = None
+    template_id: str | None = None
+    language: str | None = None
+    provider: str | None = None
 
 
 class AppSettingsUpdate(BaseModel):
     # Provider Selection
-    default_provider: Optional[str] = None
+    default_provider: str | None = None
     # Gemini
-    gemini_api_key: Optional[str] = None
-    gemini_model: Optional[str] = None
-    gemini_temperature: Optional[float] = None
-    gemini_top_k: Optional[int] = None
-    gemini_top_p: Optional[float] = None
-    gemini_max_output_tokens: Optional[int] = None
-    gemini_thinking_level: Optional[str] = None
-    gemini_enable_search: Optional[bool] = None
+    gemini_api_key: str | None = None
+    gemini_model: str | None = None
+    gemini_temperature: float | None = None
+    gemini_top_k: int | None = None
+    gemini_top_p: float | None = None
+    gemini_max_output_tokens: int | None = None
+    gemini_thinking_level: str | None = None
+    gemini_enable_search: bool | None = None
     # Claude
-    claude_api_key: Optional[str] = None
-    claude_model: Optional[str] = None
-    claude_temperature: Optional[float] = None
-    claude_max_output_tokens: Optional[int] = None
-    claude_extended_thinking: Optional[bool] = None
-    claude_thinking_budget: Optional[int] = None
+    claude_api_key: str | None = None
+    claude_model: str | None = None
+    claude_temperature: float | None = None
+    claude_max_output_tokens: int | None = None
+    claude_extended_thinking: bool | None = None
+    claude_thinking_budget: int | None = None
     # OpenAI-Compatible
-    openai_compat_base_url: Optional[str] = None
-    openai_compat_api_key: Optional[str] = None
-    openai_compat_model: Optional[str] = None
-    openai_compat_temperature: Optional[float] = None
-    openai_compat_max_output_tokens: Optional[int] = None
+    openai_compat_base_url: str | None = None
+    openai_compat_api_key: str | None = None
+    openai_compat_model: str | None = None
+    openai_compat_temperature: float | None = None
+    openai_compat_max_output_tokens: int | None = None
     # Claude Code Proxy
-    claude_proxy_base_url: Optional[str] = None
-    claude_proxy_api_key: Optional[str] = None
-    claude_proxy_model: Optional[str] = None
-    claude_proxy_temperature: Optional[float] = None
-    claude_proxy_max_output_tokens: Optional[int] = None
+    claude_proxy_base_url: str | None = None
+    claude_proxy_api_key: str | None = None
+    claude_proxy_model: str | None = None
+    claude_proxy_temperature: float | None = None
+    claude_proxy_max_output_tokens: int | None = None
     # General
-    enforce_resume_one_page: Optional[bool] = None
-    enforce_cover_letter_one_page: Optional[bool] = None
-    max_page_retry_attempts: Optional[int] = None
-    generate_cover_letter: Optional[bool] = None
-    max_latex_retries: Optional[int] = None
-    default_template_id: Optional[str] = None
+    enforce_resume_one_page: bool | None = None
+    enforce_cover_letter_one_page: bool | None = None
+    max_page_retry_attempts: int | None = None
+    generate_cover_letter: bool | None = None
+    max_latex_retries: int | None = None
+    default_template_id: str | None = None
 
 
 class AddQuestionRequest(BaseModel):
@@ -73,8 +74,8 @@ class AddQuestionRequest(BaseModel):
 
 
 class UpdateQuestionRequest(BaseModel):
-    question: Optional[str] = None
-    word_limit: Optional[int] = None
+    question: str | None = None
+    word_limit: int | None = None
 
 
 class CompanyScrapeRequest(BaseModel):
@@ -88,14 +89,15 @@ class PromptUpdate(BaseModel):
 
 # ============== Settings Endpoints ==============
 
+
 @router.get("/settings")
-async def get_settings() -> Dict[str, Any]:
+async def get_settings() -> dict[str, Any]:
     settings_manager = get_settings_manager()
     return settings_manager.get_all(mask_api_key=True)
 
 
 @router.put("/settings")
-async def update_settings(data: AppSettingsUpdate) -> Dict[str, Any]:
+async def update_settings(data: AppSettingsUpdate) -> dict[str, Any]:
     settings_manager = get_settings_manager()
     updates = {k: v for k, v in data.model_dump().items() if v is not None}
     if not updates:
@@ -105,7 +107,7 @@ async def update_settings(data: AppSettingsUpdate) -> Dict[str, Any]:
 
 
 @router.post("/settings/reset")
-async def reset_settings() -> Dict[str, Any]:
+async def reset_settings() -> dict[str, Any]:
     settings_manager = get_settings_manager()
     settings_manager.reset_to_defaults()
     return settings_manager.get_all(mask_api_key=True)
@@ -114,19 +116,27 @@ async def reset_settings() -> Dict[str, Any]:
 # ============== Prompts Endpoints ==============
 
 VALID_PROMPT_KEYS = [
-    "resume_prompt", "cover_letter_prompt", "user_information", "resume_format", "application_question_prompt",
-    "resume_prompt_zh", "cover_letter_prompt_zh", "user_information_zh", "resume_format_zh", "application_question_prompt_zh",
+    "resume_prompt",
+    "cover_letter_prompt",
+    "user_information",
+    "resume_format",
+    "application_question_prompt",
+    "resume_prompt_zh",
+    "cover_letter_prompt_zh",
+    "user_information_zh",
+    "resume_format_zh",
+    "application_question_prompt_zh",
 ]
 
 
 @router.get("/prompts")
-async def get_prompts() -> Dict[str, str]:
+async def get_prompts() -> dict[str, str]:
     prompt_manager = get_prompt_manager()
     return prompt_manager.get_all_prompts()
 
 
 @router.get("/prompts/{prompt_key}")
-async def get_prompt(prompt_key: str) -> Dict[str, str]:
+async def get_prompt(prompt_key: str) -> dict[str, str]:
     if prompt_key not in VALID_PROMPT_KEYS:
         raise HTTPException(status_code=400, detail=f"Invalid prompt key. Valid: {VALID_PROMPT_KEYS}")
     prompt_manager = get_prompt_manager()
@@ -135,7 +145,7 @@ async def get_prompt(prompt_key: str) -> Dict[str, str]:
 
 
 @router.put("/prompts/{prompt_key}")
-async def update_prompt(prompt_key: str, data: PromptUpdate) -> Dict[str, Any]:
+async def update_prompt(prompt_key: str, data: PromptUpdate) -> dict[str, Any]:
     if prompt_key not in VALID_PROMPT_KEYS:
         raise HTTPException(status_code=400, detail=f"Invalid prompt key. Valid: {VALID_PROMPT_KEYS}")
 
@@ -159,7 +169,7 @@ async def update_prompt(prompt_key: str, data: PromptUpdate) -> Dict[str, Any]:
 
 
 @router.post("/prompts/reload")
-async def reload_prompts() -> Dict[str, str]:
+async def reload_prompts() -> dict[str, str]:
     prompt_manager = get_prompt_manager()
     prompt_manager.reload_prompts()
     return {"message": "Prompts reloaded successfully"}
@@ -167,27 +177,32 @@ async def reload_prompts() -> Dict[str, str]:
 
 # ============== Provider Endpoints ==============
 
+
 @router.get("/providers")
-async def get_providers() -> List[dict]:
+async def get_providers() -> list[dict]:
     from services.provider_registry import AVAILABLE_PROVIDERS
+
     return AVAILABLE_PROVIDERS
 
 
 # ============== Template Endpoints ==============
 
+
 @router.get("/templates")
-async def get_templates() -> List[dict]:
+async def get_templates() -> list[dict]:
     return task_manager.get_available_templates()
 
 
 # ============== JD History Endpoints ==============
 
+
 @router.get("/jd-history")
-async def get_jd_history() -> List[dict]:
+async def get_jd_history() -> list[dict]:
     return task_manager.get_jd_history()
 
 
 # ============== Task Endpoints ==============
+
 
 @router.post("/tasks", response_model=Task)
 async def create_task(task_data: TaskCreate):
@@ -195,7 +210,7 @@ async def create_task(task_data: TaskCreate):
     return task
 
 
-@router.get("/tasks", response_model=List[Task])
+@router.get("/tasks", response_model=list[Task])
 async def get_tasks():
     return task_manager.get_all_tasks()
 
@@ -356,7 +371,7 @@ async def download_latex(task_id: str):
     else:
         tex_name = f"resume_task_{task.task_number}.tex"
     # Sanitize for header safety
-    tex_name = tex_name.replace('"', '').replace('\n', '').replace('\r', '')
+    tex_name = tex_name.replace('"', "").replace("\n", "").replace("\r", "")
 
     return PlainTextResponse(
         content=task.latex_source,
@@ -374,6 +389,7 @@ async def get_failed_latex(task_id: str):
 
 
 # ============== Application Questions Endpoints ==============
+
 
 @router.get("/tasks/{task_id}/questions", response_model=list[ApplicationQuestion])
 async def get_questions(task_id: str):
@@ -393,11 +409,7 @@ async def add_question(task_id: str, data: AddQuestionRequest):
 
 @router.put("/tasks/{task_id}/questions/{question_id}", response_model=ApplicationQuestion)
 async def update_question(task_id: str, question_id: str, data: UpdateQuestionRequest):
-    q = task_manager.update_question(
-        task_id, question_id,
-        question=data.question,
-        word_limit=data.word_limit
-    )
+    q = task_manager.update_question(task_id, question_id, question=data.question, word_limit=data.word_limit)
     if not q:
         raise HTTPException(status_code=404, detail="Task or question not found")
     return q
@@ -412,6 +424,7 @@ async def delete_question(task_id: str, question_id: str):
 
 
 # ============== Evaluation Endpoints ==============
+
 
 def _extract_jd_analysis(task) -> dict | None:
     """Extract JD analysis from task's agent_outputs (v3 pipeline)."""
@@ -467,17 +480,19 @@ async def evaluate_task(task_id: str):
 
 # ============== Company Research (RAG) Endpoints ==============
 
+
 @router.post("/companies/scrape")
 async def scrape_company(data: CompanyScrapeRequest):
     """Scrape a company website and index it for RAG retrieval."""
     try:
         from rag.retriever import scrape_and_index_company
+
         result = await scrape_and_index_company(data.url, data.company_name)
         return result
     except ImportError:
         raise HTTPException(status_code=501, detail="RAG module not installed (chromadb required)")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scraping failed: {e!s}")
 
 
 @router.get("/companies/{company_name}/info")
@@ -485,6 +500,7 @@ async def get_company_info(company_name: str):
     """Get indexed company data from the vector store."""
     try:
         from rag.vector_store import get_company_info as _get_info
+
         docs = _get_info(company_name)
         return {"company_name": company_name, "documents": len(docs), "chunks": docs}
     except ImportError:
@@ -496,6 +512,7 @@ async def delete_company_data(company_name: str):
     """Delete all indexed data for a company."""
     try:
         from rag.vector_store import delete_company
+
         count = delete_company(company_name)
         return {"message": f"Deleted {count} documents", "count": count}
     except ImportError:
@@ -507,12 +524,14 @@ async def list_companies():
     """List all companies with indexed data."""
     try:
         from rag.vector_store import list_companies as _list
+
         return {"companies": _list()}
     except ImportError:
         return {"companies": []}
 
 
 # ============== Application Questions Endpoints ==============
+
 
 @router.post("/tasks/{task_id}/questions/{question_id}/generate", response_model=ApplicationQuestion)
 async def generate_question_answer(task_id: str, question_id: str):

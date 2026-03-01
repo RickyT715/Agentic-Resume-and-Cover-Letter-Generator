@@ -14,7 +14,6 @@ Usage:
 
 import asyncio
 import json
-import os
 import sys
 import time
 from datetime import datetime
@@ -225,7 +224,7 @@ async def poll_task(client: httpx.AsyncClient, task_id: str) -> dict:
         status = task["status"]
         if status in ("completed", "failed", "cancelled"):
             return task
-        print(f"  [{task_id}] Status: {status} ... ({int(time.time()-start)}s elapsed)")
+        print(f"  [{task_id}] Status: {status} ... ({int(time.time() - start)}s elapsed)")
         await asyncio.sleep(POLL_INTERVAL)
     raise TimeoutError(f"Task {task_id} did not complete within {MAX_WAIT}s")
 
@@ -302,7 +301,7 @@ def generate_report(results: list[dict]) -> str:
     lines = []
     lines.append("# Resume Generator E2E Test Report")
     lines.append(f"\n**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    lines.append(f"**Pipeline:** v3 (Multi-Agent LangGraph)")
+    lines.append("**Pipeline:** v3 (Multi-Agent LangGraph)")
     lines.append(f"**Examples Run:** {len(results)}")
     lines.append("")
 
@@ -352,7 +351,7 @@ def generate_report(results: list[dict]) -> str:
 
     # Detailed section per example
     for i, r in enumerate(results, 1):
-        lines.append(f"---\n")
+        lines.append("---\n")
         lines.append(f"## Example {i}: {r['label']}")
         lines.append("")
         lines.append(f"**Status:** {r['status']}")
@@ -413,9 +412,7 @@ def generate_report(results: list[dict]) -> str:
                 extra_parts.append(f"attempt={ad['attempt']}")
             extra = ", ".join(extra_parts) or "-"
 
-            lines.append(
-                f"| {agent_name} | {latency} | {inp:,} | {out:,} | {tot:,} | {extra} |"
-            )
+            lines.append(f"| {agent_name} | {latency} | {inp:,} | {out:,} | {tot:,} | {extra} |")
         lines.append("")
 
         # ATS Evaluation
@@ -484,22 +481,20 @@ def generate_report(results: list[dict]) -> str:
 
         # Error if any
         if r.get("error_message"):
-            lines.append(f"### Error")
+            lines.append("### Error")
             lines.append(f"```\n{r['error_message']}\n```")
             lines.append("")
 
     return "\n".join(lines)
 
 
-async def run_single_example(
-    client: httpx.AsyncClient, example: dict, index: int
-) -> dict:
+async def run_single_example(client: httpx.AsyncClient, example: dict, index: int) -> dict:
     """Run a single example end-to-end."""
     label = example["label"]
     jd = example["jd"]
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Example {index}: {label}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     result = {
         "label": label,
@@ -512,16 +507,16 @@ async def run_single_example(
 
     try:
         # Step 1: Create task
-        print(f"  Creating task...")
+        print("  Creating task...")
         task = await create_task(client, jd)
         task_id = task["id"]
         task_number = task["task_number"]
         print(f"  Task created: id={task_id}, number={task_number}")
 
         # Step 2: Start v3 pipeline
-        print(f"  Starting v3 pipeline...")
+        print("  Starting v3 pipeline...")
         await start_task_v3(client, task_id)
-        print(f"  Pipeline started, polling for completion...")
+        print("  Pipeline started, polling for completion...")
 
         # Step 3: Poll until done
         final_task = await poll_task(client, task_id)
@@ -541,14 +536,14 @@ async def run_single_example(
 
         # Step 4: Fetch evaluation
         if final_task.get("resume_pdf_path"):
-            print(f"  Fetching ATS evaluation...")
+            print("  Fetching ATS evaluation...")
             ev = await get_evaluation(client, task_id)
             if ev:
                 result["evaluation"] = ev
                 result["ats_score"] = ev.get("combined_score", ev.get("ats_score", 0))
                 print(f"  ATS Score: {result['ats_score']:.0%}")
             else:
-                print(f"  No evaluation available")
+                print("  No evaluation available")
 
         # Step 5: Collect response files
         response_files = collect_response_files(task_number)
@@ -568,13 +563,9 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Run 5-example E2E test")
+    parser.add_argument("--provider", default=None, help="Override default AI provider (gemini, claude_proxy, etc.)")
     parser.add_argument(
-        "--provider", default=None,
-        help="Override default AI provider (gemini, claude_proxy, etc.)"
-    )
-    parser.add_argument(
-        "--report-name", default="report_5_examples",
-        help="Base name for report files (e.g. report_5_examples_claude)"
+        "--report-name", default="report_5_examples", help="Base name for report files (e.g. report_5_examples_claude)"
     )
     args = parser.parse_args()
 

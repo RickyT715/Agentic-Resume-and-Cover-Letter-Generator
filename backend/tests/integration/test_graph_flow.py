@@ -3,8 +3,9 @@
 Tests the graph structure and routing logic with mocked LLM calls.
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 from agents.state import ResumeState
 
@@ -133,7 +134,9 @@ class TestAgentOutputTracking:
         from agents.jd_analyzer import jd_analyzer_agent
 
         mock_provider = AsyncMock()
-        mock_provider.generate = AsyncMock(return_value='{"job_title": "SWE", "company_name": "Test", "required_skills": ["Python"], "preferred_skills": [], "experience_level": "mid", "key_responsibilities": ["Code"], "industry": "Tech"}')
+        mock_provider.generate = AsyncMock(
+            return_value='{"job_title": "SWE", "company_name": "Test", "required_skills": ["Python"], "preferred_skills": [], "experience_level": "mid", "key_responsibilities": ["Code"], "industry": "Tech"}'
+        )
 
         state: ResumeState = {
             "task_id": "test-123",

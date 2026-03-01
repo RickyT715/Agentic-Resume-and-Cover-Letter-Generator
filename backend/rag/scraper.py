@@ -10,7 +10,6 @@ structured company information.
 import logging
 import re
 import time
-from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -62,6 +61,7 @@ async def _rate_limit(domain: str):
     wait = RATE_LIMIT_SECONDS - (now - last)
     if wait > 0:
         import asyncio
+
         await asyncio.sleep(wait)
     _last_request_time[domain] = time.time()
 
@@ -90,7 +90,7 @@ def _extract_text_from_html(html: str) -> str:
     return text.strip()
 
 
-async def scrape_url(url: str, client: httpx.AsyncClient | None = None) -> Optional[str]:
+async def scrape_url(url: str, client: httpx.AsyncClient | None = None) -> str | None:
     """Scrape a single URL and return extracted text.
 
     Args:
@@ -161,11 +161,13 @@ async def scrape_company(company_url: str) -> list[dict]:
         # Scrape main page
         main_text = await scrape_url(company_url, client)
         if main_text:
-            results.append({
-                "url": company_url,
-                "text": main_text,
-                "content_type": "main",
-            })
+            results.append(
+                {
+                    "url": company_url,
+                    "text": main_text,
+                    "content_type": "main",
+                }
+            )
 
         # Try common company info paths
         for path in COMPANY_PATHS:
@@ -183,11 +185,13 @@ async def scrape_company(company_url: str) -> list[dict]:
                 content_type = "careers" if "career" in path or "job" in path else "about"
                 if "blog" in path or "tech" in path or "engineering" in path:
                     content_type = "tech_blog"
-                results.append({
-                    "url": url,
-                    "text": text,
-                    "content_type": content_type,
-                })
+                results.append(
+                    {
+                        "url": url,
+                        "text": text,
+                        "content_type": content_type,
+                    }
+                )
 
     logger.info(f"Company scrape complete for {base_url}: {len(results)} pages collected")
     return results

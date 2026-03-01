@@ -33,15 +33,17 @@ def base_state():
 class TestJDAnalyzer:
     @pytest.mark.asyncio
     async def test_parses_valid_json(self, mock_provider, base_state):
-        mock_provider.generate.return_value = json.dumps({
-            "job_title": "Software Engineer",
-            "company_name": "Google",
-            "required_skills": ["Python", "Go"],
-            "preferred_skills": ["Kubernetes"],
-            "experience_level": "3+ years",
-            "key_responsibilities": ["Build systems"],
-            "industry": "Technology",
-        })
+        mock_provider.generate.return_value = json.dumps(
+            {
+                "job_title": "Software Engineer",
+                "company_name": "Google",
+                "required_skills": ["Python", "Go"],
+                "preferred_skills": ["Kubernetes"],
+                "experience_level": "3+ years",
+                "key_responsibilities": ["Build systems"],
+                "industry": "Technology",
+            }
+        )
 
         with patch("services.provider_registry.get_provider", return_value=mock_provider):
             result = await jd_analyzer_agent(base_state)
@@ -84,15 +86,17 @@ class TestJDAnalyzer:
 
     @pytest.mark.asyncio
     async def test_tracks_latency(self, mock_provider, base_state):
-        mock_provider.generate.return_value = json.dumps({
-            "job_title": "SWE",
-            "company_name": "",
-            "required_skills": [],
-            "preferred_skills": [],
-            "experience_level": "",
-            "key_responsibilities": [],
-            "industry": "",
-        })
+        mock_provider.generate.return_value = json.dumps(
+            {
+                "job_title": "SWE",
+                "company_name": "",
+                "required_skills": [],
+                "preferred_skills": [],
+                "experience_level": "",
+                "key_responsibilities": [],
+                "industry": "",
+            }
+        )
 
         with patch("services.provider_registry.get_provider", return_value=mock_provider):
             result = await jd_analyzer_agent(base_state)

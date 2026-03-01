@@ -1,17 +1,21 @@
 """Tests for WebSocket connection manager."""
+
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestConnectionManager:
     def test_init_empty(self):
         from api.websocket import ConnectionManager
+
         mgr = ConnectionManager()
         assert mgr.active_connections == []
 
     @pytest.mark.asyncio
     async def test_connect(self):
         from api.websocket import ConnectionManager
+
         mgr = ConnectionManager()
         ws = AsyncMock()
         await mgr.connect(ws)
@@ -21,6 +25,7 @@ class TestConnectionManager:
     @pytest.mark.asyncio
     async def test_connect_multiple(self):
         from api.websocket import ConnectionManager
+
         mgr = ConnectionManager()
         ws1 = AsyncMock()
         ws2 = AsyncMock()
@@ -30,6 +35,7 @@ class TestConnectionManager:
 
     def test_disconnect(self):
         from api.websocket import ConnectionManager
+
         mgr = ConnectionManager()
         ws = MagicMock()
         mgr.active_connections.append(ws)
@@ -38,6 +44,7 @@ class TestConnectionManager:
 
     def test_disconnect_not_in_list(self):
         from api.websocket import ConnectionManager
+
         mgr = ConnectionManager()
         ws = MagicMock()
         # Should not raise
@@ -47,6 +54,7 @@ class TestConnectionManager:
     @pytest.mark.asyncio
     async def test_broadcast(self):
         from api.websocket import ConnectionManager
+
         mgr = ConnectionManager()
         ws1 = AsyncMock()
         ws2 = AsyncMock()
@@ -59,6 +67,7 @@ class TestConnectionManager:
     @pytest.mark.asyncio
     async def test_broadcast_removes_disconnected(self):
         from api.websocket import ConnectionManager
+
         mgr = ConnectionManager()
         ws_good = AsyncMock()
         ws_bad = AsyncMock()
@@ -71,6 +80,7 @@ class TestConnectionManager:
     @pytest.mark.asyncio
     async def test_broadcast_empty_connections(self):
         from api.websocket import ConnectionManager
+
         mgr = ConnectionManager()
         # Should not raise
         await mgr.broadcast({"type": "test"})
@@ -79,7 +89,8 @@ class TestConnectionManager:
 class TestProgressCallback:
     @pytest.mark.asyncio
     async def test_progress_callback_broadcasts(self):
-        from api.websocket import progress_callback, manager
+        from api.websocket import manager, progress_callback
+
         original_connections = manager.active_connections[:]
         ws = AsyncMock()
         manager.active_connections = [ws]

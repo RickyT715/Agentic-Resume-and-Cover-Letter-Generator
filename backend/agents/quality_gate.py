@@ -41,7 +41,9 @@ def _heuristic_score(latex_source: str, jd_analysis: dict) -> tuple[float, str]:
     structure_score = min(sections_found / 3, 1.0)  # At least 3 of 5
     score += structure_score * weights["structure"]
     if sections_found < 3:
-        feedback_items.append(f"Resume has only {sections_found} of expected sections (experience, education, skills, etc.)")
+        feedback_items.append(
+            f"Resume has only {sections_found} of expected sections (experience, education, skills, etc.)"
+        )
 
     # 2. Keyword match (35%) - JD required skills found in resume
     required_skills = jd_analysis.get("required_skills", [])
@@ -70,13 +72,27 @@ def _heuristic_score(latex_source: str, jd_analysis: dict) -> tuple[float, str]:
     score += length_score * weights["length"]
 
     # 4. Formatting quality (25%) - action verbs, quantified achievements
-    action_verbs = ["led", "developed", "implemented", "designed", "built", "managed", "increased",
-                    "reduced", "improved", "created", "launched", "optimized", "achieved", "delivered"]
+    action_verbs = [
+        "led",
+        "developed",
+        "implemented",
+        "designed",
+        "built",
+        "managed",
+        "increased",
+        "reduced",
+        "improved",
+        "created",
+        "launched",
+        "optimized",
+        "achieved",
+        "delivered",
+    ]
     verb_count = sum(1 for verb in action_verbs if re.search(rf"\b{verb}\b", lower_latex))
     verb_score = min(verb_count / 5, 1.0)
 
     # Check for quantified achievements (numbers in bullet points)
-    numbers = re.findall(r'\d+[%x+]|\$[\d,]+|\d+\+?\s*(?:users|customers|projects|team)', lower_latex)
+    numbers = re.findall(r"\d+[%x+]|\$[\d,]+|\d+\+?\s*(?:users|customers|projects|team)", lower_latex)
     quant_score = min(len(numbers) / 3, 1.0)
 
     format_score = (verb_score + quant_score) / 2

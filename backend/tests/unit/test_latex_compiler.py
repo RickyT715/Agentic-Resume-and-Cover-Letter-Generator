@@ -1,15 +1,16 @@
 """Tests for LaTeX compiler service."""
-import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-import subprocess
 
+import subprocess
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 # ===================== CompilationAttempt / CompilationError =====================
+
 
 class TestCompilationAttempt:
     def test_dataclass_fields(self):
         from services.latex_compiler import CompilationAttempt
+
         attempt = CompilationAttempt(
             attempt_number=1,
             latex_code="\\documentclass{article}",
@@ -23,6 +24,7 @@ class TestCompilationAttempt:
 
     def test_failed_attempt_with_error(self):
         from services.latex_compiler import CompilationAttempt
+
         attempt = CompilationAttempt(
             attempt_number=2,
             latex_code="bad latex",
@@ -36,7 +38,8 @@ class TestCompilationAttempt:
 
 class TestCompilationError:
     def test_error_with_attempts(self):
-        from services.latex_compiler import CompilationError, CompilationAttempt
+        from services.latex_compiler import CompilationAttempt, CompilationError
+
         attempts = [
             CompilationAttempt(attempt_number=1, latex_code="code1", success=False, error_log="err1"),
             CompilationAttempt(attempt_number=2, latex_code="code2", success=False, error_log="err2"),
@@ -46,7 +49,8 @@ class TestCompilationError:
         assert len(err.attempts) == 2
 
     def test_debug_report(self):
-        from services.latex_compiler import CompilationError, CompilationAttempt
+        from services.latex_compiler import CompilationAttempt, CompilationError
+
         attempts = [
             CompilationAttempt(attempt_number=1, latex_code="code", success=False, error_log="err"),
         ]
@@ -58,63 +62,69 @@ class TestCompilationError:
 
 # ===================== LaTeXCompiler =====================
 
+
 class TestLaTeXCompiler:
     def test_init_defaults(self):
         from services.latex_compiler import LaTeXCompiler
+
         compiler = LaTeXCompiler()
         assert compiler.max_retries == 3
         assert compiler.attempts == []
 
     def test_init_custom_retries(self):
         from services.latex_compiler import LaTeXCompiler
+
         compiler = LaTeXCompiler(max_retries=5)
         assert compiler.max_retries == 5
 
     def test_add_attempt(self):
-        from services.latex_compiler import LaTeXCompiler, CompilationAttempt
+        from services.latex_compiler import CompilationAttempt, LaTeXCompiler
+
         compiler = LaTeXCompiler()
         attempt = CompilationAttempt(attempt_number=1, latex_code="code", success=True)
         compiler.add_attempt(attempt)
         assert len(compiler.attempts) == 1
 
     def test_clear_attempts(self):
-        from services.latex_compiler import LaTeXCompiler, CompilationAttempt
+        from services.latex_compiler import CompilationAttempt, LaTeXCompiler
+
         compiler = LaTeXCompiler()
         compiler.add_attempt(CompilationAttempt(attempt_number=1, latex_code="code", success=True))
         compiler.clear_attempts()
         assert compiler.attempts == []
 
     def test_get_last_error_when_failed(self):
-        from services.latex_compiler import LaTeXCompiler, CompilationAttempt
+        from services.latex_compiler import CompilationAttempt, LaTeXCompiler
+
         compiler = LaTeXCompiler()
-        compiler.add_attempt(CompilationAttempt(
-            attempt_number=1, latex_code="code", success=False, error_log="some error"
-        ))
+        compiler.add_attempt(
+            CompilationAttempt(attempt_number=1, latex_code="code", success=False, error_log="some error")
+        )
         assert compiler.get_last_error() == "some error"
 
     def test_get_last_error_when_success(self):
-        from services.latex_compiler import LaTeXCompiler, CompilationAttempt
+        from services.latex_compiler import CompilationAttempt, LaTeXCompiler
+
         compiler = LaTeXCompiler()
-        compiler.add_attempt(CompilationAttempt(
-            attempt_number=1, latex_code="code", success=True
-        ))
+        compiler.add_attempt(CompilationAttempt(attempt_number=1, latex_code="code", success=True))
         assert compiler.get_last_error() is None
 
     def test_get_last_error_empty(self):
         from services.latex_compiler import LaTeXCompiler
+
         compiler = LaTeXCompiler()
         assert compiler.get_last_error() is None
 
     def test_get_last_latex(self):
-        from services.latex_compiler import LaTeXCompiler, CompilationAttempt
+        from services.latex_compiler import CompilationAttempt, LaTeXCompiler
+
         compiler = LaTeXCompiler()
-        compiler.add_attempt(CompilationAttempt(
-            attempt_number=1, latex_code="my latex", success=True
-        ))
+        compiler.add_attempt(CompilationAttempt(attempt_number=1, latex_code="my latex", success=True))
         assert compiler.get_last_latex() == "my latex"
 
     def test_get_last_latex_empty(self):
         from services.latex_compiler import LaTeXCompiler
+
         compiler = LaTeXCompiler()
         assert compiler.get_last_latex() is None
 
@@ -122,6 +132,7 @@ class TestLaTeXCompiler:
 class TestCompileOnce:
     def test_rejects_code_not_starting_with_documentclass(self):
         from services.latex_compiler import LaTeXCompiler
+
         with patch("config.settings") as mock_settings:
             mock_settings.logs_dir = Path("/tmp")
             compiler = LaTeXCompiler()
@@ -131,6 +142,7 @@ class TestCompileOnce:
 
     def test_rejects_code_not_ending_with_end_document(self):
         from services.latex_compiler import LaTeXCompiler
+
         with patch("config.settings") as mock_settings:
             mock_settings.logs_dir = Path("/tmp")
             compiler = LaTeXCompiler()
@@ -140,6 +152,7 @@ class TestCompileOnce:
 
     def test_successful_compilation(self, tmp_path):
         from services.latex_compiler import LaTeXCompiler
+
         latex = "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}"
 
         with patch("config.settings") as mock_settings:
@@ -170,6 +183,7 @@ class TestCompileOnce:
 
     def test_compilation_timeout(self, tmp_path):
         from services.latex_compiler import LaTeXCompiler
+
         latex = "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}"
 
         with patch("config.settings") as mock_settings:
@@ -184,6 +198,7 @@ class TestCompileOnce:
 
     def test_compiler_not_found(self, tmp_path):
         from services.latex_compiler import LaTeXCompiler
+
         latex = "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}"
 
         with patch("config.settings") as mock_settings:
@@ -198,6 +213,7 @@ class TestCompileOnce:
 
     def test_pdf_not_created(self, tmp_path):
         from services.latex_compiler import LaTeXCompiler
+
         latex = "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}"
 
         with patch("config.settings") as mock_settings:

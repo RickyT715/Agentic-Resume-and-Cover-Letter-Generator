@@ -6,8 +6,7 @@ Configurable via environment variables.
 
 import logging
 
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 
 logger = logging.getLogger(__name__)
 

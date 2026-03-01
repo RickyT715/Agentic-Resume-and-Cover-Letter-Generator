@@ -6,7 +6,6 @@ Data is persisted to disk for caching across sessions.
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +74,7 @@ def add_documents(
 def query(
     query_text: str,
     n_results: int = 5,
-    company_name: Optional[str] = None,
+    company_name: str | None = None,
     query_embedding: list[float] | None = None,
 ) -> list[dict]:
     """Query the vector store for relevant documents.
@@ -112,11 +111,13 @@ def query(
     docs = []
     if results and results["documents"]:
         for i, text in enumerate(results["documents"][0]):
-            docs.append({
-                "text": text,
-                "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                "distance": results["distances"][0][i] if results["distances"] else 0.0,
-            })
+            docs.append(
+                {
+                    "text": text,
+                    "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
+                    "distance": results["distances"][0][i] if results["distances"] else 0.0,
+                }
+            )
 
     return docs
 
@@ -164,10 +165,12 @@ def get_company_info(company_name: str) -> list[dict]:
     docs = []
     if results and results["documents"]:
         for i, text in enumerate(results["documents"]):
-            docs.append({
-                "text": text,
-                "metadata": results["metadatas"][i] if results["metadatas"] else {},
-            })
+            docs.append(
+                {
+                    "text": text,
+                    "metadata": results["metadatas"][i] if results["metadatas"] else {},
+                }
+            )
 
     return docs
 

@@ -1,10 +1,9 @@
-from pathlib import Path
-from pydantic_settings import BaseSettings
-from typing import Optional
-import os
 import logging
 from logging.handlers import RotatingFileHandler
-from datetime import datetime
+from pathlib import Path
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     # API Configuration - Gemini
@@ -12,10 +11,10 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-3-pro-preview"  # Gemini 3 Pro (recommended)
 
     # Gemini Generation Parameters
-    gemini_temperature: Optional[float] = None
-    gemini_top_k: Optional[int] = None
-    gemini_top_p: Optional[float] = None
-    gemini_max_output_tokens: Optional[int] = None
+    gemini_temperature: float | None = None
+    gemini_top_k: int | None = None
+    gemini_top_p: float | None = None
+    gemini_max_output_tokens: int | None = None
     gemini_thinking_level: str = "high"
 
     # Google Search Grounding
@@ -72,6 +71,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         extra = "ignore"
 
+
 settings = Settings()
 
 # Ensure directories exist
@@ -86,69 +86,56 @@ def setup_logging():
     """Configure logging to both file and console."""
     # Create formatters
     detailed_formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
-    simple_formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    
+    simple_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
     # Get root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(getattr(logging, settings.log_level.upper()))
-    
+
     # Clear existing handlers
     root_logger.handlers = []
-    
+
     # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(simple_formatter)
     root_logger.addHandler(console_handler)
-    
+
     # Main log file handler (rotating)
     main_log_file = settings.logs_dir / "app.log"
     file_handler = RotatingFileHandler(
-        main_log_file,
-        maxBytes=settings.log_max_bytes,
-        backupCount=settings.log_backup_count,
-        encoding='utf-8'
+        main_log_file, maxBytes=settings.log_max_bytes, backupCount=settings.log_backup_count, encoding="utf-8"
     )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(detailed_formatter)
     root_logger.addHandler(file_handler)
-    
+
     # Error log file handler (separate file for errors)
     error_log_file = settings.logs_dir / "error.log"
     error_handler = RotatingFileHandler(
-        error_log_file,
-        maxBytes=settings.log_max_bytes,
-        backupCount=settings.log_backup_count,
-        encoding='utf-8'
+        error_log_file, maxBytes=settings.log_max_bytes, backupCount=settings.log_backup_count, encoding="utf-8"
     )
     error_handler.setLevel(logging.ERROR)
     error_handler.setFormatter(detailed_formatter)
     root_logger.addHandler(error_handler)
-    
+
     # Task-specific log file (for task processing details)
     task_log_file = settings.logs_dir / "tasks.log"
     task_handler = RotatingFileHandler(
-        task_log_file,
-        maxBytes=settings.log_max_bytes,
-        backupCount=settings.log_backup_count,
-        encoding='utf-8'
+        task_log_file, maxBytes=settings.log_max_bytes, backupCount=settings.log_backup_count, encoding="utf-8"
     )
     task_handler.setLevel(logging.INFO)
     task_handler.setFormatter(detailed_formatter)
-    
+
     # Add task handler to specific loggers
-    task_logger = logging.getLogger('services.task_manager')
+    task_logger = logging.getLogger("services.task_manager")
     task_logger.addHandler(task_handler)
-    
-    gemini_logger = logging.getLogger('services.gemini_client')
+
+    gemini_logger = logging.getLogger("services.gemini_client")
     gemini_logger.addHandler(task_handler)
-    
+
     return root_logger
 
 

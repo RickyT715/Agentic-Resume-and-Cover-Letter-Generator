@@ -1,6 +1,8 @@
 """Tests for cover_letter_writer agent."""
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 
 
 @pytest.fixture
@@ -29,8 +31,10 @@ class TestCoverLetterWriterAgent:
     async def test_generates_cover_letter(self, cover_letter_state, mock_provider, mock_prompt_manager):
         from agents.cover_letter_writer import cover_letter_writer_agent
 
-        with patch("services.provider_registry.get_provider", return_value=mock_provider), \
-             patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager):
+        with (
+            patch("services.provider_registry.get_provider", return_value=mock_provider),
+            patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager),
+        ):
             result = await cover_letter_writer_agent(cover_letter_state)
 
         assert "cover_letter_text" in result
@@ -40,8 +44,10 @@ class TestCoverLetterWriterAgent:
     async def test_sets_current_node(self, cover_letter_state, mock_provider, mock_prompt_manager):
         from agents.cover_letter_writer import cover_letter_writer_agent
 
-        with patch("services.provider_registry.get_provider", return_value=mock_provider), \
-             patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager):
+        with (
+            patch("services.provider_registry.get_provider", return_value=mock_provider),
+            patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager),
+        ):
             result = await cover_letter_writer_agent(cover_letter_state)
 
         assert result["current_node"] == "cover_letter_writer"
@@ -50,8 +56,10 @@ class TestCoverLetterWriterAgent:
     async def test_records_agent_outputs(self, cover_letter_state, mock_provider, mock_prompt_manager):
         from agents.cover_letter_writer import cover_letter_writer_agent
 
-        with patch("services.provider_registry.get_provider", return_value=mock_provider), \
-             patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager):
+        with (
+            patch("services.provider_registry.get_provider", return_value=mock_provider),
+            patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager),
+        ):
             result = await cover_letter_writer_agent(cover_letter_state)
 
         assert "cover_letter_writer" in result["agent_outputs"]
@@ -62,8 +70,10 @@ class TestCoverLetterWriterAgent:
     async def test_prompt_includes_jd_analysis(self, cover_letter_state, mock_provider, mock_prompt_manager):
         from agents.cover_letter_writer import cover_letter_writer_agent
 
-        with patch("services.provider_registry.get_provider", return_value=mock_provider), \
-             patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager):
+        with (
+            patch("services.provider_registry.get_provider", return_value=mock_provider),
+            patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager),
+        ):
             await cover_letter_writer_agent(cover_letter_state)
 
         call_args = mock_provider.generate.call_args
@@ -77,8 +87,10 @@ class TestCoverLetterWriterAgent:
 
         cover_letter_state["company_context"] = "TestCo values innovation and collaboration."
 
-        with patch("services.provider_registry.get_provider", return_value=mock_provider), \
-             patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager):
+        with (
+            patch("services.provider_registry.get_provider", return_value=mock_provider),
+            patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager),
+        ):
             await cover_letter_writer_agent(cover_letter_state)
 
         call_args = mock_provider.generate.call_args
@@ -89,7 +101,9 @@ class TestCoverLetterWriterAgent:
     async def test_uses_correct_provider(self, cover_letter_state, mock_provider, mock_prompt_manager):
         from agents.cover_letter_writer import cover_letter_writer_agent
 
-        with patch("services.provider_registry.get_provider", return_value=mock_provider) as mock_get, \
-             patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager):
+        with (
+            patch("services.provider_registry.get_provider", return_value=mock_provider) as mock_get,
+            patch("services.prompt_manager.get_prompt_manager", return_value=mock_prompt_manager),
+        ):
             await cover_letter_writer_agent(cover_letter_state)
             mock_get.assert_called_once_with("gemini")

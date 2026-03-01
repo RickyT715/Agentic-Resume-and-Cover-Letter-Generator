@@ -56,9 +56,7 @@ async def compile_latex_node(state: ResumeState) -> dict:
             if enforce_one_page and result.pdf_path:
                 is_single, page_count = validate_single_page(result.pdf_path)
                 if not is_single and page_count > 0 and attempt < max_attempts:
-                    logger.warning(
-                        f"Task {state['task_number']}: Resume is {page_count} pages, retrying"
-                    )
+                    logger.warning(f"Task {state['task_number']}: Resume is {page_count} pages, retrying")
                     # Get AI to regenerate a shorter version
                     provider = get_provider(state["provider_name"])
                     from services.prompt_manager import get_prompt_manager
@@ -172,7 +170,6 @@ async def create_cover_letter_pdf_node(state: ResumeState) -> dict:
     Writes: cover_letter_pdf_path, current_node, agent_outputs
     """
     from config import settings
-    from services.pdf_page_counter import validate_single_page
     from services.settings_manager import get_settings_manager
     from services.text_to_pdf import TextToPDFConverter
 
@@ -180,7 +177,7 @@ async def create_cover_letter_pdf_node(state: ResumeState) -> dict:
     start = time.time()
 
     sm = get_settings_manager()
-    enforce_one_page = sm.get("enforce_cover_letter_one_page", True)
+    sm.get("enforce_cover_letter_one_page", True)
 
     converter = TextToPDFConverter()
 

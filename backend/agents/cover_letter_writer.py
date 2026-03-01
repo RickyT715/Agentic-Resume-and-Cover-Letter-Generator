@@ -72,8 +72,7 @@ async def cover_letter_writer_agent(state: ResumeState) -> dict:
 
     latency = int((time.time() - start) * 1000)
     logger.info(
-        f"Task {state['task_number']}: Cover letter generated - "
-        f"{len(cover_letter_text)} chars, latency={latency}ms"
+        f"Task {state['task_number']}: Cover letter generated - {len(cover_letter_text)} chars, latency={latency}ms"
     )
 
     agent_outputs = state.get("agent_outputs", {})
@@ -82,7 +81,7 @@ async def cover_letter_writer_agent(state: ResumeState) -> dict:
         "text_length": len(cover_letter_text),
         "prompt_chars": len(full_prompt),
     }
-    if hasattr(provider, 'last_token_usage') and provider.last_token_usage:
+    if hasattr(provider, "last_token_usage") and provider.last_token_usage:
         agent_outputs["cover_letter_writer"]["token_usage"] = provider.last_token_usage
 
     return {

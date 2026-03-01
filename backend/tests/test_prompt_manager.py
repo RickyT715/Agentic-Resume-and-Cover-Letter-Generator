@@ -1,6 +1,8 @@
 """Tests for PromptManager prompt support including Chinese language."""
+
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
@@ -53,9 +55,7 @@ class TestQuestionPromptSubstitution:
         assert "300" in result
 
     def test_default_word_limit(self, prompt_manager):
-        result = prompt_manager.get_question_prompt_with_substitutions(
-            question="Q", job_description="JD"
-        )
+        result = prompt_manager.get_question_prompt_with_substitutions(question="Q", job_description="JD")
         assert "150" in result
 
 
@@ -79,8 +79,13 @@ class TestQuestionPromptValidation:
 
 class TestChinesePromptRegistered:
     def test_zh_prompt_files_registered(self, prompt_manager):
-        for key in ["resume_prompt_zh", "cover_letter_prompt_zh", "user_information_zh",
-                     "resume_format_zh", "application_question_prompt_zh"]:
+        for key in [
+            "resume_prompt_zh",
+            "cover_letter_prompt_zh",
+            "user_information_zh",
+            "resume_format_zh",
+            "application_question_prompt_zh",
+        ]:
             assert key in prompt_manager.PROMPT_FILES
 
     def test_zh_prompts_loaded(self, prompt_manager):
@@ -101,9 +106,7 @@ class TestChineseResumePromptSubstitution:
         assert "5年经验" in result
 
     def test_en_resume_prompt_unaffected(self, prompt_manager):
-        result = prompt_manager.get_resume_prompt_with_substitutions(
-            job_description="SWE", language="en"
-        )
+        result = prompt_manager.get_resume_prompt_with_substitutions(job_description="SWE", language="en")
         assert "software engineer with 5 years" in result
 
 
@@ -153,21 +156,25 @@ class TestChinesePromptValidation:
 class TestTaskLanguageBackwardCompat:
     def test_task_default_language(self):
         from models.task import Task
+
         task = Task(task_number=1, job_description="test")
         assert task.language == "en"
 
     def test_task_create_default_language(self):
         from models.task import TaskCreate
+
         tc = TaskCreate()
         assert tc.language == "en"
 
     def test_task_with_zh_language(self):
         from models.task import Task
+
         task = Task(task_number=1, job_description="test", language="zh")
         assert task.language == "zh"
 
     def test_task_from_dict_without_language(self):
         from models.task import Task
+
         data = {"task_number": 1, "job_description": "test"}
         task = Task(**data)
         assert task.language == "en"

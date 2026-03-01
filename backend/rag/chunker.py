@@ -5,7 +5,6 @@ embedding and retrieval.
 """
 
 import logging
-import re
 
 logger = logging.getLogger(__name__)
 
@@ -99,14 +98,16 @@ def prepare_chunks_with_metadata(
 
     results = []
     for i, chunk in enumerate(chunks):
-        results.append({
-            "text": chunk,
-            "metadata": {
-                "source_url": source_url,
-                "company_name": company_name.lower(),
-                "content_type": content_type,
-                "chunk_index": i,
-                "scraped_date": datetime.utcnow().isoformat(),
-            },
-        })
+        results.append(
+            {
+                "text": chunk,
+                "metadata": {
+                    "source_url": source_url,
+                    "company_name": company_name.lower(),
+                    "content_type": content_type,
+                    "chunk_index": i,
+                    "scraped_date": datetime.utcnow().isoformat(),
+                },
+            }
+        )
     return results

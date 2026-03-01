@@ -125,9 +125,6 @@ async def evaluate_with_llm(
         )
 
     result.latency_ms = int((time.time() - start) * 1000)
-    logger.info(
-        f"Task {task_number}: LLM judge score={result.overall_score:.2f}, "
-        f"latency={result.latency_ms}ms"
-    )
+    logger.info(f"Task {task_number}: LLM judge score={result.overall_score:.2f}, latency={result.latency_ms}ms")
 
     return result

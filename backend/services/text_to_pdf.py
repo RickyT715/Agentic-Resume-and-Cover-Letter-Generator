@@ -1,11 +1,13 @@
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.units import inch
-from reportlab.lib.enums import TA_LEFT
-from pathlib import Path
-from config import settings
 import logging
+from pathlib import Path
+
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -84,9 +86,7 @@ class TextToPDFConverter:
                     story.append(Spacer(1, 0.3 * inch))  # Space for signature
             else:
                 # Regular paragraph - preserve internal line breaks
-                formatted = "<br/>".join(
-                    self._escape_html(line) for line in lines if line.strip()
-                )
+                formatted = "<br/>".join(self._escape_html(line) for line in lines if line.strip())
                 story.append(Paragraph(formatted, body_style))
                 story.append(Spacer(1, 0.15 * inch))
 

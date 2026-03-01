@@ -1,11 +1,10 @@
+import logging
+import shutil
 import subprocess
 import tempfile
-import shutil
-from pathlib import Path
-import logging
-from dataclasses import dataclass, field
-from typing import Optional, List
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -15,13 +14,13 @@ class CompilationAttempt:
     attempt_number: int
     latex_code: str
     success: bool
-    error_log: Optional[str] = None
-    pdf_path: Optional[Path] = None
+    error_log: str | None = None
+    pdf_path: Path | None = None
     used_error_feedback: bool = False
 
 
 class CompilationError(Exception):
-    def __init__(self, message: str, attempts: List[CompilationAttempt]):
+    def __init__(self, message: str, attempts: list[CompilationAttempt]):
         super().__init__(message)
         self.attempts = attempts
 
@@ -44,23 +43,23 @@ class LaTeXCompiler:
     def __init__(self, max_retries: int = 3):
         self.max_retries = max_retries
         self.logger = logging.getLogger(__name__)
-        self.attempts: List[CompilationAttempt] = []
+        self.attempts: list[CompilationAttempt] = []
 
     def compile_once(
         self, latex_code: str, output_filename: str, attempt_num: int, compiler: str = "pdflatex"
     ) -> CompilationAttempt:
         """Single compilation attempt. Returns CompilationAttempt with results."""
         from config import settings
-        
+
         # Log what we're about to compile
         logger.info(f"LaTeX compilation attempt {attempt_num} for {output_filename}")
         logger.debug(f"LaTeX code length: {len(latex_code)} characters")
         logger.debug(f"LaTeX starts with: {latex_code[:100]!r}")
         logger.debug(f"LaTeX ends with: {latex_code[-100:]!r}")
-        
+
         # Validate the LaTeX code before compilation
         if not latex_code.strip().startswith("\\documentclass"):
-            logger.error(f"LaTeX code does not start with \\documentclass!")
+            logger.error("LaTeX code does not start with \\documentclass!")
             logger.error(f"First 200 chars: {latex_code[:200]!r}")
             return CompilationAttempt(
                 attempt_number=attempt_num,
@@ -68,7 +67,7 @@ class LaTeXCompiler:
                 success=False,
                 error_log="LaTeX code does not start with \\documentclass. Extraction may have failed.",
             )
-        
+
         if not latex_code.strip().endswith("\\end{document}"):
             logger.error("LaTeX code does not end with \\end{document}!")
             logger.error(f"Last 200 chars: {latex_code[-200:]!r}")
@@ -78,7 +77,7 @@ class LaTeXCompiler:
                 success=False,
                 error_log="LaTeX code does not end with \\end{document}. Extraction may have failed.",
             )
-        
+
         # Save the LaTeX to a debug file for inspection
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         debug_tex_file = settings.logs_dir / f"debug_{output_filename}_attempt_{attempt_num}_{timestamp}.tex"
@@ -87,7 +86,7 @@ class LaTeXCompiler:
             logger.info(f"Saved debug LaTeX file: {debug_tex_file}")
         except Exception as e:
             logger.warning(f"Could not save debug LaTeX file: {e}")
-        
+
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             tex_file = temp_path / f"{output_filename}.tex"
@@ -139,9 +138,11 @@ class LaTeXCompiler:
                     else:
                         error_log = result.stdout + "\n" + result.stderr
                         logger.error(f"pdflatex output:\n{error_log}")
-                    
+
                     # Save error log for debugging
-                    error_log_file = settings.logs_dir / f"latex_error_{output_filename}_attempt_{attempt_num}_{timestamp}.log"
+                    error_log_file = (
+                        settings.logs_dir / f"latex_error_{output_filename}_attempt_{attempt_num}_{timestamp}.log"
+                    )
                     try:
                         error_log_file.write_text(error_log, encoding="utf-8")
                         logger.info(f"Saved error log: {error_log_file}")
@@ -161,7 +162,7 @@ class LaTeXCompiler:
                     attempt_number=attempt_num,
                     latex_code=latex_code,
                     success=False,
-                    error_log=f"Compilation timed out after 60 seconds",
+                    error_log="Compilation timed out after 60 seconds",
                 )
             except FileNotFoundError:
                 logger.error(f"{compiler} not found - is texlive installed?")
@@ -180,13 +181,13 @@ class LaTeXCompiler:
                     error_log=str(e),
                 )
 
-    def get_last_error(self) -> Optional[str]:
+    def get_last_error(self) -> str | None:
         """Get the error log from the last failed attempt."""
         if self.attempts and not self.attempts[-1].success:
             return self.attempts[-1].error_log
         return None
 
-    def get_last_latex(self) -> Optional[str]:
+    def get_last_latex(self) -> str | None:
         """Get the LaTeX code from the last attempt."""
         if self.attempts:
             return self.attempts[-1].latex_code

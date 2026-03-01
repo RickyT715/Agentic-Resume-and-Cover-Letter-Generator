@@ -1,15 +1,15 @@
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from pathlib import Path
 import logging
 import shutil
+from contextlib import asynccontextmanager
 
-# Import config first to initialize logging
-from config import settings, setup_logging
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import router
 from api.websocket import manager, progress_callback
+
+# Import config first to initialize logging
+from config import settings
 from services.task_manager import task_manager
 
 # Get logger after config initializes logging
@@ -23,33 +23,30 @@ def validate_environment():
     # Check pdflatex
     if not shutil.which("pdflatex"):
         warnings.append(
-            "pdflatex not found in PATH. LaTeX compilation will fail. "
-            "Install MiKTeX (Windows) or texlive (Linux/Mac)."
+            "pdflatex not found in PATH. LaTeX compilation will fail. Install MiKTeX (Windows) or texlive (Linux/Mac)."
         )
 
     # Check API key for the default provider
     from services.settings_manager import get_settings_manager
-    sm = get_settings_manager()
-    default_provider = sm.get('default_provider') or 'gemini'
 
-    if default_provider == 'gemini':
-        api_key = sm.get('gemini_api_key') or settings.gemini_api_key
+    sm = get_settings_manager()
+    default_provider = sm.get("default_provider") or "gemini"
+
+    if default_provider == "gemini":
+        api_key = sm.get("gemini_api_key") or settings.gemini_api_key
         if not api_key or api_key == "your_gemini_api_key_here":
-            warnings.append(
-                "Gemini API key not configured. Set it in Settings or backend/.env"
-            )
-    elif default_provider == 'claude':
-        api_key = sm.get('claude_api_key') or getattr(settings, 'claude_api_key', '')
+            warnings.append("Gemini API key not configured. Set it in Settings or backend/.env")
+    elif default_provider == "claude":
+        api_key = sm.get("claude_api_key") or getattr(settings, "claude_api_key", "")
         if not api_key:
-            warnings.append(
-                "Claude API key not configured. Set it in Settings or backend/.env"
-            )
-    elif default_provider == 'openai_compat':
+            warnings.append("Claude API key not configured. Set it in Settings or backend/.env")
+    elif default_provider == "openai_compat":
         # OpenAI-compat may not need an API key (local proxy)
         pass
 
     # Check prompt files
     from services.prompt_manager import get_prompt_manager
+
     pm = get_prompt_manager()
     prompts = pm.get_all_prompts()
     for key, content in prompts.items():
@@ -60,9 +57,7 @@ def validate_environment():
     resume_prompt = prompts.get("resume_prompt", "")
     for placeholder in ["{{user_information}}", "{{latex_template}}", "{{JOB_DESCRIPTION}}"]:
         if placeholder not in resume_prompt:
-            warnings.append(
-                f"Resume prompt is missing placeholder {placeholder}"
-            )
+            warnings.append(f"Resume prompt is missing placeholder {placeholder}")
 
     for w in warnings:
         logger.warning(f"STARTUP CHECK: {w}")
@@ -89,7 +84,8 @@ async def lifespan(app: FastAPI):
     # Initialize database if configured (sqlalchemy is optional)
     _close_db = None
     try:
-        from db.session import init_db, close_db
+        from db.session import close_db, init_db
+
         await init_db()
         _close_db = close_db
     except ImportError:
@@ -156,8 +152,9 @@ async def websocket_endpoint(websocket: WebSocket):
 async def health_check():
     """Health check endpoint."""
     from services.settings_manager import get_settings_manager
+
     sm = get_settings_manager()
-    default_provider = sm.get('default_provider') or 'gemini'
+    default_provider = sm.get("default_provider") or "gemini"
     return {
         "status": "healthy",
         "default_provider": default_provider,

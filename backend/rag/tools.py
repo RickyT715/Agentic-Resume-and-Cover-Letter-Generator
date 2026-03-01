@@ -4,7 +4,6 @@ Provides a retrieval node that can be inserted into the resume generation graph.
 """
 
 import logging
-from typing import Optional
 
 from agents.state import ResumeState
 
@@ -74,6 +73,7 @@ def should_retrieve_company(state: ResumeState) -> str:
     # Check if we have data for this company
     try:
         from rag.vector_store import get_company_info
+
         docs = get_company_info(company_name)
         if docs:
             return "retrieve_company"

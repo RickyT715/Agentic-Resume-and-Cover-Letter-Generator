@@ -2,14 +2,14 @@
 
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from models.task import Task, TaskCreate, TaskStatus
+from models.task import Task
 
 
 @pytest.fixture
@@ -48,8 +48,9 @@ def app_with_mocks(mock_services):
         patch("api.routes.get_settings_manager", return_value=mock_sm),
         patch("api.routes.get_prompt_manager", return_value=mock_pm),
     ):
-        from api.routes import router
         from fastapi import FastAPI
+
+        from api.routes import router
 
         app = FastAPI()
         app.include_router(router)
