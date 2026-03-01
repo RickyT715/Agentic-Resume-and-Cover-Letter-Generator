@@ -28,11 +28,7 @@ class QwenClient(AIClientBase):
         except ImportError:
             raise ImportError("openai package is not installed. Run: pip install openai")
 
-        api_key = (
-            self.settings_manager.get("qwen_api_key")
-            or getattr(app_settings, "qwen_api_key", "")
-            or "not-needed"
-        )
+        api_key = self.settings_manager.get("qwen_api_key") or getattr(app_settings, "qwen_api_key", "") or "not-needed"
 
         if self._client is None or self._current_api_key != api_key:
             self._client = openai.OpenAI(
@@ -50,11 +46,7 @@ class QwenClient(AIClientBase):
 
     @property
     def model(self) -> str:
-        return (
-            self.settings_manager.get("qwen_model")
-            or getattr(app_settings, "qwen_model", "")
-            or "qwen-plus"
-        )
+        return self.settings_manager.get("qwen_model") or getattr(app_settings, "qwen_model", "") or "qwen-plus"
 
     @property
     def _temperature(self) -> float | None:
@@ -94,9 +86,7 @@ class QwenClient(AIClientBase):
             loop = asyncio.get_running_loop()
             start_time = datetime.now()
 
-            response = await loop.run_in_executor(
-                None, lambda: client.chat.completions.create(**request_kwargs)
-            )
+            response = await loop.run_in_executor(None, lambda: client.chat.completions.create(**request_kwargs))
 
             elapsed = (datetime.now() - start_time).total_seconds()
             logger.info(f"Qwen API response received in {elapsed:.2f} seconds")

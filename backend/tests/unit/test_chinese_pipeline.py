@@ -127,9 +127,7 @@ class TestChineseActionVerbs:
             ACTION_VERBS_ZH_WEAK,
         )
 
-        assert ACTION_VERBS_ZH_ALL == (
-            ACTION_VERBS_ZH_STRONG | ACTION_VERBS_ZH_MEDIUM | ACTION_VERBS_ZH_WEAK
-        )
+        assert ACTION_VERBS_ZH_ALL == (ACTION_VERBS_ZH_STRONG | ACTION_VERBS_ZH_MEDIUM | ACTION_VERBS_ZH_WEAK)
 
 
 class TestChineseSections:
@@ -361,9 +359,7 @@ class TestChineseQualityGate:
             language="zh",
         )
         # Feedback should be in Chinese for zh language
-        has_zh = any(
-            kw in feedback for kw in ["板块", "缺少", "简历", "建议", "动词", "量化"]
-        )
+        has_zh = any(kw in feedback for kw in ["板块", "缺少", "简历", "建议", "动词", "量化"])
         assert has_zh or feedback == "简历质量达标"
 
     def test_heuristic_score_en_unchanged(self):
@@ -407,7 +403,9 @@ class TestChinesePromptSelection:
         from agents.jd_analyzer import jd_analyzer_agent
 
         mock_provider = AsyncMock()
-        mock_provider.generate = AsyncMock(return_value='{"job_title": "后端工程师", "company_name": "字节跳动", "required_skills": ["Python"], "preferred_skills": [], "experience_level": "3年", "key_responsibilities": [], "industry": "互联网"}')
+        mock_provider.generate = AsyncMock(
+            return_value='{"job_title": "后端工程师", "company_name": "字节跳动", "required_skills": ["Python"], "preferred_skills": [], "experience_level": "3年", "key_responsibilities": [], "industry": "互联网"}'
+        )
         mock_provider.last_token_usage = None
 
         state = {
@@ -431,7 +429,9 @@ class TestChinesePromptSelection:
         from agents.jd_analyzer import jd_analyzer_agent
 
         mock_provider = AsyncMock()
-        mock_provider.generate = AsyncMock(return_value='{"job_title": "Engineer", "company_name": "Co", "required_skills": ["Python"], "preferred_skills": [], "experience_level": "3y", "key_responsibilities": [], "industry": "Tech"}')
+        mock_provider.generate = AsyncMock(
+            return_value='{"job_title": "Engineer", "company_name": "Co", "required_skills": ["Python"], "preferred_skills": [], "experience_level": "3y", "key_responsibilities": [], "industry": "Tech"}'
+        )
         mock_provider.last_token_usage = None
 
         state = {
@@ -454,7 +454,9 @@ class TestChinesePromptSelection:
         from agents.relevance_matcher import relevance_matcher_agent
 
         mock_provider = AsyncMock()
-        mock_provider.generate = AsyncMock(return_value='{"matched_skills": ["Python"], "missing_skills": [], "relevant_experiences": [], "emphasis_points": [], "match_score": 0.8}')
+        mock_provider.generate = AsyncMock(
+            return_value='{"matched_skills": ["Python"], "missing_skills": [], "relevant_experiences": [], "emphasis_points": [], "match_score": 0.8}'
+        )
         mock_provider.last_token_usage = None
 
         state = {
@@ -478,9 +480,7 @@ class TestChinesePromptSelection:
         from agents.resume_writer import resume_writer_agent
 
         mock_provider = AsyncMock()
-        mock_provider.generate = AsyncMock(
-            return_value="\\documentclass{article}\\begin{document}简历\\end{document}"
-        )
+        mock_provider.generate = AsyncMock(return_value="\\documentclass{article}\\begin{document}简历\\end{document}")
         mock_provider.last_token_usage = None
 
         mock_pm = MagicMock()
@@ -494,7 +494,12 @@ class TestChinesePromptSelection:
             "template_id": "classic",
             "provider_name": "gemini",
             "jd_analysis": SAMPLE_ZH_JD_ANALYSIS,
-            "relevance_match": {"matched_skills": ["Python"], "missing_skills": ["Go"], "emphasis_points": [], "match_score": 0.7},
+            "relevance_match": {
+                "matched_skills": ["Python"],
+                "missing_skills": ["Go"],
+                "emphasis_points": [],
+                "match_score": 0.7,
+            },
             "retry_count": 0,
             "agent_outputs": {},
         }

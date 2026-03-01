@@ -1046,9 +1046,9 @@ EXPECTED_SECTIONS_ZH: dict[str, list[str]] = {
 }
 
 # Flat set of all Chinese section name variants for quick matching
-ALL_SECTION_NAMES_ZH = frozenset(
-    name for variants in EXPECTED_SECTIONS_ZH.values() for name in variants
-) | frozenset(EXPECTED_SECTIONS_ZH.keys())
+ALL_SECTION_NAMES_ZH = frozenset(name for variants in EXPECTED_SECTIONS_ZH.values() for name in variants) | frozenset(
+    EXPECTED_SECTIONS_ZH.keys()
+)
 
 
 # ── Bilingual Skill Aliases (Chinese <-> English) ───────────────────

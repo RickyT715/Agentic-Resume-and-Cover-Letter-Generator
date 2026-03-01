@@ -94,9 +94,7 @@ class DeepSeekClient(AIClientBase):
             loop = asyncio.get_running_loop()
             start_time = datetime.now()
 
-            response = await loop.run_in_executor(
-                None, lambda: client.chat.completions.create(**request_kwargs)
-            )
+            response = await loop.run_in_executor(None, lambda: client.chat.completions.create(**request_kwargs))
 
             elapsed = (datetime.now() - start_time).total_seconds()
             logger.info(f"DeepSeek API response received in {elapsed:.2f} seconds")

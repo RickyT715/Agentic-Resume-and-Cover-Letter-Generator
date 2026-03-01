@@ -98,7 +98,10 @@ def _heuristic_score(latex_source: str, jd_analysis: dict, language: str = "en")
         verb_score = min(verb_count / 5, 1.0)
 
         zh_quant_patterns = [
-            r"\d+%", r"\d+倍", r"\d+万", r"\d+亿",
+            r"\d+%",
+            r"\d+倍",
+            r"\d+万",
+            r"\d+亿",
             r"(?:提升|降低|缩短|增加|减少|优化)[\d.]+",
         ]
         numbers_count = sum(len(re.findall(p, latex_source)) for p in zh_quant_patterns)
@@ -112,9 +115,20 @@ def _heuristic_score(latex_source: str, jd_analysis: dict, language: str = "en")
             feedback_items.append("建议添加量化成果（百分比、数据指标等）")
     else:
         action_verbs = [
-            "led", "developed", "implemented", "designed", "built", "managed",
-            "increased", "reduced", "improved", "created", "launched", "optimized",
-            "achieved", "delivered",
+            "led",
+            "developed",
+            "implemented",
+            "designed",
+            "built",
+            "managed",
+            "increased",
+            "reduced",
+            "improved",
+            "created",
+            "launched",
+            "optimized",
+            "achieved",
+            "delivered",
         ]
         verb_count = sum(1 for verb in action_verbs if re.search(rf"\b{verb}\b", lower_latex))
         verb_score = min(verb_count / 5, 1.0)
