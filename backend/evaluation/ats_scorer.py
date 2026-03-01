@@ -88,6 +88,41 @@ SECTION_WEIGHTS = {
     "other": 0.05,
 }
 
+# BM25 English stop words — removed during tokenization to improve signal-to-noise
+_BM25_STOP_WORDS = frozenset({
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
+    "being", "have", "has", "had", "do", "does", "did", "will", "would",
+    "could", "should", "may", "might", "can", "shall", "it", "its",
+    "this", "that", "these", "those", "we", "you", "they", "i", "he",
+    "she", "who", "which", "what", "where", "when", "how", "not", "no",
+    "as", "if", "so", "up", "out", "about", "into", "over", "after",
+})
+
+# Generic words that LLMs commonly extract as "skills" from JDs but aren't actual skills.
+# Filtering these prevents inflated denominators and false "missing keywords" in scoring.
+JD_SKILL_NOISE = frozenset({
+    # Generic verbs/actions
+    "build", "create", "design", "develop", "implement", "manage",
+    "maintain", "support", "work", "working", "looking", "seeking",
+    "join", "lead", "drive", "ensure", "deliver", "contribute",
+    # Generic nouns
+    "ability", "experience", "knowledge", "understanding", "familiarity",
+    "proficiency", "skills", "team", "teams", "company", "role",
+    "position", "opportunity", "environment", "solutions", "tools",
+    "projects", "systems", "requirements", "responsibilities",
+    # Filler adjectives
+    "strong", "excellent", "good", "proven", "relevant", "various",
+    "complex", "multiple", "new", "key", "high", "best",
+    "flexible", "remote", "hybrid", "onsite",
+    # Location/logistics fragments
+    "san", "york", "salary", "compensation", "budget",
+    "schedule", "benefits", "equity", "bonus",
+    # Degree/level words
+    "degree", "bachelor", "master", "phd", "senior", "junior",
+    "mid", "level", "years", "year",
+})
+
 
 # ── Sigmoid calibration ──────────────────────────────────────────────
 # Research shows sigmoid calibration handles score clustering better than
@@ -118,7 +153,10 @@ def _calibrate_linear(raw: float, low: float, high: float) -> float:
 # ── Lazy-loaded singletons ────────────────────────────────────────────
 
 _spacy_nlp = None
+_spacy_nlp_zh = None
 _sentence_model = None
+_sentence_model_zh = None
+_jieba_initialized = False
 
 
 def _get_spacy_nlp():
@@ -149,6 +187,63 @@ def _get_sentence_model():
             logger.warning(f"sentence-transformers not available: {e}")
             _sentence_model = False  # Sentinel
     return _sentence_model if _sentence_model is not False else None
+
+
+def _get_spacy_nlp_zh():
+    """Lazy-load spaCy Chinese model (singleton). Falls back to None."""
+    global _spacy_nlp_zh
+    if _spacy_nlp_zh is None:
+        try:
+            import spacy
+
+            _spacy_nlp_zh = spacy.load("zh_core_web_sm")
+            logger.info("spaCy zh_core_web_sm model loaded")
+        except Exception as e:
+            logger.warning(f"spaCy Chinese model not available: {e}")
+            _spacy_nlp_zh = False
+    return _spacy_nlp_zh if _spacy_nlp_zh is not False else None
+
+
+def _get_sentence_model_zh():
+    """Lazy-load Chinese sentence-transformers model (singleton)."""
+    global _sentence_model_zh
+    if _sentence_model_zh is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+
+            _sentence_model_zh = SentenceTransformer("BAAI/bge-large-zh-v1.5")
+            logger.info("SentenceTransformer BAAI/bge-large-zh-v1.5 loaded")
+        except Exception as e:
+            logger.warning(f"Chinese sentence-transformers model not available: {e}")
+            _sentence_model_zh = False
+    return _sentence_model_zh if _sentence_model_zh is not False else None
+
+
+def _init_jieba():
+    """Initialize jieba tokenizer (singleton)."""
+    global _jieba_initialized
+    if not _jieba_initialized:
+        try:
+            import jieba
+
+            jieba.initialize()
+            _jieba_initialized = True
+            logger.info("jieba tokenizer initialized")
+        except ImportError:
+            logger.warning("jieba not installed, Chinese tokenization unavailable")
+    return _jieba_initialized
+
+
+def _jieba_tokenize(text: str) -> list[str]:
+    """Tokenize Chinese text using jieba. Returns list of tokens."""
+    try:
+        import jieba
+
+        _init_jieba()
+        return [w for w in jieba.cut(text) if w.strip()]
+    except ImportError:
+        # Fallback: character-level splitting for CJK, whitespace for non-CJK
+        return text.split()
 
 
 # ── Data classes ──────────────────────────────────────────────────────
@@ -254,7 +349,13 @@ def _normalize(text: str) -> str:
 # ── Method 1: BM25 Keyword Relevance (20%) ──────────────────────────
 
 
-def _score_bm25(resume_text: str, jd_text: str) -> float:
+def _is_chinese(text: str) -> bool:
+    """Detect if text is primarily Chinese by checking CJK character ratio."""
+    cjk_count = sum(1 for ch in text if "\u4e00" <= ch <= "\u9fff")
+    return cjk_count > len(text) * 0.1
+
+
+def _score_bm25(resume_text: str, jd_text: str, language: str = "en") -> float:
     """Compute BM25 relevance score between resume and JD.
 
     BM25 (Okapi BM25) is superior to TF-IDF because:
@@ -274,16 +375,25 @@ def _score_bm25(resume_text: str, jd_text: str) -> float:
         norm_jd = _normalize(jd_text)
 
         # Tokenize resume into sentences/chunks as the "corpus"
-        resume_sentences = [s.strip() for s in re.split(r"[.;!\n]", norm_resume) if s.strip()]
+        if language == "zh":
+            resume_sentences = [s.strip() for s in re.split(r"[。；！\n]", norm_resume) if s.strip()]
+        else:
+            resume_sentences = [s.strip() for s in re.split(r"[.;!\n]", norm_resume) if s.strip()]
         if not resume_sentences:
             resume_sentences = [norm_resume]
 
-        # Tokenize each sentence
-        tokenized_corpus = [s.lower().split() for s in resume_sentences]
-        bm25 = BM25Plus(tokenized_corpus)
+        # Tokenize each sentence — use jieba for Chinese, stop word filtering for English
+        if language == "zh":
+            tokenized_corpus = [_jieba_tokenize(s.lower()) for s in resume_sentences]
+            jd_tokens = _jieba_tokenize(norm_jd.lower())
+        else:
+            tokenized_corpus = [
+                [w for w in s.lower().split() if w not in _BM25_STOP_WORDS]
+                for s in resume_sentences
+            ]
+            jd_tokens = [w for w in norm_jd.lower().split() if w not in _BM25_STOP_WORDS]
 
-        # Score the JD query against the resume corpus
-        jd_tokens = norm_jd.lower().split()
+        bm25 = BM25Plus(tokenized_corpus)
         scores = bm25.get_scores(jd_tokens)
 
         # Aggregate: use mean of top scores (captures best-matching sections)
@@ -296,8 +406,9 @@ def _score_bm25(resume_text: str, jd_text: str) -> float:
         raw = sum(sorted_scores[:top_n]) / top_n
 
         # BM25Plus scores range widely; use sigmoid calibration
-        # Typical raw scores for good matches: 5-20, great: 20+
-        return _sigmoid_calibrate(raw, center=8.0, steepness=0.15)
+        # center=5.0: an adequate match (raw ~5) maps to 50%
+        # steepness=0.2: good discrimination in the 5-15 range
+        return _sigmoid_calibrate(raw, center=5.0, steepness=0.2)
 
     except Exception as e:
         logger.warning(f"BM25 scoring failed: {e}")
@@ -329,9 +440,9 @@ def _score_tfidf_fallback(resume_text: str, jd_text: str) -> float:
 # ── Method 2: Semantic Embedding Similarity (20%) ─────────────────────
 
 
-def _score_semantic(resume_text: str, jd_text: str) -> float:
+def _score_semantic(resume_text: str, jd_text: str, language: str = "en") -> float:
     """Compute semantic similarity using sentence embeddings."""
-    model = _get_sentence_model()
+    model = _get_sentence_model_zh() if language == "zh" else _get_sentence_model()
     if model is None:
         return 0.5  # Neutral fallback if model unavailable
 
@@ -358,8 +469,10 @@ def _score_semantic(resume_text: str, jd_text: str) -> float:
         jd_avg = np.mean(jd_embeddings, axis=0).reshape(1, -1)
 
         raw = cosine_similarity(resume_avg, jd_avg)[0][0]
-        # Semantic sim for related docs typically 0.3-0.8
-        return _sigmoid_calibrate(float(raw), center=0.45, steepness=8.0)
+        # Semantic sim for related docs typically 0.3-0.6
+        # center=0.35: spreads the useful range so 0.5 cosine → ~73%
+        # steepness=6.0: avoids the "always 60%" flat spot of the old calibration
+        return _sigmoid_calibrate(float(raw), center=0.35, steepness=6.0)
     except Exception as e:
         logger.warning(f"Semantic scoring failed: {e}")
         return 0.5
@@ -385,12 +498,18 @@ def _score_skill_coverage(
     resume_lower = resume_normalized.lower()
     jd_lower = jd_normalized.lower()
 
-    # Build skill sets from JD analysis if available
+    # Build skill sets from JD analysis if available, filtering noise words
     jd_required: list[str] = []
     jd_preferred: list[str] = []
     if jd_analysis:
-        jd_required = jd_analysis.get("required_skills", [])
-        jd_preferred = jd_analysis.get("preferred_skills", [])
+        jd_required = [
+            s for s in jd_analysis.get("required_skills", [])
+            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+        ]
+        jd_preferred = [
+            s for s in jd_analysis.get("preferred_skills", [])
+            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+        ]
 
     # Combine JD-extracted skills with taxonomy matches found in JD text
     jd_explicit_skills = {s.lower() for s in jd_required + jd_preferred}
@@ -480,11 +599,17 @@ def _score_fuzzy(
     # Normalize for synonym matching
     resume_normalized = _normalize(resume_text)
 
-    # Collect target keywords from JD
+    # Collect target keywords from JD, filtering noise words
     keywords: list[str] = []
     if jd_analysis:
-        keywords.extend(jd_analysis.get("required_skills", []))
-        keywords.extend(jd_analysis.get("preferred_skills", []))
+        keywords.extend(
+            s for s in jd_analysis.get("required_skills", [])
+            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+        )
+        keywords.extend(
+            s for s in jd_analysis.get("preferred_skills", [])
+            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+        )
     if not keywords:
         words = set(re.findall(r"\b[a-zA-Z][\w.#+/-]{2,}\b", jd_text))
         stop = {
@@ -595,6 +720,7 @@ def _score_fuzzy(
 def _score_quality(
     resume_text: str,
     resume_latex: str,
+    language: str = "en",
 ) -> tuple[float, float, float, float, float, list[str]]:
     """Score resume quality heuristics.
 
@@ -602,6 +728,9 @@ def _score_quality(
     """
     feedback: list[str] = []
     resume_lower = resume_latex.lower()
+
+    if language == "zh":
+        return _score_quality_zh(resume_text, resume_latex, feedback)
 
     # Action Verbs (25% of quality)
     found_verbs = [v for v in ACTION_VERBS if re.search(rf"\b{v}\b", resume_text.lower())]
@@ -644,6 +773,72 @@ def _score_quality(
     return overall_quality, verbs_score, quant_score, section_score, fmt_score, feedback
 
 
+def _score_quality_zh(
+    resume_text: str,
+    resume_latex: str,
+    feedback: list[str],
+) -> tuple[float, float, float, float, float, list[str]]:
+    """Score resume quality heuristics for Chinese resumes."""
+    from evaluation.skills_taxonomy import (
+        ACTION_VERBS_ZH_MEDIUM,
+        ACTION_VERBS_ZH_STRONG,
+        ACTION_VERBS_ZH_WEAK,
+        ALL_SECTION_NAMES_ZH,
+    )
+
+    resume_lower = resume_latex.lower()
+
+    # Action Verbs (25%) — Chinese verb detection
+    found_strong = [v for v in ACTION_VERBS_ZH_STRONG if v in resume_text]
+    found_medium = [v for v in ACTION_VERBS_ZH_MEDIUM if v in resume_text]
+    found_weak = [v for v in ACTION_VERBS_ZH_WEAK if v in resume_text]
+    # Strong verbs count double, weak verbs count half
+    verb_score_raw = len(found_strong) * 2 + len(found_medium) + len(found_weak) * 0.5
+    verbs_score = min(verb_score_raw / 10, 1.0)
+    if verb_score_raw < 5:
+        examples = "、".join(list(ACTION_VERBS_ZH_STRONG)[:5])
+        feedback.append(f"建议使用更多强动词（已找到{len(found_strong)}个强动词）。例如：{examples}")
+    if found_weak and not found_strong:
+        feedback.append("避免仅使用弱动词（参与、协助等），改用更有力的表达（主导、设计、架构等）")
+
+    # Quantified Achievements (25%) — Chinese quantification patterns
+    zh_quant_patterns = [
+        r"\d+%",
+        r"\d+倍",
+        r"\d+万",
+        r"\d+亿",
+        r"(?:提升|降低|缩短|增加|减少|优化)[\d.]+",
+        r"日活[\d]+",
+        r"[\d]+(?:万|亿)(?:用户|条|次|人)",
+        r"[\d,]+\+?\s*(?:用户|客户|项目|团队|人)",
+        r"\$[\d,]+",
+        r"\d+x",
+    ]
+    quant_count = sum(len(re.findall(p, resume_text)) for p in zh_quant_patterns)
+    quant_score = min(quant_count / 5, 1.0)
+    if quant_count < 3:
+        feedback.append("建议添加更多量化成果（百分比、数字、指标），如'提升30%'、'服务500万用户'")
+
+    # Section Completeness (25%) — Chinese section detection
+    sections_found = sum(1 for s in ALL_SECTION_NAMES_ZH if s in resume_text)
+    section_score = min(sections_found / 4, 1.0)
+    if sections_found < 3:
+        feedback.append(f"简历只有{sections_found}个必要板块，建议包含：工作经历、教育背景、专业技能、项目经历")
+
+    # Format Quality (25%)
+    has_itemize = "\\begin{itemize}" in resume_lower or "\\item" in resume_lower
+    has_sections = sections_found >= 3
+    has_hyperlinks = "\\href{" in resume_lower or "\\url{" in resume_lower
+    has_dates = bool(re.findall(r"20\d{2}", resume_latex))
+    format_points = sum([has_itemize, has_sections, has_hyperlinks, has_dates])
+    fmt_score = format_points / 4
+    if not has_itemize:
+        feedback.append("建议使用项目符号（\\item）使简历结构更清晰")
+
+    overall_quality = (verbs_score + quant_score + section_score + fmt_score) / 4
+    return overall_quality, verbs_score, quant_score, section_score, fmt_score, feedback
+
+
 # ── Method 6: Section-Aware Bonus (10%) ──────────────────────────────
 
 
@@ -662,11 +857,17 @@ def _score_section_bonus(
     if not sections:
         return 0.5  # Can't determine sections
 
-    # Collect target keywords
+    # Collect target keywords, filtering noise words
     target_keywords: list[str] = []
     if jd_analysis:
-        target_keywords.extend(jd_analysis.get("required_skills", []))
-        target_keywords.extend(jd_analysis.get("preferred_skills", []))
+        target_keywords.extend(
+            s for s in jd_analysis.get("required_skills", [])
+            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+        )
+        target_keywords.extend(
+            s for s in jd_analysis.get("preferred_skills", [])
+            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+        )
 
     if not target_keywords:
         # Extract from JD text
@@ -721,6 +922,7 @@ def score_resume(
     resume_latex: str,
     jd_text: str,
     jd_analysis: dict | None = None,
+    language: str = "en",
 ) -> ATSScoreBreakdown:
     """Score a resume against a job description using hybrid multi-method analysis.
 
@@ -736,18 +938,23 @@ def score_resume(
         resume_latex: LaTeX source of the resume
         jd_text: Raw job description text
         jd_analysis: Optional structured JD analysis from the pipeline
+        language: "en" or "zh" — selects language-appropriate scoring
 
     Returns:
         ATSScoreBreakdown with detailed scores and feedback
     """
+    # Auto-detect language if not specified
+    if language == "en" and _is_chinese(jd_text):
+        language = "zh"
+
     result = ATSScoreBreakdown()
     resume_text = _extract_text_from_latex(resume_latex)
 
     # Method 1: BM25 Keyword Relevance (20%)
-    result.keyword_similarity = _score_bm25(resume_text, jd_text)
+    result.keyword_similarity = _score_bm25(resume_text, jd_text, language=language)
 
     # Method 2: Semantic Embedding (20%)
-    result.semantic_similarity = _score_semantic(resume_text, jd_text)
+    result.semantic_similarity = _score_semantic(resume_text, jd_text, language=language)
 
     # Method 3: Skill Coverage (30%)
     result.skill_coverage, result.matched_keywords, result.missing_keywords = _score_skill_coverage(
@@ -765,7 +972,7 @@ def score_resume(
         result.section_score,
         result.format_score,
         quality_feedback,
-    ) = _score_quality(resume_text, resume_latex)
+    ) = _score_quality(resume_text, resume_latex, language=language)
     result.feedback.extend(quality_feedback)
 
     # Method 6: Section-Aware Bonus (10%)
@@ -773,9 +980,14 @@ def score_resume(
 
     # Add skill-gap feedback
     if result.missing_keywords:
-        result.feedback.append(
-            f"Missing {len(result.missing_keywords)} required skills: {', '.join(result.missing_keywords[:5])}"
-        )
+        if language == "zh":
+            result.feedback.append(
+                f"缺少{len(result.missing_keywords)}个关键技能：{', '.join(result.missing_keywords[:5])}"
+            )
+        else:
+            result.feedback.append(
+                f"Missing {len(result.missing_keywords)} required skills: {', '.join(result.missing_keywords[:5])}"
+            )
 
     # Weighted overall score (research-backed distribution)
     result.overall = round(
