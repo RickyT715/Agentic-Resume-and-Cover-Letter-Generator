@@ -89,39 +89,160 @@ SECTION_WEIGHTS = {
 }
 
 # BM25 English stop words — removed during tokenization to improve signal-to-noise
-_BM25_STOP_WORDS = frozenset({
-    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
-    "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
-    "being", "have", "has", "had", "do", "does", "did", "will", "would",
-    "could", "should", "may", "might", "can", "shall", "it", "its",
-    "this", "that", "these", "those", "we", "you", "they", "i", "he",
-    "she", "who", "which", "what", "where", "when", "how", "not", "no",
-    "as", "if", "so", "up", "out", "about", "into", "over", "after",
-})
+_BM25_STOP_WORDS = frozenset(
+    {
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "but",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "of",
+        "with",
+        "by",
+        "from",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "can",
+        "shall",
+        "it",
+        "its",
+        "this",
+        "that",
+        "these",
+        "those",
+        "we",
+        "you",
+        "they",
+        "i",
+        "he",
+        "she",
+        "who",
+        "which",
+        "what",
+        "where",
+        "when",
+        "how",
+        "not",
+        "no",
+        "as",
+        "if",
+        "so",
+        "up",
+        "out",
+        "about",
+        "into",
+        "over",
+        "after",
+    }
+)
 
 # Generic words that LLMs commonly extract as "skills" from JDs but aren't actual skills.
 # Filtering these prevents inflated denominators and false "missing keywords" in scoring.
-JD_SKILL_NOISE = frozenset({
-    # Generic verbs/actions
-    "build", "create", "design", "develop", "implement", "manage",
-    "maintain", "support", "work", "working", "looking", "seeking",
-    "join", "lead", "drive", "ensure", "deliver", "contribute",
-    # Generic nouns
-    "ability", "experience", "knowledge", "understanding", "familiarity",
-    "proficiency", "skills", "team", "teams", "company", "role",
-    "position", "opportunity", "environment", "solutions", "tools",
-    "projects", "systems", "requirements", "responsibilities",
-    # Filler adjectives
-    "strong", "excellent", "good", "proven", "relevant", "various",
-    "complex", "multiple", "new", "key", "high", "best",
-    "flexible", "remote", "hybrid", "onsite",
-    # Location/logistics fragments
-    "san", "york", "salary", "compensation", "budget",
-    "schedule", "benefits", "equity", "bonus",
-    # Degree/level words
-    "degree", "bachelor", "master", "phd", "senior", "junior",
-    "mid", "level", "years", "year",
-})
+JD_SKILL_NOISE = frozenset(
+    {
+        # Generic verbs/actions
+        "build",
+        "create",
+        "design",
+        "develop",
+        "implement",
+        "manage",
+        "maintain",
+        "support",
+        "work",
+        "working",
+        "looking",
+        "seeking",
+        "join",
+        "lead",
+        "drive",
+        "ensure",
+        "deliver",
+        "contribute",
+        # Generic nouns
+        "ability",
+        "experience",
+        "knowledge",
+        "understanding",
+        "familiarity",
+        "proficiency",
+        "skills",
+        "team",
+        "teams",
+        "company",
+        "role",
+        "position",
+        "opportunity",
+        "environment",
+        "solutions",
+        "tools",
+        "projects",
+        "systems",
+        "requirements",
+        "responsibilities",
+        # Filler adjectives
+        "strong",
+        "excellent",
+        "good",
+        "proven",
+        "relevant",
+        "various",
+        "complex",
+        "multiple",
+        "new",
+        "key",
+        "high",
+        "best",
+        "flexible",
+        "remote",
+        "hybrid",
+        "onsite",
+        # Location/logistics fragments
+        "san",
+        "york",
+        "salary",
+        "compensation",
+        "budget",
+        "schedule",
+        "benefits",
+        "equity",
+        "bonus",
+        # Degree/level words
+        "degree",
+        "bachelor",
+        "master",
+        "phd",
+        "senior",
+        "junior",
+        "mid",
+        "level",
+        "years",
+        "year",
+    }
+)
 
 
 # ── Sigmoid calibration ──────────────────────────────────────────────
@@ -387,10 +508,7 @@ def _score_bm25(resume_text: str, jd_text: str, language: str = "en") -> float:
             tokenized_corpus = [_jieba_tokenize(s.lower()) for s in resume_sentences]
             jd_tokens = _jieba_tokenize(norm_jd.lower())
         else:
-            tokenized_corpus = [
-                [w for w in s.lower().split() if w not in _BM25_STOP_WORDS]
-                for s in resume_sentences
-            ]
+            tokenized_corpus = [[w for w in s.lower().split() if w not in _BM25_STOP_WORDS] for s in resume_sentences]
             jd_tokens = [w for w in norm_jd.lower().split() if w not in _BM25_STOP_WORDS]
 
         bm25 = BM25Plus(tokenized_corpus)
@@ -503,12 +621,10 @@ def _score_skill_coverage(
     jd_preferred: list[str] = []
     if jd_analysis:
         jd_required = [
-            s for s in jd_analysis.get("required_skills", [])
-            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+            s for s in jd_analysis.get("required_skills", []) if s.lower() not in JD_SKILL_NOISE and len(s) > 1
         ]
         jd_preferred = [
-            s for s in jd_analysis.get("preferred_skills", [])
-            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+            s for s in jd_analysis.get("preferred_skills", []) if s.lower() not in JD_SKILL_NOISE and len(s) > 1
         ]
 
     # Combine JD-extracted skills with taxonomy matches found in JD text
@@ -603,12 +719,10 @@ def _score_fuzzy(
     keywords: list[str] = []
     if jd_analysis:
         keywords.extend(
-            s for s in jd_analysis.get("required_skills", [])
-            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+            s for s in jd_analysis.get("required_skills", []) if s.lower() not in JD_SKILL_NOISE and len(s) > 1
         )
         keywords.extend(
-            s for s in jd_analysis.get("preferred_skills", [])
-            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+            s for s in jd_analysis.get("preferred_skills", []) if s.lower() not in JD_SKILL_NOISE and len(s) > 1
         )
     if not keywords:
         words = set(re.findall(r"\b[a-zA-Z][\w.#+/-]{2,}\b", jd_text))
@@ -861,12 +975,10 @@ def _score_section_bonus(
     target_keywords: list[str] = []
     if jd_analysis:
         target_keywords.extend(
-            s for s in jd_analysis.get("required_skills", [])
-            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+            s for s in jd_analysis.get("required_skills", []) if s.lower() not in JD_SKILL_NOISE and len(s) > 1
         )
         target_keywords.extend(
-            s for s in jd_analysis.get("preferred_skills", [])
-            if s.lower() not in JD_SKILL_NOISE and len(s) > 1
+            s for s in jd_analysis.get("preferred_skills", []) if s.lower() not in JD_SKILL_NOISE and len(s) > 1
         )
 
     if not target_keywords:
