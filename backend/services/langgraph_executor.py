@@ -2,12 +2,15 @@
 
 import logging
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from agents.graph import get_resume_graph
-from agents.state import ResumeState
 from models.task import Task, TaskStatus, TaskStep
 from services.prompt_manager import get_prompt_manager
 from services.settings_manager import get_settings_manager
+
+if TYPE_CHECKING:
+    from agents.state import ResumeState
 
 logger = logging.getLogger(__name__)
 

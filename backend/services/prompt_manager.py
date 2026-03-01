@@ -25,7 +25,7 @@ class PromptManager:
         "application_question_prompt_zh": "Application_question_prompt_zh.txt",
     }
 
-    def __init__(self, prompts_dir: Path = None):
+    def __init__(self, prompts_dir: Path | None = None):
         """
         Initialize the prompt manager.
 

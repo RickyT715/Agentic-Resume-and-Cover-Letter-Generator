@@ -68,7 +68,7 @@ class TestTaskEndpoints:
         mock_tm.create_task.assert_called_once()
 
     async def test_get_all_tasks(self, app_with_mocks):
-        app, mock_tm, *_ = app_with_mocks
+        app, _mock_tm, *_ = app_with_mocks
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.get("/api/tasks")
@@ -77,7 +77,7 @@ class TestTaskEndpoints:
         assert isinstance(data, list)
 
     async def test_get_task_by_id(self, app_with_mocks):
-        app, mock_tm, _, _, task = app_with_mocks
+        app, _mock_tm, _, _, task = app_with_mocks
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.get(f"/api/tasks/{task.id}")
@@ -108,7 +108,7 @@ class TestTaskEndpoints:
         assert r.status_code == 400
 
     async def test_start_task(self, app_with_mocks):
-        app, mock_tm, _, _, task = app_with_mocks
+        app, _mock_tm, _, _, task = app_with_mocks
         task.job_description = "Valid JD"
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -116,7 +116,7 @@ class TestTaskEndpoints:
         assert r.status_code == 200
 
     async def test_start_task_empty_jd(self, app_with_mocks):
-        app, mock_tm, _, _, task = app_with_mocks
+        app, _mock_tm, _, _, task = app_with_mocks
         task.job_description = "   "
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -154,7 +154,7 @@ class TestSettingsEndpoints:
 @pytest.mark.asyncio
 class TestPromptsEndpoints:
     async def test_get_prompts(self, app_with_mocks):
-        app, _, _, mock_pm, _ = app_with_mocks
+        app, _, _, _mock_pm, _ = app_with_mocks
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.get("/api/prompts")

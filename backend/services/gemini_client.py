@@ -76,7 +76,7 @@ class GeminiClient(AIClientBase):
         response_type: str,
         prompt: str,
         response: str,
-        grounding_metadata: dict = None,
+        grounding_metadata: dict | None = None,
     ) -> Path:
         """Save Gemini API response, including optional grounding metadata."""
         extra_metadata = None
@@ -222,8 +222,8 @@ Generation Parameters:
         top_k: int | None = None,
         top_p: float | None = None,
         max_output_tokens: int | None = None,
-        task_id: str = None,
-        task_number: int = None,
+        task_id: str | None = None,
+        task_number: int | None = None,
         response_type: str = "general",
     ) -> str:
         """
@@ -319,7 +319,7 @@ Generation Parameters:
             logger.error(f"Gemini API error: {e}", exc_info=True)
             raise
 
-    async def generate_resume(self, prompt: str, task_id: str = None, task_number: int = None) -> str:
+    async def generate_resume(self, prompt: str, task_id: str | None = None, task_number: int | None = None) -> str:
         """Generate resume with high thinking level for complex formatting."""
         logger.info(f"[gemini] Generating resume for task {task_number}")
         return await self.generate(
@@ -331,7 +331,9 @@ Generation Parameters:
             response_type="resume",
         )
 
-    async def generate_cover_letter(self, prompt: str, task_id: str = None, task_number: int = None) -> str:
+    async def generate_cover_letter(
+        self, prompt: str, task_id: str | None = None, task_number: int | None = None
+    ) -> str:
         """Generate cover letter with high thinking level."""
         logger.info(f"[gemini] Generating cover letter for task {task_number}")
         return await self.generate(
@@ -339,7 +341,7 @@ Generation Parameters:
         )
 
     async def generate_question_answer(
-        self, prompt: str, task_id: str = None, task_number: int = None, question_id: str = None
+        self, prompt: str, task_id: str | None = None, task_number: int | None = None, question_id: str | None = None
     ) -> str:
         """Generate an answer to an application question with low thinking level."""
         logger.info(f"[gemini] Generating question answer for task {task_number}, question {question_id}")
@@ -357,8 +359,8 @@ Generation Parameters:
         prompt: str,
         error_log: str,
         previous_latex: str,
-        task_id: str = None,
-        task_number: int = None,
+        task_id: str | None = None,
+        task_number: int | None = None,
         attempt: int = 1,
     ) -> str:
         """Generate resume with error feedback from failed compilation."""

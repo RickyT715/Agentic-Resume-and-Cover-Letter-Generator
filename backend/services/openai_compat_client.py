@@ -71,8 +71,8 @@ class OpenAICompatClient(AIClientBase):
     async def generate(
         self,
         prompt: str,
-        task_id: str = None,
-        task_number: int = None,
+        task_id: str | None = None,
+        task_number: int | None = None,
         response_type: str = "general",
         **kwargs,
     ) -> str:

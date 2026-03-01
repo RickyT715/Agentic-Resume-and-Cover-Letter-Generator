@@ -129,7 +129,7 @@ async def retrieve_company_context(
         return None
 
     # Grade relevance
-    relevant, irrelevant = _grade_relevance(results)
+    relevant, _irrelevant = _grade_relevance(results)
 
     # Corrective: if too few relevant results, rewrite and retry
     retries = 0

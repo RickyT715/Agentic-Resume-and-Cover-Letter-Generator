@@ -32,8 +32,8 @@ class AIClientBase(ABC):
     async def generate(
         self,
         prompt: str,
-        task_id: str = None,
-        task_number: int = None,
+        task_id: str | None = None,
+        task_number: int | None = None,
         response_type: str = "general",
         **kwargs,
     ) -> str:
@@ -54,12 +54,14 @@ class AIClientBase(ABC):
 
     # ---- Default high-level methods that delegate to generate() ----
 
-    async def generate_resume(self, prompt: str, task_id: str = None, task_number: int = None) -> str:
+    async def generate_resume(self, prompt: str, task_id: str | None = None, task_number: int | None = None) -> str:
         """Generate resume content."""
         logger.info(f"[{self.provider_name}] Generating resume for task {task_number}")
         return await self.generate(prompt, task_id=task_id, task_number=task_number, response_type="resume")
 
-    async def generate_cover_letter(self, prompt: str, task_id: str = None, task_number: int = None) -> str:
+    async def generate_cover_letter(
+        self, prompt: str, task_id: str | None = None, task_number: int | None = None
+    ) -> str:
         """Generate cover letter content."""
         logger.info(f"[{self.provider_name}] Generating cover letter for task {task_number}")
         return await self.generate(prompt, task_id=task_id, task_number=task_number, response_type="cover_letter")
@@ -67,9 +69,9 @@ class AIClientBase(ABC):
     async def generate_question_answer(
         self,
         prompt: str,
-        task_id: str = None,
-        task_number: int = None,
-        question_id: str = None,
+        task_id: str | None = None,
+        task_number: int | None = None,
+        question_id: str | None = None,
     ) -> str:
         """Generate an answer to an application question."""
         logger.info(f"[{self.provider_name}] Generating question answer for task {task_number}, question {question_id}")
@@ -85,8 +87,8 @@ class AIClientBase(ABC):
         prompt: str,
         error_log: str,
         previous_latex: str,
-        task_id: str = None,
-        task_number: int = None,
+        task_id: str | None = None,
+        task_number: int | None = None,
         attempt: int = 1,
     ) -> str:
         """Generate resume with error feedback from failed compilation."""

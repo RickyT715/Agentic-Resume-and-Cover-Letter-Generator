@@ -44,7 +44,7 @@ def app_with_mock(mock_task_manager):
 @pytest.mark.asyncio
 class TestGetQuestions:
     async def test_list_questions(self, app_with_mock):
-        app, mock_tm, task, q1 = app_with_mock
+        app, _mock_tm, task, _q1 = app_with_mock
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.get(f"/api/tasks/{task.id}/questions")
@@ -54,7 +54,7 @@ class TestGetQuestions:
         assert data[0]["question"] == "Why here?"
 
     async def test_list_questions_task_not_found(self, app_with_mock):
-        app, mock_tm, task, q1 = app_with_mock
+        app, mock_tm, _task, _q1 = app_with_mock
         mock_tm.get_task.return_value = None
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -67,7 +67,7 @@ class TestAddQuestion:
     async def test_add_question(self, app_with_mock):
         from models.task import ApplicationQuestion
 
-        app, mock_tm, task, q1 = app_with_mock
+        app, mock_tm, task, _q1 = app_with_mock
         new_q = ApplicationQuestion(question="New Q", word_limit=200)
         mock_tm.add_question.return_value = new_q
 
@@ -85,7 +85,7 @@ class TestAddQuestion:
     async def test_add_question_default_word_limit(self, app_with_mock):
         from models.task import ApplicationQuestion
 
-        app, mock_tm, task, q1 = app_with_mock
+        app, mock_tm, task, _q1 = app_with_mock
         new_q = ApplicationQuestion(question="Q", word_limit=150)
         mock_tm.add_question.return_value = new_q
 
@@ -99,7 +99,7 @@ class TestAddQuestion:
         mock_tm.add_question.assert_called_once_with(task.id, "Q", 150)
 
     async def test_add_question_task_not_found(self, app_with_mock):
-        app, mock_tm, task, q1 = app_with_mock
+        app, mock_tm, task, _q1 = app_with_mock
         mock_tm.add_question.return_value = None
 
         transport = ASGITransport(app=app)
@@ -130,7 +130,7 @@ class TestUpdateQuestion:
         assert r.json()["question"] == "Updated Q"
 
     async def test_update_question_not_found(self, app_with_mock):
-        app, mock_tm, task, q1 = app_with_mock
+        app, mock_tm, task, _q1 = app_with_mock
         mock_tm.update_question.return_value = None
 
         transport = ASGITransport(app=app)
@@ -155,7 +155,7 @@ class TestDeleteQuestion:
         assert r.json()["message"] == "Question deleted"
 
     async def test_delete_question_not_found(self, app_with_mock):
-        app, mock_tm, task, q1 = app_with_mock
+        app, mock_tm, task, _q1 = app_with_mock
         mock_tm.delete_question.return_value = False
 
         transport = ASGITransport(app=app)
@@ -186,7 +186,7 @@ class TestGenerateQuestionAnswer:
         assert r.json()["status"] == "completed"
 
     async def test_generate_requires_job_description(self, app_with_mock):
-        app, mock_tm, task, q1 = app_with_mock
+        app, _mock_tm, task, q1 = app_with_mock
         task.job_description = "   "  # blank
 
         transport = ASGITransport(app=app)
@@ -196,7 +196,7 @@ class TestGenerateQuestionAnswer:
         assert "Job description is required" in r.json()["detail"]
 
     async def test_generate_task_not_found(self, app_with_mock):
-        app, mock_tm, task, q1 = app_with_mock
+        app, mock_tm, _task, _q1 = app_with_mock
         mock_tm.get_task.return_value = None
 
         transport = ASGITransport(app=app)
@@ -227,7 +227,7 @@ class TestGenerateAllAnswers:
         assert isinstance(data, list)
 
     async def test_generate_all_requires_job_description(self, app_with_mock):
-        app, mock_tm, task, q1 = app_with_mock
+        app, _mock_tm, task, _q1 = app_with_mock
         task.job_description = ""
 
         transport = ASGITransport(app=app)

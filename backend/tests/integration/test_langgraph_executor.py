@@ -14,11 +14,11 @@ sys.modules.setdefault("langgraph.graph", langgraph_mock)
 
 
 def _make_task(**kwargs):
-    defaults = dict(
-        task_number=1,
-        job_description="We need a Python engineer.",
-        generate_cover_letter=True,
-    )
+    defaults = {
+        "task_number": 1,
+        "job_description": "We need a Python engineer.",
+        "generate_cover_letter": True,
+    }
     defaults.update(kwargs)
     return Task(**defaults)
 

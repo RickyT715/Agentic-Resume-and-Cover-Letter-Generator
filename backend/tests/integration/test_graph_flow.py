@@ -3,11 +3,13 @@
 Tests the graph structure and routing logic with mocked LLM calls.
 """
 
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agents.state import ResumeState
+if TYPE_CHECKING:
+    from agents.state import ResumeState
 
 
 class TestGraphStructure:

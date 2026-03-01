@@ -111,10 +111,15 @@ describe('SettingsPanel', () => {
   });
 
   it('calls save endpoint on save click', async () => {
-    const mockFetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
+    const mockFetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+      if (url === '/api/settings' && opts?.method === 'PUT') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      }
+      if (url === '/api/settings') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockSettings) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    });
 
     vi.stubGlobal('fetch', mockFetch);
 

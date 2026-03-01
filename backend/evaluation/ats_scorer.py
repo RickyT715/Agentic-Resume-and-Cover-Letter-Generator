@@ -393,7 +393,7 @@ def _score_skill_coverage(
         jd_preferred = jd_analysis.get("preferred_skills", [])
 
     # Combine JD-extracted skills with taxonomy matches found in JD text
-    jd_explicit_skills = set(s.lower() for s in jd_required + jd_preferred)
+    jd_explicit_skills = {s.lower() for s in jd_required + jd_preferred}
 
     # Find taxonomy skills present in JD text
     jd_taxonomy_skills = set()
@@ -450,7 +450,7 @@ def _score_skill_coverage(
 
     # Weight required skills more heavily
     if jd_required:
-        required_set = set(s.lower() for s in jd_required)
+        required_set = {s.lower() for s in jd_required}
         required_matched = len(resume_skills_found & required_set)
         required_coverage = required_matched / len(required_set) if required_set else 0
         total_coverage = len(matched) / len(all_jd_skills) if all_jd_skills else 0
@@ -708,10 +708,7 @@ def _score_section_bonus(
         weighted_score += section_coverage * weight
         total_weight += weight
 
-    if total_weight > 0:
-        raw = weighted_score / total_weight
-    else:
-        raw = 0.0
+    raw = weighted_score / total_weight if total_weight > 0 else 0.0
 
     # Sigmoid calibration — center at 0.3, typical range is 0.1-0.6
     return _sigmoid_calibrate(raw, center=0.25, steepness=8.0)

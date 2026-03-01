@@ -52,7 +52,7 @@ def app_with_pdf(mock_task_with_pdf):
 class TestResumeDownloadDisposition:
     async def test_default_is_attachment(self, app_with_pdf):
         """Without ?inline, Content-Disposition should be 'attachment'."""
-        app, mock_tm, task, pdf_path = app_with_pdf
+        app, _mock_tm, task, pdf_path = app_with_pdf
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.get(f"/api/tasks/{task.id}/resume")
@@ -63,7 +63,7 @@ class TestResumeDownloadDisposition:
 
     async def test_inline_true_sets_inline_disposition(self, app_with_pdf):
         """With ?inline=true, Content-Disposition should be 'inline'."""
-        app, mock_tm, task, pdf_path = app_with_pdf
+        app, _mock_tm, task, pdf_path = app_with_pdf
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.get(f"/api/tasks/{task.id}/resume?inline=true")
@@ -74,7 +74,7 @@ class TestResumeDownloadDisposition:
 
     async def test_inline_false_is_attachment(self, app_with_pdf):
         """With ?inline=false, Content-Disposition should be 'attachment'."""
-        app, mock_tm, task, pdf_path = app_with_pdf
+        app, _mock_tm, task, _pdf_path = app_with_pdf
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.get(f"/api/tasks/{task.id}/resume?inline=false")
@@ -84,7 +84,7 @@ class TestResumeDownloadDisposition:
 
     async def test_content_type_is_pdf(self, app_with_pdf):
         """Both inline and attachment should return application/pdf."""
-        app, mock_tm, task, pdf_path = app_with_pdf
+        app, _mock_tm, task, _pdf_path = app_with_pdf
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r1 = await client.get(f"/api/tasks/{task.id}/resume")
@@ -96,7 +96,7 @@ class TestResumeDownloadDisposition:
 @pytest.mark.asyncio
 class TestCoverLetterDownloadDisposition:
     async def test_default_is_attachment(self, app_with_pdf):
-        app, mock_tm, task, pdf_path = app_with_pdf
+        app, _mock_tm, task, _pdf_path = app_with_pdf
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.get(f"/api/tasks/{task.id}/cover-letter")
@@ -105,7 +105,7 @@ class TestCoverLetterDownloadDisposition:
         assert cd.startswith("attachment")
 
     async def test_inline_true_sets_inline_disposition(self, app_with_pdf):
-        app, mock_tm, task, pdf_path = app_with_pdf
+        app, _mock_tm, task, pdf_path = app_with_pdf
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.get(f"/api/tasks/{task.id}/cover-letter?inline=true")

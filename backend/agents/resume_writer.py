@@ -77,7 +77,7 @@ async def resume_writer_agent(state: ResumeState) -> dict:
         matched_skills=", ".join(relevance.get("matched_skills", [])) or "N/A",
         missing_skills=", ".join(relevance.get("missing_skills", [])) or "None",
         experience_level=jd.get("experience_level", "Not specified"),
-        emphasis_points="\n- ".join([""] + relevance.get("emphasis_points", [])) or "N/A",
+        emphasis_points="\n- ".join(["", *relevance.get("emphasis_points", [])]) or "N/A",
         match_score=relevance.get("match_score", 0.5),
         company_context_section=company_context_section,
         feedback_section=feedback_section,

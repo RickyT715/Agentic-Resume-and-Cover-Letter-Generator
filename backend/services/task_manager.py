@@ -278,11 +278,11 @@ class TaskManager:
     def update_task_settings(
         self,
         task_id: str,
-        job_description: str = None,
-        generate_cover_letter: bool = None,
-        template_id: str = None,
-        language: str = None,
-        provider: str = None,
+        job_description: str | None = None,
+        generate_cover_letter: bool | None = None,
+        template_id: str | None = None,
+        language: str | None = None,
+        provider: str | None = None,
     ) -> Task | None:
         task = self.tasks.get(task_id)
         if task and task.status == TaskStatus.PENDING:
@@ -315,7 +315,7 @@ class TaskManager:
         return q
 
     def update_question(
-        self, task_id: str, question_id: str, question: str = None, word_limit: int = None
+        self, task_id: str, question_id: str, question: str | None = None, word_limit: int | None = None
     ) -> ApplicationQuestion | None:
         """Update a question's text or word limit. Resets answer if question text changed."""
         task = self.tasks.get(task_id)
@@ -843,28 +843,27 @@ class TaskManager:
             if enforce_one_page:
                 is_single_page, page_count = validate_single_page(cover_letter_pdf_path)
 
-                if not is_single_page and page_count > 0:
-                    if attempt < max_retries:
-                        await self._notify_progress(
-                            task,
-                            TaskStep.CREATE_COVER_PDF,
-                            TaskStatus.RUNNING,
-                            f"Cover letter is {page_count} pages. Regenerating shorter...",
+                if not is_single_page and page_count > 0 and attempt < max_retries:
+                    await self._notify_progress(
+                        task,
+                        TaskStep.CREATE_COVER_PDF,
+                        TaskStatus.RUNNING,
+                        f"Cover letter is {page_count} pages. Regenerating shorter...",
+                    )
+                    page_feedback_prompt = self.prompt_manager.get_cover_letter_prompt_with_substitutions(
+                        resume_text, task.job_description, language=task.language
+                    )
+                    page_feedback_prompt += (
+                        f"\n\nIMPORTANT: The previous cover letter was {page_count} pages. "
+                        "It MUST be exactly 1 page. Write a more concise version."
+                    )
+                    try:
+                        current_text = await ai_client.generate_cover_letter(
+                            page_feedback_prompt, task_id=task.id, task_number=task.task_number
                         )
-                        page_feedback_prompt = self.prompt_manager.get_cover_letter_prompt_with_substitutions(
-                            resume_text, task.job_description, language=task.language
-                        )
-                        page_feedback_prompt += (
-                            f"\n\nIMPORTANT: The previous cover letter was {page_count} pages. "
-                            "It MUST be exactly 1 page. Write a more concise version."
-                        )
-                        try:
-                            current_text = await ai_client.generate_cover_letter(
-                                page_feedback_prompt, task_id=task.id, task_number=task.task_number
-                            )
-                            continue
-                        except Exception as e:
-                            logger.error(f"Cover letter regen failed: {e}")
+                        continue
+                    except Exception as e:
+                        logger.error(f"Cover letter regen failed: {e}")
 
             return cover_letter_pdf_path
 

@@ -71,7 +71,7 @@ class AppSettings(BaseModel):
 class SettingsManager:
     """Manages application settings with persistence."""
 
-    def __init__(self, settings_file: Path = None):
+    def __init__(self, settings_file: Path | None = None):
         if settings_file is None:
             settings_file = Path(__file__).parent.parent / "settings.json"
 

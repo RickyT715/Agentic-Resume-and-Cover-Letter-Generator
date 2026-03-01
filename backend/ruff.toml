@@ -22,11 +22,20 @@ ignore = [
     "A003",   # class attribute shadowing builtin
     "RUF012", # mutable class variable without ClassVar
     "N805",   # first argument of a method should be named `self` (pydantic validators)
+    "B904",   # raise without from in except
+    "N806",   # variable in function should be lowercase
+    "N818",   # exception name should end in Error
+    "RUF001", # ambiguous unicode
+    "RUF043", # ambiguous unicode in docstring
+    "SIM102", # collapsible if
+    "B007",   # unused loop variable
 ]
 
 [lint.per-file-ignores]
-"tests/*" = ["S101", "B011"]  # allow assert in tests
+"tests/*" = ["S101", "B011", "F841"]  # allow assert, unused vars in tests
 "alembic/*" = ["E402", "I001"]
+"__init__.py" = ["F401"]  # re-exports
+"main.py" = ["E402"]  # late imports after app setup
 
 [lint.isort]
 known-first-party = ["agents", "api", "db", "evaluation", "models", "rag", "services"]

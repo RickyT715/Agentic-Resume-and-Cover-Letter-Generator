@@ -12,6 +12,7 @@ This test verifies the full application works end-to-end:
 """
 
 import asyncio
+import contextlib
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -155,10 +156,8 @@ def cleanup_tasks():
             # Clean up files
             for path_str in [task.resume_pdf_path, task.cover_letter_pdf_path]:
                 if path_str and Path(path_str).exists():
-                    try:
+                    with contextlib.suppress(Exception):
                         Path(path_str).unlink()
-                    except Exception:
-                        pass
             del task_manager.tasks[tid]
     task_manager._save_tasks()
 

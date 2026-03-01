@@ -32,7 +32,7 @@ class TestHeuristicScore:
             "required_skills": ["Python", "Docker", "AWS", "CI/CD"],
             "job_title": "Software Engineer",
         }
-        score, feedback = _heuristic_score(latex, jd)
+        score, _feedback = _heuristic_score(latex, jd)
         assert score > 0.5
 
     def test_empty_resume_scores_low(self):
@@ -45,13 +45,13 @@ class TestHeuristicScore:
     def test_missing_skills_feedback(self):
         latex = r"\documentclass{article}\begin{document}\section{Experience}Did stuff.\end{document}"
         jd = {"required_skills": ["Rust", "Go", "Kubernetes"], "job_title": "SRE"}
-        score, feedback = _heuristic_score(latex, jd)
+        _score, feedback = _heuristic_score(latex, jd)
         assert "Missing key skills" in feedback or "skills" in feedback.lower()
 
     def test_no_jd_skills_uses_default(self):
         latex = r"\documentclass{article}\begin{document}\section{Experience}Work.\section{Education}Degree.\section{Skills}Python.\end{document}"
         jd = {"required_skills": [], "job_title": "Developer"}
-        score, feedback = _heuristic_score(latex, jd)
+        score, _feedback = _heuristic_score(latex, jd)
         assert score > 0.3  # Should still get reasonable score
 
 
