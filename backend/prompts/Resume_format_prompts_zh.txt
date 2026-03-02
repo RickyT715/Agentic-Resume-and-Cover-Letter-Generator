@@ -86,27 +86,72 @@
 \end{tabular*}
 
 
+% 排版指导 — 根据 <user_information> 中候选人的经验选择：
+%
+% 如果有经验（2年以上工作经验）：
+%   板块顺序：个人总结 → 工作经验 → 项目经历 → 技术技能 → 教育背景
+%   包含个人总结（1-2句）。
+%
+% 如果是应届生（不足2年工作经验）：
+%   板块顺序：教育背景 → 技术技能 → 项目经历 → 工作经验（实习）
+%   完全省略个人总结。
+
+
+%-----------个人总结-----------
+% 可选但推荐：1-2行针对目标JD的总结。
+% 包含：工作年限、核心技术领域、2-3项JD关键技术、一个量化亮点。
+% 如果候选人是应届生无工作经验，可省略此部分。
+\section{个人总结}
+[1-2句专业总结。示例："具有3年以上后端开发经验的软件工程师，精通Python和Go语言。
+主导构建的AWS微服务系统日均处理100万+请求，可用性达99.9\%。"]
+
+
+%-----------工作经验-----------
+\section{工作经验}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {职位名称}{日期范围}
+      {公司名称}{地点}
+      \resumeItemListStart
+        \resumeItem{}{通过[Z方法]使用[技术栈]，实现了[X成果]，达到了[Y指标]}
+        \resumeItem{}{[每个职位3-5个要点，每个以不同的动词开头]}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+
+%-----------项目经历-----------
+\section{项目经历}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {项目名称}{日期范围}
+      {使用技术}{链接（如有）}
+      \resumeItemListStart
+        \resumeItem{}{[每个项目2-4个要点，包含量化成果]}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+
+%-----------技术技能-----------
+\section{技术技能}
+  \resumeSubHeadingListStart
+    \resumeSubItem{编程语言：}{Python, Java, JavaScript, TypeScript, SQL}
+    \resumeSubItem{框架：}{React, Node.js, Spring Boot, FastAPI}
+    \resumeSubItem{云计算与运维：}{AWS, Docker, Kubernetes, CI/CD, Terraform}
+    \resumeSubItem{数据库：}{PostgreSQL, MongoDB, Redis}
+    \resumeSubItem{工具：}{Git, Linux, Jira}
+  \resumeSubHeadingListEnd
+
+
+%-----------教育背景-----------
 \section{教育背景}
   \resumeSubHeadingListStart
     \resumeSubheading
       {学位名称}{地点}
       {大学名称}{日期范围}
       \resumeItemListStart
-      \resumeItem{GPA: }{X.XX/4.00（从 user\_information 中获取真实GPA）}
+      \resumeItem{}{GPA: X.XX/4.00 | 相关课程：...}
       \resumeItemListEnd
   \resumeSubHeadingListEnd
-
-
-\section{工作经验}
-[使用 \resumeSubheading 和 \resumeItem 填写工作经历]
-
-
-\section{项目经历}
-[使用 \resumeSubheading 和 \resumeItem 填写项目经历]
-
-
-\section{技术技能}
-[技能条目]
 
 
 \end{document}

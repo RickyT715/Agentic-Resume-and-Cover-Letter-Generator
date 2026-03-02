@@ -4,7 +4,18 @@
 
 An AI-powered system that generates tailored resumes, cover letters, and application question answers using a **multi-agent LangGraph pipeline** with automated evaluation, company research (RAG), and multiple LLM providers. Built with FastAPI, React, and TypeScript.
 
-## What's New in v3.1
+## What's New in v3.2
+
+- **ATS-Optimized Resume Format** — Redesigned LaTeX template based on research from 30+ sources (FAANG recruiter guides, ATS system docs, Google/Harvard/Stanford career services). Key improvements:
+  - **Conditional layout** — Experienced (2+ yrs): Summary → Experience → Projects → Skills → Education. New grads: Education → Skills → Projects → Experience
+  - **Summary section** — JD-targeted 1-2 sentence summary with years of experience, core domain, key technologies, and quantified highlight
+  - **Structured Technical Skills** — 5 categories (Languages, Frameworks, Cloud & DevOps, Databases, Tools) with dual-form keywords
+  - **X-Y-Z bullet formula** — "Accomplished [X] as measured by [Y] by doing [Z]" with 3-5 bullets per role guidance
+  - **Standard section headers** — `Technical Skills` (replaces `Programming Skills`), ATS-recognized names across all sections
+- **Enhanced Quality Checklist** — Both English and Chinese prompts now enforce Summary presence, categorized skills, 8+ distinct action verbs, and 5+ quantified achievements
+- **Example Resume PDFs** — 3 reference PDFs in `backend/output/examples/` (new grad, experienced engineer, senior AI/ML)
+
+### v3.1
 
 - **Hybrid Multi-Method ATS Scorer** — 6 complementary scoring methods (BM25, semantic embeddings, skill coverage, fuzzy matching, quality heuristics, section-aware bonus) with sigmoid calibration and synonym normalization. See [ATS Scoring System](#ats-scoring-system) for details.
 - **ATS-Optimized Prompts** — Resume generation prompt now instructs the AI to use dual-form keywords (e.g., "Machine Learning (ML)"), distribute keywords across multiple sections, and use standard ATS-recognized section headers.
@@ -62,6 +73,8 @@ JD Analyzer → Relevance Matcher → [Company Research] → Resume Writer → Q
 - **Anthropic Claude** — Claude Sonnet 4.5, Claude Opus 4.6 via direct API
 - **Claude Code Proxy** — Claude models via local proxy with SSE streaming
 - **OpenAI-Compatible** — Any OpenAI-compatible API (Ollama, LM Studio, vLLM, etc.)
+- **DeepSeek** — DeepSeek Chat/Reasoner via DeepSeek API
+- **Qwen** — Qwen Plus/Max/Turbo via Alibaba DashScope API
 - Per-task provider override or global default
 
 ### ATS Scoring System
@@ -115,6 +128,15 @@ The skill taxonomy (`evaluation/skills_taxonomy.py`) contains 550+ skills organi
 - Generate answers individually or all at once
 - Dedicated **Generated Answers** panel with per-answer and bulk copy
 
+### Chinese Language Support
+
+- Bilingual pipeline (English / Chinese) with language auto-detection
+- Chinese JD analysis with dedicated prompt templates
+- CJK font support in PDF generation (requires a CJK font such as Noto Sans CJK)
+- Chinese skill taxonomy (action verbs, section names)
+- `jieba` tokenization for Chinese text processing
+- DeepSeek and Qwen providers optimized for Chinese content
+
 ### Task Management
 
 - Multi-task support with concurrent generation (semaphore-limited)
@@ -159,10 +181,10 @@ The skill taxonomy (`evaluation/skills_taxonomy.py`) contains 550+ skills organi
                     │                                                  │
        ┌────────────┼────────────┐                                    │
        │            │            │                                    │
-  ┌────▼────┐ ┌────▼────┐ ┌────▼────┐                      ┌────────▼────────┐
-  │ Gemini  │ │ Claude  │ │ OpenAI  │                      │ LaTeX Compiler  │
-  │   API   │ │   API   │ │ Compat  │                      │ PDF Generation  │
-  └─────────┘ └─────────┘ └─────────┘                      └─────────────────┘
+  ┌────▼────┐ ┌────▼────┐ ┌────▼────┐ ┌──────────┐ ┌───────┐  ┌────────▼────────┐
+  │ Gemini  │ │ Claude  │ │ OpenAI  │ │ DeepSeek │ │ Qwen  │  │ LaTeX Compiler  │
+  │   API   │ │   API   │ │ Compat  │ │   API    │ │  API  │  │ PDF Generation  │
+  └─────────┘ └─────────┘ └─────────┘ └──────────┘ └───────┘  └─────────────────┘
                                                                      │
                                                             ┌────────▼────────┐
                                                             │   PostgreSQL    │
@@ -175,7 +197,9 @@ The skill taxonomy (`evaluation/skills_taxonomy.py`) contains 550+ skills organi
 - **Python 3.11+**
 - **Node.js 18+**
 - **LaTeX** (MiKTeX on Windows, TeX Live on Linux/Mac)
-- At least one API key: [Google AI Studio](https://aistudio.google.com/), [Anthropic](https://console.anthropic.com/), or a local proxy
+- **spaCy English model** — required for ATS skill matching (`python -m spacy download en_core_web_sm`)
+- At least one API key: [Google AI Studio](https://aistudio.google.com/), [Anthropic](https://console.anthropic.com/), [DeepSeek](https://platform.deepseek.com/), [Alibaba DashScope (Qwen)](https://dashscope.console.aliyun.com/), or a local proxy
+- The `sentence-transformers` model (~90 MB) auto-downloads on first ATS evaluation — no manual step needed
 
 ## Quick Start
 
@@ -233,6 +257,9 @@ pip install -r requirements.txt
 
 cp .env.example .env
 # Edit .env with your API key(s)
+
+# Download spaCy model (required for ATS scoring)
+python -m spacy download en_core_web_sm
 ```
 
 #### Frontend
@@ -255,6 +282,25 @@ cd frontend && npm run dev
 ```
 
 Open **http://localhost:45173**.
+
+## Manual Setup Requirements
+
+Some features require one-time manual setup beyond installing dependencies:
+
+| Requirement | Why | How |
+|---|---|---|
+| **API Key(s)** | At least one AI provider needed | Settings panel or `backend/.env` |
+| **LaTeX (pdflatex)** | PDF generation | MiKTeX (Windows) / TeX Live (Linux/Mac) |
+| **spaCy model** | ATS skill matching | `python -m spacy download en_core_web_sm` |
+| **User Information** | Your resume data for AI to use | Edit via Prompts panel in UI |
+| **Chinese fonts** (optional) | Chinese PDF generation | Install Noto Sans CJK or similar CJK font |
+| **ChromaDB** (optional) | Company research RAG | `pip install chromadb` (auto-installed with `uv sync`) |
+
+**Auto-handled** (no manual action):
+- `sentence-transformers` model (~90 MB, auto-downloads on first ATS evaluation)
+- Python dependencies (via `uv sync` or `pip install`)
+- Node.js dependencies (via `npm install`)
+- Settings persistence (`backend/settings.json` auto-created on first run)
 
 ## Usage
 
@@ -281,6 +327,8 @@ All settings are configurable from the **Settings** panel in the UI and persiste
 | Anthropic Claude | `claude_api_key`, `claude_model` | Direct Anthropic API |
 | Claude Code Proxy | `claude_proxy_base_url`, `claude_proxy_model` | Uses SSE streaming to avoid response truncation |
 | OpenAI-Compatible | `openai_compat_api_key`, `openai_compat_base_url`, `openai_compat_model` | Works with any OpenAI-compatible endpoint |
+| DeepSeek | `deepseek_api_key`, `deepseek_model` | DeepSeek Chat, DeepSeek Reasoner |
+| Qwen (DashScope) | `qwen_api_key`, `qwen_model` | Qwen Plus, Max, Turbo via Alibaba Cloud |
 
 ### Generation Parameters
 
@@ -323,6 +371,11 @@ Edit via the **Prompts** panel in the UI or directly in `backend/prompts/`:
 | `Resume_prompts.txt` | Main resume generation prompt |
 | `Cover_letter_prompt.txt` | Cover letter generation prompt |
 | `Application_question_prompt.txt` | Application question answering prompt |
+| `User_information_prompts_zh.txt` | Your personal info (Chinese version) |
+| `Resume_prompts_zh.txt` | Resume generation prompt (Chinese) |
+| `Resume_format_prompts_zh.txt` | LaTeX template structure (Chinese) |
+| `Cover_letter_prompt_zh.txt` | Cover letter prompt (Chinese) |
+| `Application_question_prompt_zh.txt` | Application question prompt (Chinese) |
 
 **Placeholders** (auto-substituted):
 - `{{user_information}}` — your personal info
@@ -434,6 +487,8 @@ backend/
 │   ├── claude_client.py       # Anthropic Claude provider
 │   ├── claude_proxy_client.py # Claude via local proxy (SSE streaming)
 │   ├── openai_compat_client.py# OpenAI-compatible provider
+│   ├── deepseek_client.py    # DeepSeek provider
+│   ├── qwen_client.py        # Qwen (DashScope) provider
 │   ├── prompt_manager.py      # Prompt loading and substitution
 │   ├── settings_manager.py    # Settings persistence
 │   ├── latex_compiler.py      # LaTeX to PDF compilation
@@ -460,9 +515,11 @@ backend/
 │   │   ├── test_routes.py
 │   │   ├── test_settings_manager.py
 │   │   ├── test_task_manager.py
-│   │   └── test_websocket_manager.py
+│   │   ├── test_websocket_manager.py
+│   │   └── test_chinese_pipeline.py  # Chinese language pipeline tests
 │   ├── integration/           # Graph flow, LangGraph executor, mocked pipeline, state machine tests
 │   └── e2e/                   # Full API lifecycle tests
+│       └── test_zh_examples_report.py # Chinese E2E tests
 ├── config.py                  # Pydantic settings
 ├── main.py                    # FastAPI app with lifespan
 ├── pyproject.toml             # Project config (uv/pip)
@@ -579,6 +636,9 @@ docs(readme): update architecture diagram
 | Proxy response truncation | The Claude Code Proxy client uses SSE streaming by default |
 | `Thinking level not supported` | Use a Gemini 3+ model (e.g., `gemini-3.1-pro-preview`) |
 | ChromaDB import error | Install with `pip install chromadb` (optional — RAG features disabled without it) |
+| Chinese PDF shows boxes | Install a CJK font (e.g., Noto Sans CJK) and restart the backend |
+| `spacy model not found` | Run `python -m spacy download en_core_web_sm` |
+| DeepSeek/Qwen API errors | Verify API key in Settings panel, check provider rate limits |
 | Docker build fails on LaTeX | Ensure texlive packages are available in the Docker build context |
 
 ## Tech Stack
@@ -586,7 +646,7 @@ docs(readme): update architecture diagram
 | Layer | Technology |
 |-------|-----------|
 | Agent Orchestration | LangGraph (StateGraph with conditional edges) |
-| LLM Providers | Gemini, Claude, OpenAI-compatible |
+| LLM Providers | Gemini, Claude, OpenAI-compatible, DeepSeek, Qwen |
 | Evaluation | Hybrid ATS scorer (BM25, spaCy, sentence-transformers, rapidfuzz) + LLM-as-a-Judge |
 | RAG | ChromaDB + httpx/BeautifulSoup + sentence-transformers |
 | Backend | FastAPI + SQLAlchemy 2.0 async + Pydantic v2 |

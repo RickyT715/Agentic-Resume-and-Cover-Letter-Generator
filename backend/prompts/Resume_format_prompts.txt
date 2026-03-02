@@ -75,35 +75,80 @@
 \begin{document}
 
 % NOTE: Replace the header below with the candidate's REAL contact info from <user_information>.
-% Do NOT copy placeholder values. Use the name, email, phone, and LinkedIn from user_information.
+% Do NOT copy placeholder values. Use the name, email, phone, LinkedIn, and GitHub from user_information.
 \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
   \textbf{\href{}{\Large CANDIDATE_NAME}} & Email : \href{mailto:CANDIDATE_EMAIL}{CANDIDATE_EMAIL}\\
   \href{CANDIDATE_LINKEDIN}{CANDIDATE_LINKEDIN} & Mobile : CANDIDATE_PHONE \\
 \end{tabular*}
 
 
+% LAYOUT GUIDANCE — choose based on candidate's experience from <user_information>:
+%
+% IF EXPERIENCED (2+ years professional experience):
+%   Section order: Summary → Experience → Projects → Technical Skills → Education
+%   Include Summary section (1-2 sentences).
+%
+% IF NEW GRAD (< 2 years professional experience):
+%   Section order: Education → Technical Skills → Projects → Experience (internships)
+%   OMIT Summary section entirely.
+
+
+%-----------SUMMARY-----------
+% Optional but recommended: 1-2 line JD-targeted summary.
+% Include: years of experience matching JD, core technical domain, 2-3 key JD technologies, one quantified highlight.
+% Omit if the candidate is a new grad with no professional experience.
+\section{Summary}
+\small{[1-2 sentence professional summary. Example: "Senior Software Engineer with 5+ years of experience
+building distributed backend systems in Python and Go. Architected event-driven microservices on AWS
+serving 2M+ daily requests with 99.95\% uptime."]}
+
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Job Title}{Date Range}
+      {Company Name}{Location}
+      \resumeItemListStart
+        \resumeItem{}{Accomplished [X] as measured by [Y] by doing [Z] using [tech stack]}
+        \resumeItem{}{[3-5 bullets per role, each starting with a different action verb]}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+
+%-----------PROJECTS-----------
+\section{Projects}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Project Name}{Date Range}
+      {Technologies Used}{Link (if available)}
+      \resumeItemListStart
+        \resumeItem{}{[2-4 bullets per project, include quantified outcomes]}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+
+%-----------TECHNICAL SKILLS-----------
+\section{Technical Skills}
+  \resumeSubHeadingListStart
+    \resumeSubItem{Languages: }{Python, Java, JavaScript, TypeScript, SQL}
+    \resumeSubItem{Frameworks: }{React, Node.js, Spring Boot, FastAPI}
+    \resumeSubItem{Cloud \& DevOps: }{AWS, Docker, Kubernetes, CI/CD, Terraform}
+    \resumeSubItem{Databases: }{PostgreSQL, MongoDB, Redis}
+    \resumeSubItem{Tools: }{Git, Linux, Jira}
+  \resumeSubHeadingListEnd
+
+
+%-----------EDUCATION-----------
 \section{Education}
   \resumeSubHeadingListStart
     \resumeSubheading
       {Degree Name}{Location}
       {University Name}{Date Range}
       \resumeItemListStart
-      \resumeItem{GPA & Specialization: }{X.X/4.0 (use real GPA from user\_information), ...}
-      \resumeItem{Award}{}(Include this line of available)
+      \resumeItem{}{GPA: X.XX/4.00 | Relevant Coursework: ...}
       \resumeItemListEnd
   \resumeSubHeadingListEnd
-
-
-\section{Experience}
-[Experience entries using \resumeSubheading and \resumeItem]
-
-
-\section{Projects}
-[Project entries using \resumeSubheading and \resumeItem]
-
-
-\section{Programming Skills}
-[Skills entries]
 
 
 \end{document}
