@@ -16,6 +16,7 @@ export function TaskPanel() {
   const [generateCoverLetter, setGenerateCoverLetter] = useState(true);
   const [templateId, setTemplateId] = useState('classic');
   const [language, setLanguage] = useState('en');
+  const [experienceLevel, setExperienceLevel] = useState('auto');
   const [provider, setProvider] = useState<string>('');
   const [templates, setTemplates] = useState<Template[]>([]);
   const [jdHistory, setJdHistory] = useState<JDHistoryEntry[]>([]);
@@ -57,6 +58,7 @@ export function TaskPanel() {
       setGenerateCoverLetter(activeTask.generate_cover_letter ?? true);
       setTemplateId(activeTask.template_id || 'classic');
       setLanguage(activeTask.language || 'en');
+      setExperienceLevel(activeTask.experience_level || 'auto');
       setProvider(activeTask.provider || '');
       setError(null);
     }
@@ -151,6 +153,21 @@ export function TaskPanel() {
     }
   };
 
+  const handleExperienceLevelChange = async (newLevel: string) => {
+    setExperienceLevel(newLevel);
+    if (!activeTask || activeTask.status !== 'pending') return;
+    try {
+      const response = await fetch(`${API_URL}/tasks/${activeTask.id}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ experience_level: newLevel, job_description: jobDescription }),
+      });
+      if (response.ok) updateTask(activeTask.id, await response.json());
+    } catch (e) {
+      console.error('Failed to update experience level:', e);
+    }
+  };
+
   const handleProviderChange = async (newProvider: string) => {
     setProvider(newProvider);
     if (!activeTask || activeTask.status !== 'pending') return;
@@ -181,6 +198,7 @@ export function TaskPanel() {
           job_description: jobDescription,
           generate_cover_letter: generateCoverLetter,
           template_id: templateId,
+          experience_level: experienceLevel,
           provider: provider || undefined,
         }),
       });
@@ -239,7 +257,7 @@ export function TaskPanel() {
         handleStartTask();
       }
     },
-    [activeTask, jobDescription, generateCoverLetter, templateId, language, provider]
+    [activeTask, jobDescription, generateCoverLetter, templateId, language, experienceLevel, provider]
   );
 
   const handleRetry = async () => {
@@ -433,6 +451,32 @@ export function TaskPanel() {
                     >
                       中文
                     </button>
+                  </div>
+                </div>
+
+                {/* Experience Level Selection */}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Experience:</label>
+                  <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+                    {([
+                      { value: 'auto', label: 'Auto' },
+                      { value: 'new_grad', label: 'New Grad' },
+                      { value: 'experienced', label: 'Experienced' },
+                    ] as const).map((opt, i) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => handleExperienceLevelChange(opt.value)}
+                        className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                          i > 0 ? 'border-l border-gray-300 dark:border-gray-600' : ''
+                        } ${
+                          experienceLevel === opt.value
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 

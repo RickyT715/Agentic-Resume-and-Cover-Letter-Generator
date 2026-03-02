@@ -396,6 +396,7 @@ class TestFullV2Pipeline:
                     generate_cover_letter=False,
                     template_id="classic",
                     language="en",
+                    experience_level="auto",
                     provider=None,
                 )
             )
@@ -432,6 +433,7 @@ class TestFullV2Pipeline:
                     generate_cover_letter=True,
                     template_id="classic",
                     language="en",
+                    experience_level="auto",
                     provider=None,
                 )
             )
@@ -507,6 +509,7 @@ class TestFullV2Pipeline:
                 generate_cover_letter=False,
                 template_id="classic",
                 language="en",
+                experience_level="auto",
                 provider=None,
             )
         )
@@ -526,6 +529,7 @@ class TestFullV2Pipeline:
                     generate_cover_letter=False,
                     template_id="classic",
                     language="en",
+                    experience_level="auto",
                     provider=None,
                 )
             )

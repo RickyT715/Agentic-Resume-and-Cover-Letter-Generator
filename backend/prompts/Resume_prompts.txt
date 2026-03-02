@@ -64,7 +64,7 @@ Create a **strictly 1-page** resume in LaTeX format that is tailored to maximize
  - **CRITICAL**: Include ALL required and preferred skills/technologies from the JD that the candidate has or plausibly has. Each skill keyword from the JD MUST appear verbatim in the Skills section or bullet points.
  - Group skills by category (e.g., Languages, Frameworks, Tools, Cloud, Databases) and ensure JD-mentioned technologies appear as exact matches.
  - **Dual-form keywords**: For common abbreviations, include BOTH the abbreviation and full form on first use. Examples: "Machine Learning (ML)", "Amazon Web Services (AWS)", "Kubernetes (K8s)", "Natural Language Processing (NLP)", "Continuous Integration/Continuous Deployment (CI/CD)". This ensures matching regardless of which form the ATS looks for.
-- **Summary Section**: ALWAYS include a 1-2 sentence Summary section immediately after contact info. Must contain: years of experience matching JD requirements, core technical domain, 2-3 key JD technologies, and one quantified achievement. Omit only if the candidate is a new grad with no professional experience.
+- **Summary Section**: Include a 1-2 sentence Summary section for experienced candidates (2+ years). Must contain: years of experience matching JD requirements, core technical domain, 2-3 key JD technologies, and one quantified achievement. Omit Summary entirely for new graduates with no professional experience. If experience level instructions are provided below, follow them strictly for section ordering and Summary inclusion.
 - **Keyword Distribution**: Distribute important keywords across MULTIPLE sections — not just Skills. The same key terms should appear in:
  - Summary section (keyword-dense professional overview)
  - Skills section (categorized listing)
@@ -104,7 +104,7 @@ Example:
 <quality_checklist>
 Before outputting, verify:
 - [ ] Resume fits exactly one page when compiled
-- [ ] Summary section is present with years of experience, core domain, key technologies, and a quantified highlight
+- [ ] Summary section is present (for experienced candidates) with years of experience, core domain, key technologies, and a quantified highlight. Omitted for new graduates if instructed.
 - [ ] All bullet points start with action verbs (at least 8 DIFFERENT verbs used across resume)
 - [ ] Metrics and quantifiable results are included where possible (at least 5 quantified achievements with %, $, or numbers)
 - [ ] Skills section is organized by category (Languages, Frameworks, Cloud/DevOps, Databases, Tools) and includes EVERY required/preferred technology from the JD

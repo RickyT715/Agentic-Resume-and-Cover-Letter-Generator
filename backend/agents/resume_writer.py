@@ -71,6 +71,7 @@ async def resume_writer_agent(state: ResumeState) -> dict:
         job_description=state["job_description"],
         template_id=state.get("template_id", "classic"),
         language=state.get("language", "en"),
+        experience_level=state.get("experience_level", "auto"),
     )
 
     # Prepend agent-specific optimization instructions

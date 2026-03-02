@@ -46,7 +46,7 @@
 % Custom commands
 \newcommand{\resumeItem}[2]{
   \item\small{
-    \textbf{#1}{#2 \vspace{-2pt}}
+    \textbf{#1}{#2 \vspace{-1pt}}
   }
 }
 
@@ -60,7 +60,12 @@
 }
 
 
-\newcommand{\resumeSubItem}[2]{\resumeItem{#1}{#2}\vspace{-4pt}}
+\newcommand{\resumeSubItem}[2]{\resumeItem{#1}{#2}\vspace{-2pt}}
+
+
+\newcommand{\resumeSummary}[1]{
+  \small{#1}\vspace{-5pt}
+}
 
 
 \renewcommand{\labelitemii}{$\circ$}
@@ -98,7 +103,7 @@
 % Include: years of experience matching JD, core technical domain, 2-3 key JD technologies, one quantified highlight.
 % Omit if the candidate is a new grad with no professional experience.
 \section{Summary}
-\small{[1-2 sentence professional summary. Example: "Senior Software Engineer with 5+ years of experience
+\resumeSummary{[1-2 sentence professional summary. Example: "Senior Software Engineer with 5+ years of experience
 building distributed backend systems in Python and Go. Architected event-driven microservices on AWS
 serving 2M+ daily requests with 99.95\% uptime."]}
 

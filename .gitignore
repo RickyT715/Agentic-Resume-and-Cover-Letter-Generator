@@ -57,6 +57,7 @@ htmlcov/
 coverage.xml
 
 # E2E test reports (generated artifacts)
+backend/reports/
 backend/tests/e2e/report_*.md
 backend/tests/e2e/report_*.json
 

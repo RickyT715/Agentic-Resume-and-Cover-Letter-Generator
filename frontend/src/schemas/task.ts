@@ -5,6 +5,7 @@ export const taskCreateSchema = z.object({
   generate_cover_letter: z.boolean().default(true),
   template_id: z.string().default("classic"),
   language: z.enum(["en", "zh"]).default("en"),
+  experience_level: z.enum(["auto", "new_grad", "experienced"]).default("auto"),
   provider: z.string().optional(),
 })
 
@@ -15,6 +16,7 @@ export const taskSettingsSchema = z.object({
   generate_cover_letter: z.boolean().optional(),
   template_id: z.string().optional(),
   language: z.string().optional(),
+  experience_level: z.string().optional(),
   provider: z.string().optional(),
 })
 

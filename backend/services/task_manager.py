@@ -186,6 +186,7 @@ class TaskManager:
             generate_cover_letter=generate_cover_letter,
             template_id=template_id,
             language=task_data.language,
+            experience_level=task_data.experience_level,
             provider=task_data.provider,
         )
         self.tasks[task.id] = task
@@ -282,6 +283,7 @@ class TaskManager:
         generate_cover_letter: bool | None = None,
         template_id: str | None = None,
         language: str | None = None,
+        experience_level: str | None = None,
         provider: str | None = None,
     ) -> Task | None:
         task = self.tasks.get(task_id)
@@ -295,6 +297,8 @@ class TaskManager:
                 task._rebuild_steps()
             if language is not None:
                 task.language = language
+            if experience_level is not None:
+                task.experience_level = experience_level
             if provider is not None:
                 task.provider = provider if provider != "" else None
             self._save_tasks()
@@ -501,7 +505,10 @@ class TaskManager:
             )
 
             resume_prompt = self.prompt_manager.get_resume_prompt_with_substitutions(
-                task.job_description, template_id=task.template_id, language=task.language
+                task.job_description,
+                template_id=task.template_id,
+                language=task.language,
+                experience_level=task.experience_level,
             )
             raw_response = await ai_client.generate_resume(resume_prompt, task_id=task.id, task_number=task.task_number)
             # Extract company/position metadata before stripping to \documentclass

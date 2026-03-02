@@ -25,6 +25,7 @@ class TaskSettingsUpdate(BaseModel):
     generate_cover_letter: bool | None = None
     template_id: str | None = None
     language: str | None = None
+    experience_level: str | None = None
     provider: str | None = None
 
 
@@ -253,6 +254,7 @@ async def update_task_settings(task_id: str, data: TaskSettingsUpdate):
         generate_cover_letter=data.generate_cover_letter,
         template_id=data.template_id,
         language=data.language,
+        experience_level=data.experience_level,
         provider=data.provider,
     )
     if not task:

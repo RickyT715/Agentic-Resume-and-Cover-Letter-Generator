@@ -20,6 +20,7 @@ class ResumeState(TypedDict, total=False):
     language: str
     template_id: str
     generate_cover_letter: bool
+    experience_level: str
     provider_name: str
 
     # ---- User profile ----

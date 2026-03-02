@@ -98,7 +98,11 @@ class PromptManager:
             return False
 
     def get_resume_prompt_with_substitutions(
-        self, job_description: str, template_id: str = "classic", language: str = "en"
+        self,
+        job_description: str,
+        template_id: str = "classic",
+        language: str = "en",
+        experience_level: str = "auto",
     ) -> str:
         """
         Get the resume prompt with all template substitutions applied.
@@ -112,6 +116,7 @@ class PromptManager:
             job_description: The job description to insert
             template_id: The resume template style to use
             language: Language code ("en" or "zh")
+            experience_level: "auto", "new_grad", or "experienced"
 
         Returns:
             Fully substituted prompt
@@ -132,8 +137,60 @@ class PromptManager:
             if template_instructions:
                 prompt += f"\n\n## Resume Style Instructions\n{template_instructions}"
 
-        logger.debug(f"Applied template substitutions (template={template_id}) to resume prompt")
+        # Append experience level override if explicitly set
+        if experience_level and experience_level != "auto":
+            if language == "zh":
+                override = self._get_experience_level_override_zh(experience_level)
+            else:
+                override = self._get_experience_level_override(experience_level)
+            prompt += f"\n\n{override}"
+
+        logger.debug(
+            f"Applied template substitutions (template={template_id}, experience={experience_level}) to resume prompt"
+        )
         return prompt
+
+    def _get_experience_level_override(self, level: str) -> str:
+        """Get English experience level override instructions."""
+        if level == "new_grad":
+            return (
+                "## Experience Level: New Graduate\n"
+                "The candidate is a new graduate. Follow this layout STRICTLY:\n"
+                "- Section order: Education → Technical Skills → Projects → Experience (internships)\n"
+                "- Do NOT include a Summary/Objective section\n"
+                "- Emphasize education (GPA, relevant coursework, honors) and projects over work experience\n"
+                "- List internships under Experience but keep them concise (2-3 bullets each)"
+            )
+        else:  # experienced
+            return (
+                "## Experience Level: Experienced Professional\n"
+                "The candidate is an experienced professional. Follow this layout STRICTLY:\n"
+                "- Section order: Summary → Experience → Projects → Technical Skills → Education\n"
+                "- MUST include a Summary section (1-2 sentences with years of experience, core domain, key technologies)\n"
+                "- Emphasize work experience with detailed bullets (3-5 per role)\n"
+                "- Education section should be minimal (degree, university, date only)"
+            )
+
+    def _get_experience_level_override_zh(self, level: str) -> str:
+        """Get Chinese experience level override instructions."""
+        if level == "new_grad":
+            return (
+                "## 经验等级：应届毕业生\n"
+                "候选人是应届毕业生。请严格按照以下布局：\n"
+                "- 板块顺序：教育背景 → 技术技能 → 项目经历 → 工作经验（实习）\n"
+                "- 不要包含个人总结部分\n"
+                "- 重点突出教育背景（GPA、相关课程、荣誉）和项目经历\n"
+                "- 实习经历放在工作经验下，每段保持简洁（2-3个要点）"
+            )
+        else:  # experienced
+            return (
+                "## 经验等级：有经验的专业人士\n"
+                "候选人是有经验的专业人士。请严格按照以下布局：\n"
+                "- 板块顺序：个人总结 → 工作经验 → 项目经历 → 技术技能 → 教育背景\n"
+                "- 必须包含个人总结（1-2句，包含工作年限、核心领域、关键技术）\n"
+                "- 重点突出工作经验，每段3-5个详细要点\n"
+                "- 教育背景保持简洁（学位、学校、日期即可）"
+            )
 
     def _load_template_instructions(self, template_id: str) -> str:
         """Load template style instructions from the templates directory."""

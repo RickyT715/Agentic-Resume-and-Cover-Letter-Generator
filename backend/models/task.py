@@ -59,6 +59,7 @@ class Task(BaseModel):
     generate_cover_letter: bool = True
     template_id: str = "classic"
     language: str = "en"
+    experience_level: str = "auto"
     provider: str | None = None
     pipeline_version: str = "v2"
     steps: list[StepProgress] = Field(default_factory=list)
@@ -100,6 +101,7 @@ class TaskCreate(BaseModel):
     generate_cover_letter: bool = True
     template_id: str = "classic"
     language: str = "en"
+    experience_level: str = "auto"
     provider: str | None = None
 
 
@@ -108,6 +110,7 @@ class TaskUpdate(BaseModel):
     generate_cover_letter: bool | None = None
     template_id: str | None = None
     language: str | None = None
+    experience_level: str | None = None
     provider: str | None = None
 
 

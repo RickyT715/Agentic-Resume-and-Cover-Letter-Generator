@@ -45,6 +45,7 @@ export interface Task {
   generate_cover_letter: boolean;
   template_id: string;
   language?: string;
+  experience_level?: string;
   provider?: string | null;
   pipeline_version?: string;
   steps: StepProgress[];

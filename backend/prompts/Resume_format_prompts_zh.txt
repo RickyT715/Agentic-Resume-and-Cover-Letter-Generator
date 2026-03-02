@@ -49,7 +49,7 @@
 % Custom commands
 \newcommand{\resumeItem}[2]{
   \item\small{
-    \textbf{#1}{#2 \vspace{-2pt}}
+    \textbf{#1}{#2 \vspace{-1pt}}
   }
 }
 
@@ -63,7 +63,12 @@
 }
 
 
-\newcommand{\resumeSubItem}[2]{\resumeItem{#1}{#2}\vspace{-4pt}}
+\newcommand{\resumeSubItem}[2]{\resumeItem{#1}{#2}\vspace{-2pt}}
+
+
+\newcommand{\resumeSummary}[1]{
+  \small{#1}\vspace{-5pt}
+}
 
 
 \renewcommand{\labelitemii}{$\circ$}
@@ -102,8 +107,8 @@
 % 包含：工作年限、核心技术领域、2-3项JD关键技术、一个量化亮点。
 % 如果候选人是应届生无工作经验，可省略此部分。
 \section{个人总结}
-[1-2句专业总结。示例："具有3年以上后端开发经验的软件工程师，精通Python和Go语言。
-主导构建的AWS微服务系统日均处理100万+请求，可用性达99.9\%。"]
+\resumeSummary{[1-2句专业总结。示例："具有3年以上后端开发经验的软件工程师，精通Python和Go语言。
+主导构建的AWS微服务系统日均处理100万+请求，可用性达99.9\%。"]}
 
 
 %-----------工作经验-----------

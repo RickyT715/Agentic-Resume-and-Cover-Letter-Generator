@@ -84,6 +84,7 @@ async def run_langgraph_pipeline(
         "language": task.language,
         "template_id": task.template_id,
         "generate_cover_letter": task.generate_cover_letter,
+        "experience_level": task.experience_level,
         "provider_name": provider_name,
         "user_information": user_info,
         "retry_count": 0,
