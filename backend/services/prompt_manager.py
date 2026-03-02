@@ -103,6 +103,8 @@ class PromptManager:
         template_id: str = "classic",
         language: str = "en",
         experience_level: str = "auto",
+        enforce_one_page: bool = False,
+        allow_fabrication: bool = True,
     ) -> str:
         """
         Get the resume prompt with all template substitutions applied.
@@ -145,6 +147,24 @@ class PromptManager:
                 override = self._get_experience_level_override(experience_level)
             prompt += f"\n\n{override}"
 
+        # Append one-page optimization instructions
+        if enforce_one_page:
+            if language == "zh":
+                prompt += (
+                    "\n\n## 一页限制优化\n"
+                    "简历必须严格控制在一页以内。为节省空间，不要包含个人总结（Summary/Objective）部分。"
+                )
+            else:
+                prompt += (
+                    "\n\n## One-Page Optimization\n"
+                    "The resume MUST fit on exactly one page. To save space, "
+                    "do NOT include a Summary or Objective section."
+                )
+
+        # Append anti-fabrication instructions
+        if not allow_fabrication:
+            prompt += f"\n\n{self._get_anti_fabrication_instructions('resume', language)}"
+
         logger.debug(
             f"Applied template substitutions (template={template_id}, experience={experience_level}) to resume prompt"
         )
@@ -156,7 +176,7 @@ class PromptManager:
             return (
                 "## Experience Level: New Graduate\n"
                 "The candidate is a new graduate. Follow this layout STRICTLY:\n"
-                "- Section order: Education → Technical Skills → Projects → Experience (internships)\n"
+                "- Section order: Education → Technical Skills → Experience (internships) → Projects\n"
                 "- Do NOT include a Summary/Objective section\n"
                 "- Emphasize education (GPA, relevant coursework, honors) and projects over work experience\n"
                 "- List internships under Experience but keep them concise (2-3 bullets each)"
@@ -177,7 +197,7 @@ class PromptManager:
             return (
                 "## 经验等级：应届毕业生\n"
                 "候选人是应届毕业生。请严格按照以下布局：\n"
-                "- 板块顺序：教育背景 → 技术技能 → 项目经历 → 工作经验（实习）\n"
+                "- 板块顺序：教育背景 → 技术技能 → 工作经验（实习） → 项目经历\n"
                 "- 不要包含个人总结部分\n"
                 "- 重点突出教育背景（GPA、相关课程、荣誉）和项目经历\n"
                 "- 实习经历放在工作经验下，每段保持简洁（2-3个要点）"
@@ -205,7 +225,11 @@ class PromptManager:
         return ""
 
     def get_cover_letter_prompt_with_substitutions(
-        self, resume_content: str, job_description: str, language: str = "en"
+        self,
+        resume_content: str,
+        job_description: str,
+        language: str = "en",
+        allow_fabrication: bool = True,
     ) -> str:
         """
         Get the cover letter prompt with all template substitutions applied.
@@ -229,11 +253,19 @@ class PromptManager:
         prompt = prompt.replace("{{RESUME_CONTENT}}", resume_content)
         prompt = prompt.replace("{{JOB_DESCRIPTION}}", job_description)
 
+        if not allow_fabrication:
+            prompt += f"\n\n{self._get_anti_fabrication_instructions('cover_letter', language)}"
+
         logger.debug("Applied template substitutions to cover letter prompt")
         return prompt
 
     def get_question_prompt_with_substitutions(
-        self, question: str, job_description: str, word_limit: int = 150, language: str = "en"
+        self,
+        question: str,
+        job_description: str,
+        word_limit: int = 150,
+        language: str = "en",
+        allow_fabrication: bool = True,
     ) -> str:
         """
         Get the application question prompt with all template substitutions applied.
@@ -262,8 +294,44 @@ class PromptManager:
         prompt = prompt.replace("{{QUESTION}}", question)
         prompt = prompt.replace("{{WORD_LIMIT}}", str(word_limit))
 
+        if not allow_fabrication:
+            prompt += f"\n\n{self._get_anti_fabrication_instructions('question', language)}"
+
         logger.debug("Applied template substitutions to application question prompt")
         return prompt
+
+    def _get_anti_fabrication_instructions(self, prompt_type: str, language: str) -> str:
+        """Get anti-fabrication instructions for the given prompt type and language."""
+        if prompt_type == "resume":
+            if language == "zh":
+                return (
+                    "## 禁止虚构信息\n"
+                    "不要发明、编造或估算任何信息。只使用 <user_information> 中明确陈述的事实。"
+                    "不要添加候选人未明确列出的技能。不要编造指标、百分比或量化结果。"
+                )
+            return (
+                "## No Fabrication Policy\n"
+                "Do NOT invent, fabricate, or estimate any information. "
+                "Only use facts explicitly stated in <user_information>. "
+                "Do not add skills the candidate doesn't explicitly list. "
+                "Do not invent metrics, percentages, or quantitative results."
+            )
+        elif prompt_type == "cover_letter":
+            if language == "zh":
+                return "## 禁止虚构信息\n不要编造或估算任何细节。只使用简历和用户背景中直接提供的信息。"
+            return (
+                "## No Fabrication Policy\n"
+                "Do NOT fabricate or estimate any details. "
+                "Only use information directly from the resume and user background."
+            )
+        else:  # question
+            if language == "zh":
+                return "## 禁止虚构信息\n只使用申请人背景中明确提供的信息。不要编造经历或细节。"
+            return (
+                "## No Fabrication Policy\n"
+                "Only use information explicitly provided in the applicant's background. "
+                "Do not fabricate experiences or details."
+            )
 
     def validate_prompt(self, prompt_key: str, content: str) -> list:
         """

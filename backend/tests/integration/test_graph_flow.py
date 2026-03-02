@@ -114,17 +114,17 @@ class TestCompanyResearchRouting:
         result = _should_retrieve_company(state)
         assert result == "resume_writer"
 
-    def test_skip_without_rag_data(self):
-        """Company name but no indexed data means skip."""
+    def test_auto_research_without_rag_data(self):
+        """Company name but no indexed data falls back to auto research."""
         from agents.graph import _should_retrieve_company
 
         state: ResumeState = {
             "company_name": "TestCorp",
             "jd_analysis": {"company_name": "TestCorp"},
         }
-        # Without actual data in vector store, should skip
+        # Without actual data in vector store, should fall back to auto company research
         result = _should_retrieve_company(state)
-        assert result == "resume_writer"
+        assert result == "auto_company_research"
 
 
 class TestAgentOutputTracking:
@@ -148,7 +148,7 @@ class TestAgentOutputTracking:
             "agent_outputs": {},
         }
 
-        with patch("agents.jd_analyzer.get_provider", return_value=mock_provider):
+        with patch("services.provider_registry.get_provider_for_agent", return_value=mock_provider):
             result = await jd_analyzer_agent(state)
 
         assert "agent_outputs" in result

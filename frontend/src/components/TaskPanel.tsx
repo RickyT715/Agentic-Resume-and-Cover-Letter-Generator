@@ -166,6 +166,12 @@ export function TaskPanel() {
     } catch (e) {
       console.error('Failed to update experience level:', e);
     }
+    // Persist as default for future tasks
+    fetch(`/api/settings`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ default_experience_level: newLevel }),
+    }).catch(() => {});
   };
 
   const handleProviderChange = async (newProvider: string) => {
@@ -691,6 +697,25 @@ export function TaskPanel() {
             <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">
               Resume was generated before the failure and is available for download.
             </p>
+          </div>
+        )}
+
+        {/* Validation Warnings */}
+        {(isCompleted || isFailed) && activeTask.validation_warnings && activeTask.validation_warnings.length > 0 && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-500" />
+              <div>
+                <h3 className="font-medium text-amber-800 dark:text-amber-300">Validation Warnings</h3>
+                <ul className="mt-2 space-y-1">
+                  {activeTask.validation_warnings.map((warning, i) => (
+                    <li key={i} className="text-sm text-amber-700 dark:text-amber-400">
+                      {warning}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         )}
 

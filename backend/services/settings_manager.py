@@ -61,6 +61,17 @@ class AppSettings(BaseModel):
     generate_cover_letter: bool = True
     max_latex_retries: int = 3
     default_template_id: str = "classic"
+    default_experience_level: str = "auto"
+    allow_ai_fabrication: bool = True
+
+    # Resume Validation
+    enable_contact_replacement: bool = True
+    enable_text_validation: bool = True
+    enable_llm_validation: bool = False
+
+    # User Profile Links
+    user_linkedin_url: str = ""
+    user_github_url: str = ""
 
     # Per-Agent Provider Overrides
     # Maps agent name -> provider id. Empty string means "use task default".

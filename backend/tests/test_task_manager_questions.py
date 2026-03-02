@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -131,22 +131,26 @@ class TestDeleteQuestion:
 class TestGenerateQuestionAnswer:
     async def test_successful_generation(self, task_manager_isolated):
         tm = task_manager_isolated
-        tm.gemini_client.generate_question_answer = AsyncMock(return_value="  Generated answer.  ")
+        mock_provider = AsyncMock()
+        mock_provider.generate_question_answer = AsyncMock(return_value="  Generated answer.  ")
         task = tm.create_task(TaskCreate(job_description="Software Engineer at Acme"))
         q = tm.add_question(task.id, "Why here?")
 
-        result = await tm.generate_question_answer(task.id, q.id)
+        with patch("services.task_manager.get_provider_for_task", return_value=mock_provider):
+            result = await tm.generate_question_answer(task.id, q.id)
         assert result.answer == "Generated answer."
         assert result.status == QuestionStatus.COMPLETED
         assert result.answered_at is not None
 
     async def test_generation_failure(self, task_manager_isolated):
         tm = task_manager_isolated
-        tm.gemini_client.generate_question_answer = AsyncMock(side_effect=Exception("API error"))
+        mock_provider = AsyncMock()
+        mock_provider.generate_question_answer = AsyncMock(side_effect=Exception("API error"))
         task = tm.create_task(TaskCreate(job_description="JD"))
         q = tm.add_question(task.id, "Q")
 
-        result = await tm.generate_question_answer(task.id, q.id)
+        with patch("services.task_manager.get_provider_for_task", return_value=mock_provider):
+            result = await tm.generate_question_answer(task.id, q.id)
         assert result.status == QuestionStatus.FAILED
         assert "API error" in result.error_message
 
@@ -162,14 +166,16 @@ class TestGenerateQuestionAnswer:
 
     async def test_prompt_includes_question_text(self, task_manager_isolated):
         tm = task_manager_isolated
-        tm.gemini_client.generate_question_answer = AsyncMock(return_value="Answer")
+        mock_provider = AsyncMock()
+        mock_provider.generate_question_answer = AsyncMock(return_value="Answer")
         task = tm.create_task(TaskCreate(job_description="JD at company"))
         q = tm.add_question(task.id, "Why do you want this role?", word_limit=200)
 
-        await tm.generate_question_answer(task.id, q.id)
+        with patch("services.task_manager.get_provider_for_task", return_value=mock_provider):
+            await tm.generate_question_answer(task.id, q.id)
 
         # Verify the prompt was built with correct substitutions
-        call_args = tm.gemini_client.generate_question_answer.call_args
+        call_args = mock_provider.generate_question_answer.call_args
         prompt = call_args[0][0] if call_args[0] else call_args[1]["prompt"]
         assert "Why do you want this role?" in prompt
         assert "JD at company" in prompt

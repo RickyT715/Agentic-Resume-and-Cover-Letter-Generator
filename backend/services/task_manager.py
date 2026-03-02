@@ -10,11 +10,13 @@ from pathlib import Path
 from config import settings
 from models.task import ApplicationQuestion, QuestionStatus, Task, TaskCreate, TaskStatus, TaskStep
 from services.latex_compiler import CompilationAttempt, CompilationError, LaTeXCompiler
+from services.latex_link_checker import fix_latex_links
 from services.latex_utils import extract_metadata, process_latex_response
 from services.pdf_extractor import PDFTextExtractor
 from services.pdf_page_counter import validate_single_page
 from services.prompt_manager import get_prompt_manager
 from services.provider_registry import get_provider_for_task
+from services.resume_validator import validate_resume_async
 from services.settings_manager import get_settings_manager
 from services.text_to_pdf import TextToPDFConverter
 
@@ -180,13 +182,19 @@ class TaskManager:
 
         template_id = task_data.template_id or self.settings_manager.get("default_template_id", "classic")
 
+        experience_level = task_data.experience_level
+        if not experience_level or experience_level == "auto":
+            saved_level = self.settings_manager.get("default_experience_level", "auto")
+            if isinstance(saved_level, str) and saved_level not in ("", "auto"):
+                experience_level = saved_level
+
         task = Task(
             task_number=self.task_counter,
             job_description=task_data.job_description,
             generate_cover_letter=generate_cover_letter,
             template_id=template_id,
             language=task_data.language,
-            experience_level=task_data.experience_level,
+            experience_level=experience_level,
             provider=task_data.provider,
         )
         self.tasks[task.id] = task
@@ -372,11 +380,13 @@ class TaskManager:
 
         try:
             ai_client = get_provider_for_task(task.provider)
+            allow_fabrication = self.settings_manager.get("allow_ai_fabrication", True)
             prompt = self.prompt_manager.get_question_prompt_with_substitutions(
                 question=target_q.question,
                 job_description=task.job_description,
                 word_limit=target_q.word_limit,
                 language=task.language,
+                allow_fabrication=allow_fabrication,
             )
             answer = await ai_client.generate_question_answer(
                 prompt, task_id=task.id, task_number=task.task_number, question_id=target_q.id
@@ -479,6 +489,7 @@ class TaskManager:
         enforce_resume_one_page = self.settings_manager.get("enforce_resume_one_page", True)
         enforce_cover_letter_one_page = self.settings_manager.get("enforce_cover_letter_one_page", True)
         max_page_retry_attempts = self.settings_manager.get("max_page_retry_attempts", 3)
+        allow_fabrication = self.settings_manager.get("allow_ai_fabrication", True)
 
         logger.info(f"{'=' * 60}")
         logger.info(f"Starting task {task.task_number} [{task_id}]")
@@ -509,6 +520,8 @@ class TaskManager:
                 template_id=task.template_id,
                 language=task.language,
                 experience_level=task.experience_level,
+                enforce_one_page=enforce_resume_one_page,
+                allow_fabrication=allow_fabrication,
             )
             raw_response = await ai_client.generate_resume(resume_prompt, task_id=task.id, task_number=task.task_number)
             # Extract company/position metadata before stripping to \documentclass
@@ -519,6 +532,25 @@ class TaskManager:
                 task.position_name = metadata["position_name"]
 
             latex_code = process_latex_response(raw_response)
+            latex_code = fix_latex_links(
+                latex_code,
+                self.settings_manager.get("user_linkedin_url", ""),
+                self.settings_manager.get("user_github_url", ""),
+            )
+
+            # Validate resume contact info
+            suffix = "_zh" if task.language == "zh" else ""
+            user_info_text = self.prompt_manager.get_prompt(f"user_information{suffix}")
+            latex_code, validation_warnings = await validate_resume_async(
+                latex_code,
+                user_info_text,
+                task.language,
+                self.settings_manager,
+                ai_client,
+                job_description=task.job_description,
+            )
+            task.validation_warnings = validation_warnings
+
             task.latex_source = latex_code
             await self._notify_progress(
                 task,
@@ -537,7 +569,12 @@ class TaskManager:
             )
 
             resume_pdf_path = await self._compile_latex_with_retry_and_page_check(
-                task, latex_code, enforce_resume_one_page, max_page_retry_attempts, ai_client
+                task,
+                latex_code,
+                enforce_resume_one_page,
+                max_page_retry_attempts,
+                ai_client,
+                user_info_text=user_info_text,
             )
 
             await self._notify_progress(task, TaskStep.COMPILE_LATEX, TaskStatus.COMPLETED, "Resume PDF created")
@@ -606,7 +643,7 @@ class TaskManager:
                     f"Generating cover letter with {provider_label}...",
                 )
                 cover_letter_prompt = self.prompt_manager.get_cover_letter_prompt_with_substitutions(
-                    resume_text, task.job_description, language=task.language
+                    resume_text, task.job_description, language=task.language, allow_fabrication=allow_fabrication
                 )
                 cover_letter_text = await ai_client.generate_cover_letter(
                     cover_letter_prompt, task_id=task.id, task_number=task.task_number
@@ -717,7 +754,13 @@ class TaskManager:
     # ===================== LaTeX Compilation =====================
 
     async def _compile_latex_with_retry_and_page_check(
-        self, task: Task, initial_latex: str, enforce_one_page: bool, max_page_retries: int, ai_client=None
+        self,
+        task: Task,
+        initial_latex: str,
+        enforce_one_page: bool,
+        max_page_retries: int,
+        ai_client=None,
+        user_info_text: str = "",
     ):
         self.latex_compiler.clear_attempts()
         current_latex = initial_latex
@@ -774,8 +817,13 @@ class TaskManager:
                                 "Generate a new version that fits exactly 1 page.\n"
                             )
                             try:
+                                allow_fabrication = self.settings_manager.get("allow_ai_fabrication", True)
                                 resume_prompt = self.prompt_manager.get_resume_prompt_with_substitutions(
-                                    task.job_description, template_id=task.template_id, language=task.language
+                                    task.job_description,
+                                    template_id=task.template_id,
+                                    language=task.language,
+                                    enforce_one_page=enforce_one_page,
+                                    allow_fabrication=allow_fabrication,
                                 )
                                 raw = await ai_client.generate_resume_with_error_feedback(
                                     resume_prompt,
@@ -786,6 +834,19 @@ class TaskManager:
                                     attempt=attempt + 1,
                                 )
                                 current_latex = process_latex_response(raw)
+                                current_latex = fix_latex_links(
+                                    current_latex,
+                                    self.settings_manager.get("user_linkedin_url", ""),
+                                    self.settings_manager.get("user_github_url", ""),
+                                )
+                                current_latex, retry_warnings = await validate_resume_async(
+                                    current_latex,
+                                    user_info_text,
+                                    task.language,
+                                    self.settings_manager,
+                                    skip_llm=True,
+                                )
+                                task.validation_warnings = retry_warnings
                                 task.latex_source = current_latex
                                 continue
                             except Exception as e:
@@ -807,8 +868,13 @@ class TaskManager:
                     attempt=attempt,
                 )
                 try:
+                    allow_fabrication = self.settings_manager.get("allow_ai_fabrication", True)
                     resume_prompt = self.prompt_manager.get_resume_prompt_with_substitutions(
-                        task.job_description, template_id=task.template_id, language=task.language
+                        task.job_description,
+                        template_id=task.template_id,
+                        language=task.language,
+                        enforce_one_page=enforce_one_page,
+                        allow_fabrication=allow_fabrication,
                     )
                     raw = await ai_client.generate_resume_with_error_feedback(
                         resume_prompt,
@@ -819,6 +885,19 @@ class TaskManager:
                         attempt=attempt + 1,
                     )
                     current_latex = process_latex_response(raw)
+                    current_latex = fix_latex_links(
+                        current_latex,
+                        self.settings_manager.get("user_linkedin_url", ""),
+                        self.settings_manager.get("user_github_url", ""),
+                    )
+                    current_latex, retry_warnings = await validate_resume_async(
+                        current_latex,
+                        user_info_text,
+                        task.language,
+                        self.settings_manager,
+                        skip_llm=True,
+                    )
+                    task.validation_warnings = retry_warnings
                     task.latex_source = current_latex
                 except Exception as e:
                     logger.error(f"Task {task.task_number}: Regen failed: {e}")

@@ -53,6 +53,7 @@ export interface Task {
   cover_letter_pdf_path?: string;
   latex_source?: string;
   error_message?: string;
+  validation_warnings?: string[];
   company_name?: string;
   position_name?: string;
   questions?: ApplicationQuestion[];

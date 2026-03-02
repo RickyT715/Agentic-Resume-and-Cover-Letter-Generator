@@ -45,6 +45,13 @@ export const settingsSchema = z.object({
   enforce_cover_letter_one_page: z.boolean().optional(),
   max_latex_retries: z.number().int().min(1).max(10).optional(),
   default_template_id: z.string().optional(),
+  default_experience_level: z.string().optional(),
+  allow_ai_fabrication: z.boolean().optional(),
+  user_linkedin_url: z.string().optional(),
+  user_github_url: z.string().optional(),
+  enable_contact_replacement: z.boolean().optional(),
+  enable_text_validation: z.boolean().optional(),
+  enable_llm_validation: z.boolean().optional(),
 })
 
 export type SettingsInput = z.infer<typeof settingsSchema>

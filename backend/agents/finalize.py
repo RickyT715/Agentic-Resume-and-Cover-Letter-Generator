@@ -29,12 +29,37 @@ async def compile_latex_node(state: ResumeState) -> dict:
     logger.info(f"Task {state['task_number']}: Compiling LaTeX to PDF")
     start = time.time()
 
+    from services.latex_link_checker import fix_latex_links
+
     sm = get_settings_manager()
     enforce_one_page = sm.get("enforce_resume_one_page", True)
     max_page_retries = sm.get("max_page_retry_attempts", 3)
 
     compiler = LaTeXCompiler(max_retries=settings.max_latex_retries)
     current_latex = state["latex_source"]
+
+    # Fix links before compilation
+    current_latex = fix_latex_links(
+        current_latex,
+        sm.get("user_linkedin_url", ""),
+        sm.get("user_github_url", ""),
+    )
+
+    # Validate resume contact info
+    from services.prompt_manager import get_prompt_manager as _get_pm
+    from services.resume_validator import validate_resume_async
+
+    _pm = _get_pm()
+    suffix = "_zh" if state.get("language") == "zh" else ""
+    user_info_text = _pm.get_prompt(f"user_information{suffix}")
+    current_latex, validation_warnings = await validate_resume_async(
+        current_latex,
+        user_info_text,
+        state.get("language", "en"),
+        sm,
+        job_description=state.get("job_description", ""),
+    )
+
     compiler_name = "xelatex" if state.get("language") == "zh" else "pdflatex"
 
     max_attempts = max(settings.max_latex_retries, max_page_retries)
@@ -66,6 +91,8 @@ async def compile_latex_node(state: ResumeState) -> dict:
                         state["job_description"],
                         template_id=state.get("template_id", "classic"),
                         language=state.get("language", "en"),
+                        enforce_one_page=enforce_one_page,
+                        allow_fabrication=sm.get("allow_ai_fabrication", True),
                     )
                     page_feedback = (
                         f"\nThe resume compiled successfully but is {page_count} pages long. "
@@ -87,6 +114,18 @@ async def compile_latex_node(state: ResumeState) -> dict:
                             attempt=attempt + 1,
                         )
                         current_latex = process_latex_response(raw)
+                        current_latex = fix_latex_links(
+                            current_latex,
+                            sm.get("user_linkedin_url", ""),
+                            sm.get("user_github_url", ""),
+                        )
+                        current_latex, validation_warnings = await validate_resume_async(
+                            current_latex,
+                            user_info_text,
+                            state.get("language", "en"),
+                            sm,
+                            skip_llm=True,
+                        )
                         continue
                     except Exception as e:
                         logger.error(f"Task {state['task_number']}: Page-fix regen failed: {e}")
@@ -105,6 +144,8 @@ async def compile_latex_node(state: ResumeState) -> dict:
                     state["job_description"],
                     template_id=state.get("template_id", "classic"),
                     language=state.get("language", "en"),
+                    enforce_one_page=enforce_one_page,
+                    allow_fabrication=sm.get("allow_ai_fabrication", True),
                 )
                 raw = await provider.generate_resume_with_error_feedback(
                     resume_prompt,
@@ -115,6 +156,18 @@ async def compile_latex_node(state: ResumeState) -> dict:
                     attempt=attempt + 1,
                 )
                 current_latex = process_latex_response(raw)
+                current_latex = fix_latex_links(
+                    current_latex,
+                    sm.get("user_linkedin_url", ""),
+                    sm.get("user_github_url", ""),
+                )
+                current_latex, validation_warnings = await validate_resume_async(
+                    current_latex,
+                    user_info_text,
+                    state.get("language", "en"),
+                    sm,
+                    skip_llm=True,
+                )
             except Exception as e:
                 logger.error(f"Task {state['task_number']}: LaTeX regen failed: {e}")
 
@@ -133,6 +186,8 @@ async def compile_latex_node(state: ResumeState) -> dict:
 
     agent_outputs = state.get("agent_outputs", {})
     agent_outputs["compile_latex"] = {"latency_ms": latency}
+    if validation_warnings:
+        agent_outputs["validation_warnings"] = validation_warnings
 
     return {
         "resume_pdf_path": pdf_path,

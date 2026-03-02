@@ -59,11 +59,13 @@ async def resume_writer_agent(state: ResumeState) -> dict:
     from services.latex_utils import extract_metadata, process_latex_response
     from services.prompt_manager import get_prompt_manager
     from services.provider_registry import get_provider_for_agent
+    from services.settings_manager import get_settings_manager
 
     logger.info(f"Task {state['task_number']}: Generating resume (retry={state.get('retry_count', 0)})")
     start = time.time()
 
     pm = get_prompt_manager()
+    sm = get_settings_manager()
     provider = get_provider_for_agent("resume_writer", state["provider_name"])
 
     # Build the base prompt using existing infrastructure
@@ -72,6 +74,8 @@ async def resume_writer_agent(state: ResumeState) -> dict:
         template_id=state.get("template_id", "classic"),
         language=state.get("language", "en"),
         experience_level=state.get("experience_level", "auto"),
+        enforce_one_page=sm.get("enforce_resume_one_page", True),
+        allow_fabrication=sm.get("allow_ai_fabrication", True),
     )
 
     # Prepend agent-specific optimization instructions
@@ -121,6 +125,21 @@ async def resume_writer_agent(state: ResumeState) -> dict:
     # Extract metadata and process LaTeX
     metadata = extract_metadata(raw_response)
     latex_source = process_latex_response(raw_response)
+
+    # Validate and fix contact header (skip LLM to keep generation fast)
+    from services.resume_validator import validate_resume_async
+
+    suffix = "_zh" if language == "zh" else ""
+    user_info_text = pm.get_prompt(f"user_information{suffix}")
+    latex_source, validation_warnings = await validate_resume_async(
+        latex_source,
+        user_info_text,
+        language,
+        sm,
+        skip_llm=True,
+    )
+    if validation_warnings:
+        logger.info(f"Task {state['task_number']}: Resume validation warnings: {validation_warnings}")
 
     latency = int((time.time() - start) * 1000)
     logger.info(f"Task {state['task_number']}: Resume generated - {len(latex_source)} chars, latency={latency}ms")

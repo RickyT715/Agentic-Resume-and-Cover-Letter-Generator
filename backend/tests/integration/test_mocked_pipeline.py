@@ -34,27 +34,25 @@ class TestMockedPipelineFull:
         mock_graph = AsyncMock()
 
         async def fake_astream(state, **kwargs):
-            yield {"jd_analyzer": {"jd_analysis": {"job_title": "Developer"}, "current_node": "jd_analyzer"}}
-            yield {"relevance_matcher": {"relevance_match": {"match_score": 0.8}, "current_node": "relevance_matcher"}}
+            yield {"current_node": "jd_analyzer", "jd_analysis": {"job_title": "Developer"}, "agent_outputs": {}}
+            yield {"current_node": "relevance_matcher", "relevance_match": {"match_score": 0.8}, "agent_outputs": {}}
             yield {
-                "resume_writer": {
-                    "latex_source": "\\documentclass{a}\\begin{document}\\end{document}",
-                    "current_node": "resume_writer",
-                }
+                "current_node": "resume_writer",
+                "latex_source": "\\documentclass{a}\\begin{document}\\end{document}",
+                "agent_outputs": {},
             }
-            yield {"quality_gate": {"quality_passed": True, "current_node": "quality_gate"}}
-            yield {"compile_latex": {"resume_pdf_path": "/out/resume.pdf", "current_node": "compile_latex"}}
-            yield {"finalize": {"resume_pdf_path": "/out/final_resume.pdf", "current_node": "finalize"}}
-
-        mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(
-            return_value={
+            yield {"current_node": "quality_gate", "quality_passed": True, "agent_outputs": {}}
+            yield {"current_node": "compile_latex", "resume_pdf_path": "/out/resume.pdf", "agent_outputs": {}}
+            yield {
+                "current_node": "finalize",
                 "resume_pdf_path": "/out/final_resume.pdf",
                 "latex_source": "\\documentclass{a}...",
                 "company_name": "TestCo",
                 "position_name": "Developer",
+                "agent_outputs": {},
             }
-        )
+
+        mock_graph.astream = fake_astream
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -82,17 +80,16 @@ class TestMockedPipelineFull:
         mock_graph = AsyncMock()
 
         async def fake_astream(state, **kwargs):
-            yield {"jd_analyzer": {"current_node": "jd_analyzer"}}
-            yield {"finalize": {"current_node": "finalize"}}
-
-        mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(
-            return_value={
+            yield {"current_node": "jd_analyzer", "agent_outputs": {}}
+            yield {
+                "current_node": "finalize",
                 "resume_pdf_path": "/out/resume.pdf",
                 "cover_letter_pdf_path": "/out/cover.pdf",
                 "latex_source": "tex",
+                "agent_outputs": {},
             }
-        )
+
+        mock_graph.astream = fake_astream
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -119,25 +116,22 @@ class TestMockedPipelineFull:
         mock_graph = AsyncMock()
 
         async def fake_astream(state, **kwargs):
-            yield {"jd_analyzer": {"current_node": "jd_analyzer"}}
+            yield {"current_node": "jd_analyzer", "agent_outputs": {}}
             yield {
-                "quality_gate": {
-                    "quality_passed": False,
-                    "quality_feedback": "Too generic",
-                    "current_node": "quality_gate",
-                }
+                "current_node": "quality_gate",
+                "quality_passed": False,
+                "quality_feedback": "Too generic",
+                "agent_outputs": {},
             }
-            # Second pass after retry
-            yield {"resume_writer": {"latex_source": "improved", "current_node": "resume_writer"}}
-            yield {"finalize": {"resume_pdf_path": "/out/resume.pdf", "current_node": "finalize"}}
-
-        mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(
-            return_value={
+            yield {"current_node": "resume_writer", "latex_source": "improved", "agent_outputs": {}}
+            yield {
+                "current_node": "finalize",
                 "resume_pdf_path": "/out/resume.pdf",
                 "latex_source": "improved tex",
+                "agent_outputs": {},
             }
-        )
+
+        mock_graph.astream = fake_astream
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -162,10 +156,9 @@ class TestMockedPipelineFull:
         mock_graph = AsyncMock()
 
         async def fake_astream(state, **kwargs):
-            yield {"finalize": {"current_node": "finalize"}}
+            yield {"current_node": "finalize", "resume_pdf_path": "/out/r.pdf", "agent_outputs": {}}
 
         mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(return_value={"resume_pdf_path": "/out/r.pdf"})
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"

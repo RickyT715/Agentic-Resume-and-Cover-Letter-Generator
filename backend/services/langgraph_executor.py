@@ -165,6 +165,11 @@ async def run_langgraph_pipeline(
             if full_result.get("agent_outputs"):
                 task.agent_outputs = full_result["agent_outputs"]
 
+        # Transfer validation warnings from agent_outputs to task
+        ao = full_result.get("agent_outputs", {})
+        if ao.get("validation_warnings"):
+            task.validation_warnings = ao["validation_warnings"]
+
         # Mark all steps as completed
         for s in task.steps:
             if task.status == TaskStatus.COMPLETED:

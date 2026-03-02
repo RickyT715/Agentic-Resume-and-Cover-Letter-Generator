@@ -50,6 +50,15 @@ interface AppSettings {
   generate_cover_letter: boolean;
   max_latex_retries: number;
   default_template_id: string;
+  default_experience_level: string;
+  allow_ai_fabrication: boolean;
+  // Resume Validation
+  enable_contact_replacement: boolean;
+  enable_text_validation: boolean;
+  enable_llm_validation: boolean;
+  // User Profile Links
+  user_linkedin_url: string;
+  user_github_url: string;
   // Per-Agent Providers
   agent_providers: Record<string, string>;
 }
@@ -76,6 +85,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     qwen: false,
     generation: true,
     validation: true,
+    resume_validation: false,
+    profile: false,
   });
 
   useEffect(() => {
@@ -818,6 +829,21 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         Generate Cover Letter by Default
                       </label>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="allow_ai_fabrication"
+                        checked={settings.allow_ai_fabrication !== false}
+                        onChange={(e) => updateSetting('allow_ai_fabrication', e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <label htmlFor="allow_ai_fabrication" className="text-sm text-gray-700 dark:text-gray-300">
+                        Allow AI Fabrication
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2 ml-6">
+                      When disabled, AI will only use facts explicitly stated in your profile. No invented metrics or skills.
+                    </p>
                   </div>
                 )}
               </div>
@@ -872,6 +898,111 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         Number of times to retry if document exceeds 1 page
                       </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Resume Validation Section */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+                <button
+                  onClick={() => toggleSection('resume_validation')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
+                >
+                  <span className="font-medium">Resume Validation</span>
+                  {expandedSections.resume_validation ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedSections.resume_validation && (
+                  <div className="p-4 space-y-4">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Validate and fix contact information in generated resumes. Enable any combination of methods.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="enable_contact_replacement"
+                        checked={settings.enable_contact_replacement !== false}
+                        onChange={(e) => updateSetting('enable_contact_replacement', e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <label htmlFor="enable_contact_replacement" className="text-sm text-gray-700 dark:text-gray-300">
+                        Auto-fix Contact Info
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 ml-6 -mt-2">
+                      Directly replace the resume header with your parsed contact info. Prevents wrong name/email/phone.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="enable_text_validation"
+                        checked={settings.enable_text_validation !== false}
+                        onChange={(e) => updateSetting('enable_text_validation', e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <label htmlFor="enable_text_validation" className="text-sm text-gray-700 dark:text-gray-300">
+                        Text Validation
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 ml-6 -mt-2">
+                      Verify that your name, email, and phone appear correctly in the LaTeX source. Detects placeholder text.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="enable_llm_validation"
+                        checked={settings.enable_llm_validation || false}
+                        onChange={(e) => updateSetting('enable_llm_validation', e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <label htmlFor="enable_llm_validation" className="text-sm text-gray-700 dark:text-gray-300">
+                        LLM Validation
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 ml-6 -mt-2">
+                      AI reviews the entire resume for accuracy, fabricated content, and formatting issues. Slower and uses an extra API call.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* User Profile Links Section */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+                <button
+                  onClick={() => toggleSection('profile')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
+                >
+                  <span className="font-medium">User Profile Links</span>
+                  {expandedSections.profile ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedSections.profile && (
+                  <div className="p-4 space-y-4">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Set your correct LinkedIn and GitHub URLs. The link checker will auto-fix any AI-generated URLs to match these.
+                    </p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        LinkedIn URL
+                      </label>
+                      <input
+                        type="url"
+                        value={settings.user_linkedin_url || ''}
+                        onChange={(e) => updateSetting('user_linkedin_url', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        placeholder="https://linkedin.com/in/yourprofile"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        GitHub URL
+                      </label>
+                      <input
+                        type="url"
+                        value={settings.user_github_url || ''}
+                        onChange={(e) => updateSetting('user_github_url', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                        placeholder="https://github.com/yourusername"
+                      />
                     </div>
                   </div>
                 )}

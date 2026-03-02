@@ -72,6 +72,7 @@ class Task(BaseModel):
     questions: list[ApplicationQuestion] = Field(default_factory=list)
     company_name: str = ""
     position_name: str = ""
+    validation_warnings: list[str] = Field(default_factory=list)
     failed_latex_attempts: list[str] = Field(default_factory=list)
     agent_outputs: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.now)

@@ -94,7 +94,7 @@
 %   Include Summary section (1-2 sentences).
 %
 % IF NEW GRAD (< 2 years professional experience):
-%   Section order: Education → Technical Skills → Projects → Experience (internships)
+%   Section order: Education → Technical Skills → Experience (internships) → Projects
 %   OMIT Summary section entirely.
 
 

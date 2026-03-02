@@ -42,17 +42,20 @@ async def cover_letter_writer_agent(state: ResumeState) -> dict:
     """
     from services.prompt_manager import get_prompt_manager
     from services.provider_registry import get_provider_for_agent
+    from services.settings_manager import get_settings_manager
 
     logger.info(f"Task {state['task_number']}: Generating cover letter")
     start = time.time()
 
     pm = get_prompt_manager()
+    sm = get_settings_manager()
     provider = get_provider_for_agent("cover_letter_writer", state["provider_name"])
 
     base_prompt = pm.get_cover_letter_prompt_with_substitutions(
         resume_content=state.get("resume_text", ""),
         job_description=state["job_description"],
         language=state.get("language", "en"),
+        allow_fabrication=sm.get("allow_ai_fabrication", True),
     )
 
     # Prepend agent intelligence

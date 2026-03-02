@@ -25,6 +25,7 @@ def mock_provider():
 def mock_prompt_manager():
     pm = MagicMock()
     pm.get_resume_prompt_with_substitutions.return_value = "Base resume prompt"
+    pm.get_prompt.return_value = "John Doe\nEmail: john@example.com\nMobile: 555-1234"
     return pm
 
 

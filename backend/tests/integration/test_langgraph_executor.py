@@ -31,22 +31,22 @@ class TestRunLanggraphPipeline:
         task = _make_task()
 
         # Mock the graph to return a successful final state
+        # astream with stream_mode="values" yields full accumulated state dicts
         mock_graph = AsyncMock()
 
         async def fake_astream(state, **kwargs):
-            yield {"jd_analyzer": {"jd_analysis": {}, "current_node": "jd_analyzer"}}
-            yield {"resume_writer": {"latex_source": "tex", "current_node": "resume_writer"}}
-            yield {"finalize": {"resume_pdf_path": "/out/resume.pdf", "current_node": "finalize"}}
-
-        mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(
-            return_value={
+            yield {"current_node": "jd_analyzer", "jd_analysis": {}, "agent_outputs": {}}
+            yield {"current_node": "resume_writer", "latex_source": "tex", "agent_outputs": {}}
+            yield {
+                "current_node": "finalize",
                 "resume_pdf_path": "/out/resume.pdf",
                 "latex_source": "\\documentclass{article}...",
                 "company_name": "TestCo",
                 "position_name": "Engineer",
+                "agent_outputs": {},
             }
-        )
+
+        mock_graph.astream = fake_astream
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -74,14 +74,10 @@ class TestRunLanggraphPipeline:
         mock_graph = AsyncMock()
 
         async def fake_astream(state, **kwargs):
-            yield {"jd_analyzer": {"current_node": "jd_analyzer"}}
+            yield {"current_node": "jd_analyzer", "agent_outputs": {}}
+            yield {"current_node": "compile_latex", "error": "LaTeX compilation failed", "agent_outputs": {}}
 
         mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(
-            return_value={
-                "error": "LaTeX compilation failed",
-            }
-        )
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -142,15 +138,11 @@ class TestRunLanggraphPipeline:
         mock_graph = AsyncMock()
 
         async def fake_astream(state, **kwargs):
-            yield {"jd_analyzer": {"current_node": "jd_analyzer"}}
-            yield {"resume_writer": {"current_node": "resume_writer"}}
+            yield {"current_node": "jd_analyzer", "agent_outputs": {}}
+            yield {"current_node": "resume_writer", "agent_outputs": {}}
+            yield {"current_node": "finalize", "resume_pdf_path": "/out/resume.pdf", "agent_outputs": {}}
 
         mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(
-            return_value={
-                "resume_pdf_path": "/out/resume.pdf",
-            }
-        )
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"
@@ -178,14 +170,9 @@ class TestRunLanggraphPipeline:
         mock_graph = AsyncMock()
 
         async def fake_astream(state, **kwargs):
-            yield {"compile_latex": {"current_node": "compile_latex"}}
+            yield {"current_node": "compile_latex", "resume_pdf_path": "/out/resume.pdf", "agent_outputs": {}}
 
         mock_graph.astream = fake_astream
-        mock_graph.ainvoke = AsyncMock(
-            return_value={
-                "resume_pdf_path": "/out/resume.pdf",
-            }
-        )
 
         mock_sm = MagicMock()
         mock_sm.get.return_value = "gemini"

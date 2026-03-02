@@ -209,4 +209,6 @@ def should_retry(state: ResumeState) -> str:
     """
     if state.get("quality_passed", True):
         return "compile_latex"
+    if state.get("retry_count", 0) >= MAX_RETRIES:
+        return "compile_latex"
     return "resume_writer"

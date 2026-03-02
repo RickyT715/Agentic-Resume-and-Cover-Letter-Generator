@@ -485,6 +485,7 @@ class TestChinesePromptSelection:
 
         mock_pm = MagicMock()
         mock_pm.get_resume_prompt_with_substitutions = MagicMock(return_value="base prompt")
+        mock_pm.get_prompt.return_value = "张三\n邮箱：zhangsan@example.com\n电话：+86-13800138000"
 
         state = {
             "task_number": 1,
