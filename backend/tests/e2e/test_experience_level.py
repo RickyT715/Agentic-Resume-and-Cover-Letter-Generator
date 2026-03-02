@@ -235,10 +235,12 @@ async def run_scenario(
         if task.get("experience_level") == experience_level:
             result["checks"].append(("experience_level stored correctly", True))
         else:
-            result["checks"].append((
-                f"experience_level stored correctly (expected={experience_level}, got={task.get('experience_level')})",
-                False,
-            ))
+            result["checks"].append(
+                (
+                    f"experience_level stored correctly (expected={experience_level}, got={task.get('experience_level')})",
+                    False,
+                )
+            )
 
         # Start v3 pipeline
         print("    Starting v3 pipeline...")
@@ -288,8 +290,12 @@ async def run_scenario(
 
             # Education should come before Experience
             if analysis["has_education"] and analysis["has_experience"]:
-                edu_pos = analysis["section_positions"].get("Education", analysis["section_positions"].get("教育背景", 999999))
-                exp_pos = analysis["section_positions"].get("Experience", analysis["section_positions"].get("工作经验", 0))
+                edu_pos = analysis["section_positions"].get(
+                    "Education", analysis["section_positions"].get("教育背景", 999999)
+                )
+                exp_pos = analysis["section_positions"].get(
+                    "Experience", analysis["section_positions"].get("工作经验", 0)
+                )
                 if edu_pos < exp_pos:
                     result["checks"].append(("new_grad: Education before Experience", True))
                 else:
@@ -304,8 +310,12 @@ async def run_scenario(
 
             # Experience should come before Education
             if analysis["has_education"] and analysis["has_experience"]:
-                edu_pos = analysis["section_positions"].get("Education", analysis["section_positions"].get("教育背景", 0))
-                exp_pos = analysis["section_positions"].get("Experience", analysis["section_positions"].get("工作经验", 999999))
+                edu_pos = analysis["section_positions"].get(
+                    "Education", analysis["section_positions"].get("教育背景", 0)
+                )
+                exp_pos = analysis["section_positions"].get(
+                    "Experience", analysis["section_positions"].get("工作经验", 999999)
+                )
                 if exp_pos < edu_pos:
                     result["checks"].append(("experienced: Experience before Education", True))
                 else:
@@ -473,12 +483,14 @@ async def main():
 
     scenarios = list(SCENARIOS)
     if args.include_zh:
-        scenarios.append({
-            "label": "New Grad (ZH) - Entry-level JD",
-            "jd": NEW_GRAD_JD,
-            "experience_level": "new_grad",
-            "language": "zh",
-        })
+        scenarios.append(
+            {
+                "label": "New Grad (ZH) - Entry-level JD",
+                "jd": NEW_GRAD_JD,
+                "experience_level": "new_grad",
+                "language": "zh",
+            }
+        )
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         # Check server
@@ -530,9 +542,11 @@ async def main():
         icon = "PASS" if r["status"] == "completed" and failed == 0 else "FAIL"
         if failed > 0 or r["status"] != "completed":
             all_passed = False
-        print(f"  [{icon}] {r['label']} (experience_level={r['experience_level']}) "
-              f"- {r['status']} - checks: {passed}/{passed + failed} "
-              f"- {format_duration(r.get('total_time_ms', 0))}")
+        print(
+            f"  [{icon}] {r['label']} (experience_level={r['experience_level']}) "
+            f"- {r['status']} - checks: {passed}/{passed + failed} "
+            f"- {format_duration(r.get('total_time_ms', 0))}"
+        )
         for check_name, check_ok in r.get("checks", []):
             icon2 = "  PASS" if check_ok else "  FAIL"
             print(f"    [{icon2}] {check_name}")
