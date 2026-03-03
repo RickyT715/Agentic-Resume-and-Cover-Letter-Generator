@@ -1,9 +1,11 @@
 import logging
 import shutil
+import traceback
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from api.routes import router
 from api.websocket import manager, progress_callback
@@ -104,6 +106,13 @@ app = FastAPI(
     version="3.0.0",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.error("Unhandled exception on %s %s\n%s", request.method, request.url.path, traceback.format_exc())
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
 
 # Rate limiting (optional - requires slowapi)
 from middleware.rate_limit import setup_rate_limiting

@@ -25,9 +25,9 @@ class QuestionStatus(StrEnum):
 
 class ApplicationQuestion(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
-    question: str
+    question: str = Field(max_length=1_000)
     word_limit: int = 150
-    answer: str | None = None
+    answer: str | None = Field(default=None, max_length=5_000)
     status: QuestionStatus = QuestionStatus.PENDING
     error_message: str | None = None
     created_at: datetime = Field(default_factory=datetime.now)
@@ -54,7 +54,7 @@ class StepProgress(BaseModel):
 class Task(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
     task_number: int
-    job_description: str
+    job_description: str = Field(max_length=50_000)
     status: TaskStatus = TaskStatus.PENDING
     generate_cover_letter: bool = True
     template_id: str = "classic"
@@ -70,7 +70,7 @@ class Task(BaseModel):
     error_message: str | None = None
     cancelled: bool = False
     questions: list[ApplicationQuestion] = Field(default_factory=list)
-    company_name: str = ""
+    company_name: str = Field(default="", max_length=500)
     position_name: str = ""
     validation_warnings: list[str] = Field(default_factory=list)
     failed_latex_attempts: list[str] = Field(default_factory=list)
@@ -98,7 +98,7 @@ class Task(BaseModel):
 
 
 class TaskCreate(BaseModel):
-    job_description: str = ""
+    job_description: str = Field(default="", max_length=50_000)
     generate_cover_letter: bool = True
     template_id: str = "classic"
     language: str = "en"
@@ -107,7 +107,7 @@ class TaskCreate(BaseModel):
 
 
 class TaskUpdate(BaseModel):
-    job_description: str | None = None
+    job_description: str | None = Field(default=None, max_length=50_000)
     generate_cover_letter: bool | None = None
     template_id: str | None = None
     language: str | None = None

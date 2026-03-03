@@ -8,9 +8,12 @@ services:
     ports:
       - "48765:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://resumegen:resumegen@postgres:5432/resumegen
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-resumegen}:${POSTGRES_PASSWORD:-resumegen}@postgres:5432/${POSTGRES_DB:-resumegen}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - OPENAI_COMPAT_API_KEY=${OPENAI_COMPAT_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
     volumes:
       - backend-output:/app/output
       - backend-logs:/app/logs
@@ -35,15 +38,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: resumegen
-      POSTGRES_PASSWORD: resumegen
-      POSTGRES_DB: resumegen
+      POSTGRES_USER: ${POSTGRES_USER:-resumegen}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resumegen}
+      POSTGRES_DB: ${POSTGRES_DB:-resumegen}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U resumegen"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-resumegen}"]
       interval: 5s
       timeout: 3s
       retries: 5

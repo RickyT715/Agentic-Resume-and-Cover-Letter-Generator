@@ -1,16 +1,51 @@
+import ipaddress
+import socket
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel
 
+from middleware.auth import require_api_key
+from middleware.rate_limit import SCRAPE_RATE, TASK_CREATE_RATE, rate_limit
 from models.task import ApplicationQuestion, Task, TaskCreate
 from services.prompt_manager import get_prompt_manager
 from services.settings_manager import get_settings_manager
 from services.task_manager import task_manager
 
 router = APIRouter(prefix="/api")
+
+# Private IP ranges blocked for SSRF protection
+_PRIVATE_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+]
+
+
+def validate_url_not_internal(url: str) -> None:
+    """Raise HTTPException 400 if the URL resolves to a private/internal address."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise HTTPException(status_code=400, detail="Only http/https URLs are allowed")
+    hostname = parsed.hostname
+    if not hostname:
+        raise HTTPException(status_code=400, detail="Invalid URL: missing hostname")
+    try:
+        addr_info = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        raise HTTPException(status_code=400, detail="Could not resolve hostname")
+    for _, _, _, _, sockaddr in addr_info:
+        ip = ipaddress.ip_address(sockaddr[0])
+        for network in _PRIVATE_NETWORKS:
+            if ip in network:
+                raise HTTPException(status_code=400, detail="URL resolves to a private/internal address")
 
 
 # ============== Request Models ==============
@@ -205,9 +240,10 @@ async def get_jd_history() -> list[dict]:
 # ============== Task Endpoints ==============
 
 
-@router.post("/tasks", response_model=Task)
-async def create_task(task_data: TaskCreate):
-    task = task_manager.create_task(task_data)
+@router.post("/tasks", response_model=Task, dependencies=[Depends(require_api_key)])
+@rate_limit(TASK_CREATE_RATE)
+async def create_task(request: Request, task_data: TaskCreate):
+    task = await task_manager.create_task(task_data)
     return task
 
 
@@ -226,7 +262,7 @@ async def get_task(task_id: str):
 
 @router.delete("/tasks/{task_id}")
 async def delete_task(task_id: str):
-    success = task_manager.delete_task(task_id)
+    success = await task_manager.delete_task(task_id)
     if not success:
         raise HTTPException(status_code=400, detail="Task not found or is currently running")
     return {"message": "Task deleted"}
@@ -234,13 +270,13 @@ async def delete_task(task_id: str):
 
 @router.delete("/tasks")
 async def delete_completed_tasks():
-    count = task_manager.delete_completed_tasks()
+    count = await task_manager.delete_completed_tasks()
     return {"message": f"Deleted {count} tasks", "count": count}
 
 
 @router.put("/tasks/{task_id}/job-description")
 async def update_job_description(task_id: str, data: JobDescriptionUpdate):
-    task = task_manager.update_task_job_description(task_id, data.job_description)
+    task = await task_manager.update_task_job_description(task_id, data.job_description)
     if not task:
         raise HTTPException(status_code=400, detail="Task not found or already started")
     return task
@@ -248,7 +284,7 @@ async def update_job_description(task_id: str, data: JobDescriptionUpdate):
 
 @router.put("/tasks/{task_id}/settings")
 async def update_task_settings(task_id: str, data: TaskSettingsUpdate):
-    task = task_manager.update_task_settings(
+    task = await task_manager.update_task_settings(
         task_id,
         job_description=data.job_description,
         generate_cover_letter=data.generate_cover_letter,
@@ -293,7 +329,7 @@ async def start_task_v3(task_id: str, background_tasks: BackgroundTasks):
 
 @router.post("/tasks/{task_id}/retry")
 async def retry_task(task_id: str, background_tasks: BackgroundTasks):
-    task = task_manager.retry_task(task_id)
+    task = await task_manager.retry_task(task_id)
     if not task:
         raise HTTPException(status_code=400, detail="Task not found or cannot be retried")
     return task
@@ -301,7 +337,7 @@ async def retry_task(task_id: str, background_tasks: BackgroundTasks):
 
 @router.post("/tasks/{task_id}/cancel")
 async def cancel_task(task_id: str):
-    task = task_manager.cancel_task(task_id)
+    task = await task_manager.cancel_task(task_id)
     if not task:
         raise HTTPException(status_code=400, detail="Task not found or cannot be cancelled")
     return task
@@ -403,7 +439,7 @@ async def get_questions(task_id: str):
 
 @router.post("/tasks/{task_id}/questions", response_model=ApplicationQuestion)
 async def add_question(task_id: str, data: AddQuestionRequest):
-    q = task_manager.add_question(task_id, data.question, data.word_limit)
+    q = await task_manager.add_question(task_id, data.question, data.word_limit)
     if not q:
         raise HTTPException(status_code=404, detail="Task not found")
     return q
@@ -411,7 +447,7 @@ async def add_question(task_id: str, data: AddQuestionRequest):
 
 @router.put("/tasks/{task_id}/questions/{question_id}", response_model=ApplicationQuestion)
 async def update_question(task_id: str, question_id: str, data: UpdateQuestionRequest):
-    q = task_manager.update_question(task_id, question_id, question=data.question, word_limit=data.word_limit)
+    q = await task_manager.update_question(task_id, question_id, question=data.question, word_limit=data.word_limit)
     if not q:
         raise HTTPException(status_code=404, detail="Task or question not found")
     return q
@@ -419,7 +455,7 @@ async def update_question(task_id: str, question_id: str, data: UpdateQuestionRe
 
 @router.delete("/tasks/{task_id}/questions/{question_id}")
 async def delete_question(task_id: str, question_id: str):
-    success = task_manager.delete_question(task_id, question_id)
+    success = await task_manager.delete_question(task_id, question_id)
     if not success:
         raise HTTPException(status_code=404, detail="Task or question not found")
     return {"message": "Question deleted"}
@@ -483,9 +519,11 @@ async def evaluate_task(task_id: str):
 # ============== Company Research (RAG) Endpoints ==============
 
 
-@router.post("/companies/scrape")
-async def scrape_company(data: CompanyScrapeRequest):
+@router.post("/companies/scrape", dependencies=[Depends(require_api_key)])
+@rate_limit(SCRAPE_RATE)
+async def scrape_company(request: Request, data: CompanyScrapeRequest):
     """Scrape a company website and index it for RAG retrieval."""
+    validate_url_not_internal(data.url)
     try:
         from rag.retriever import scrape_and_index_company
 
@@ -556,10 +594,8 @@ async def generate_all_question_answers(task_id: str):
     if not task.job_description.strip():
         raise HTTPException(status_code=400, detail="Job description is required to generate answers")
 
-    results = []
-    for q in task.questions:
-        if q.status != "completed" or q.answer is None:
-            result = await task_manager.generate_question_answer(task_id, q.id)
-            if result:
-                results.append(result)
+    import asyncio
+
+    pending_ids = [q.id for q in task.questions if q.status != "completed" or q.answer is None]
+    await asyncio.gather(*(task_manager.generate_question_answer(task_id, qid) for qid in pending_ids))
     return task.questions

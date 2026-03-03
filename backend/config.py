@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     # Concurrency
     max_concurrent_tasks: int = 3
 
+    # Quality Gate
+    quality_threshold: float = 0.7
+    quality_max_retries: int = 2
+
     # File Paths
     base_dir: Path = Path(__file__).parent
     prompts_dir: Path = base_dir / "prompts"
@@ -65,6 +69,9 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 48765
     frontend_port: int = 45173
+
+    # Optional API key auth (empty = disabled/dev mode)
+    api_auth_key: str = ""
 
     # PDF Generation Settings
     cover_letter_font: str = "Helvetica"
