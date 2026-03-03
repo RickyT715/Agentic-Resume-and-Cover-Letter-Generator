@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Settings, Save, RefreshCw, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTaskStore } from '../store/taskStore';
 import { AppSettings, Template } from '../types/task';
@@ -28,13 +28,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     agent_providers: false,
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      loadSettings();
-    }
-  }, [isOpen]);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/settings');
@@ -48,7 +42,13 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadSettings();
+    }
+  }, [isOpen, loadSettings]);
 
   const saveSettings = async () => {
     if (!settings) return;

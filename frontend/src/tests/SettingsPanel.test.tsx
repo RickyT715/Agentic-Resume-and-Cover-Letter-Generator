@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SettingsPanel } from '../components/SettingsPanel';
 import { useTaskStore } from '../store/taskStore';
 
@@ -46,14 +47,25 @@ const mockSettings = {
   agent_providers: {},
 };
 
+function renderWithQuery(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
+
 describe('SettingsPanel', () => {
   beforeEach(() => {
     useTaskStore.setState({ tasks: [], activeTaskId: null, toasts: [], darkMode: false });
     vi.restoreAllMocks();
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('renders nothing when not open', () => {
-    const { container } = render(<SettingsPanel isOpen={false} onClose={() => {}} />);
+    const { container } = renderWithQuery(<SettingsPanel isOpen={false} onClose={() => {}} />);
     expect(container.innerHTML).toBe('');
   });
 
@@ -66,10 +78,8 @@ describe('SettingsPanel', () => {
       }),
     );
 
-    render(<SettingsPanel isOpen={true} onClose={() => {}} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={() => {}} />);
     expect(screen.getByText('Application Settings')).toBeTruthy();
-
-    vi.unstubAllGlobals();
   });
 
   it('loads settings on open', async () => {
@@ -80,13 +90,11 @@ describe('SettingsPanel', () => {
 
     vi.stubGlobal('fetch', mockFetch);
 
-    render(<SettingsPanel isOpen={true} onClose={() => {}} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith('/api/settings');
     });
-
-    vi.unstubAllGlobals();
   });
 
   it('shows section headers', async () => {
@@ -98,7 +106,7 @@ describe('SettingsPanel', () => {
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
     );
 
-    render(<SettingsPanel isOpen={true} onClose={() => {}} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
     await waitFor(() => {
       expect(screen.getByText('Default AI Provider')).toBeTruthy();
@@ -107,8 +115,6 @@ describe('SettingsPanel', () => {
     expect(screen.getByText('Claude Settings')).toBeTruthy();
     expect(screen.getByText('Generation Settings')).toBeTruthy();
     expect(screen.getByText('Page Length Validation')).toBeTruthy();
-
-    vi.unstubAllGlobals();
   });
 
   it('shows save and reset buttons', async () => {
@@ -120,15 +126,13 @@ describe('SettingsPanel', () => {
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
     );
 
-    render(<SettingsPanel isOpen={true} onClose={() => {}} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
     await waitFor(() => {
       expect(screen.getByText('Save Settings')).toBeTruthy();
     });
     expect(screen.getByText('Reset to Defaults')).toBeTruthy();
     expect(screen.getByText('Cancel')).toBeTruthy();
-
-    vi.unstubAllGlobals();
   });
 
   it('calls save endpoint on save click', async () => {
@@ -144,7 +148,7 @@ describe('SettingsPanel', () => {
 
     vi.stubGlobal('fetch', mockFetch);
 
-    render(<SettingsPanel isOpen={true} onClose={() => {}} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
     await waitFor(() => {
       expect(screen.getByText('Save Settings')).toBeTruthy();
@@ -158,8 +162,6 @@ describe('SettingsPanel', () => {
       );
       expect(saveCalls.length).toBe(1);
     });
-
-    vi.unstubAllGlobals();
   });
 
   it('calls onClose when Cancel is clicked', async () => {
@@ -172,7 +174,7 @@ describe('SettingsPanel', () => {
     );
 
     const onClose = vi.fn();
-    render(<SettingsPanel isOpen={true} onClose={onClose} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={onClose} />);
 
     await waitFor(() => {
       expect(screen.getByText('Cancel')).toBeTruthy();
@@ -180,8 +182,6 @@ describe('SettingsPanel', () => {
 
     fireEvent.click(screen.getByText('Cancel'));
     expect(onClose).toHaveBeenCalled();
-
-    vi.unstubAllGlobals();
   });
 
   it('calls onClose when X button is clicked', async () => {
@@ -194,7 +194,7 @@ describe('SettingsPanel', () => {
     );
 
     const onClose = vi.fn();
-    render(<SettingsPanel isOpen={true} onClose={onClose} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={onClose} />);
 
     await waitFor(() => {
       expect(screen.getByText('Application Settings')).toBeTruthy();
@@ -209,8 +209,6 @@ describe('SettingsPanel', () => {
       fireEvent.click(xButton);
       expect(onClose).toHaveBeenCalled();
     }
-
-    vi.unstubAllGlobals();
   });
 
   it('toggles section expansion', async () => {
@@ -222,7 +220,7 @@ describe('SettingsPanel', () => {
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
     );
 
-    render(<SettingsPanel isOpen={true} onClose={() => {}} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
     await waitFor(() => {
       expect(screen.getByText('Claude Settings')).toBeTruthy();
@@ -239,8 +237,6 @@ describe('SettingsPanel', () => {
     await waitFor(() => {
       expect(screen.queryByPlaceholderText('Enter your Anthropic API key')).toBeNull();
     });
-
-    vi.unstubAllGlobals();
   });
 
   it('shows loading indicator on reset', async () => {
@@ -254,7 +250,7 @@ describe('SettingsPanel', () => {
     );
     vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
 
-    render(<SettingsPanel isOpen={true} onClose={() => {}} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
     await waitFor(() => {
       expect(screen.getByText('Reset to Defaults')).toBeTruthy();
@@ -269,20 +265,20 @@ describe('SettingsPanel', () => {
       );
       expect(resetCalls.length).toBe(1);
     });
-
-    vi.unstubAllGlobals();
   });
 
   it('shows error toast on failed load', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
+      vi.fn().mockImplementation((url: string) => {
+        if (url === '/api/settings') {
+          return Promise.reject(new Error('Network error'));
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }),
     );
 
-    render(<SettingsPanel isOpen={true} onClose={() => {}} />);
+    renderWithQuery(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
     await waitFor(() => {
       const toasts = useTaskStore.getState().toasts;
@@ -290,7 +286,5 @@ describe('SettingsPanel', () => {
         toasts.some((t) => t.type === 'error' && t.message.includes('Failed to load settings')),
       ).toBe(true);
     });
-
-    vi.unstubAllGlobals();
   });
 });

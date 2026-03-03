@@ -27,7 +27,7 @@ export function TaskPanel() {
     }
   };
 
-  const handleStartTask = async () => {
+  const handleStartTask = useCallback(async () => {
     if (!activeTask || !jobDescription.trim()) {
       setError('Please enter a job description');
       return;
@@ -67,7 +67,7 @@ export function TaskPanel() {
     } finally {
       setIsStarting(false);
     }
-  };
+  }, [activeTask, jobDescription, updateTask]);
 
   const handleRetry = async () => {
     if (!activeTask) return;
@@ -96,7 +96,7 @@ export function TaskPanel() {
         handleStartTask();
       }
     },
-    [activeTask, jobDescription],
+    [activeTask, handleStartTask],
   );
 
   if (!activeTask) {
