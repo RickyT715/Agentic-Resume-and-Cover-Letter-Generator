@@ -18,18 +18,21 @@ TASK_CREATE_RATE = "10/minute"
 SCRAPE_RATE = "5/minute"
 
 
-def _noop_limit(_rate):
+def _noop_limit(_rate: str) -> Any:
     """No-op decorator used when slowapi is not installed."""
 
-    def decorator(func):
+    def decorator(func: Any) -> Any:
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             return await func(*args, **kwargs)
 
         return wrapper
 
     return decorator
 
+
+_slowapi_available = False
+limiter: Any = None
 
 try:
     from slowapi import Limiter
@@ -38,18 +41,17 @@ try:
     limiter = Limiter(key_func=get_remote_address, default_limits=[DEFAULT_RATE])
     _slowapi_available = True
 except ImportError:
-    limiter = None
-    _slowapi_available = False
+    pass
 
 
-def rate_limit(rate: str):
+def rate_limit(rate: str) -> Any:
     """Decorator: apply rate limit if slowapi is available, else no-op."""
     if _slowapi_available and limiter is not None:
         return limiter.limit(rate)
     return _noop_limit(rate)
 
 
-def setup_rate_limiting(app: FastAPI):
+def setup_rate_limiting(app: FastAPI) -> None:
     """Register the limiter and error handler on the FastAPI app.
 
     Gracefully skips if slowapi is not installed.
@@ -62,10 +64,9 @@ def setup_rate_limiting(app: FastAPI):
     from slowapi.errors import RateLimitExceeded
 
     app.state.limiter = limiter
-
-    async def _handle_rate_limit_exceeded(request: Any, exc: Exception) -> Any:
-        return _rate_limit_exceeded_handler(request, exc)
-
-    app.add_exception_handler(RateLimitExceeded, _handle_rate_limit_exceeded)
+    app.add_exception_handler(
+        RateLimitExceeded,
+        _rate_limit_exceeded_handler,  # type: ignore[arg-type]
+    )
 
     logger.info(f"Rate limiting enabled: default={DEFAULT_RATE}")

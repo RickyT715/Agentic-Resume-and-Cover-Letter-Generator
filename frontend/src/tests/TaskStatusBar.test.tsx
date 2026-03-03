@@ -103,7 +103,10 @@ describe('TaskStatusBar', () => {
 
   it('shows task number for non-pending tasks without company', () => {
     render(
-      <TaskStatusBar activeTask={makeTask({ status: 'running', task_number: 5 })} onRetry={vi.fn()} />,
+      <TaskStatusBar
+        activeTask={makeTask({ status: 'running', task_number: 5 })}
+        onRetry={vi.fn()}
+      />,
     );
     expect(screen.getByText('Task 5')).toBeTruthy();
   });

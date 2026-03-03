@@ -212,9 +212,17 @@ describe('SettingFieldRenderer', () => {
       type: 'url',
       placeholder: 'https://linkedin.com/in/yourprofile',
     };
-    render(<SettingFieldRenderer field={field} value="https://linkedin.com/in/test" onChange={vi.fn()} />);
+    render(
+      <SettingFieldRenderer
+        field={field}
+        value="https://linkedin.com/in/test"
+        onChange={vi.fn()}
+      />,
+    );
     expect(screen.getByText('LinkedIn URL')).toBeTruthy();
-    const input = screen.getByPlaceholderText('https://linkedin.com/in/yourprofile') as HTMLInputElement;
+    const input = screen.getByPlaceholderText(
+      'https://linkedin.com/in/yourprofile',
+    ) as HTMLInputElement;
     expect(input.type).toBe('url');
     expect(input.value).toBe('https://linkedin.com/in/test');
   });
