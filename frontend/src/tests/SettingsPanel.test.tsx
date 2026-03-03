@@ -58,10 +58,13 @@ describe('SettingsPanel', () => {
   });
 
   it('renders header when open', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockSettings),
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockSettings),
+      }),
+    );
 
     render(<SettingsPanel isOpen={true} onClose={() => {}} />);
     expect(screen.getByText('Application Settings')).toBeTruthy();
@@ -70,7 +73,8 @@ describe('SettingsPanel', () => {
   });
 
   it('loads settings on open', async () => {
-    const mockFetch = vi.fn()
+    const mockFetch = vi
+      .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) });
 
@@ -86,9 +90,13 @@ describe('SettingsPanel', () => {
   });
 
   it('shows section headers', async () => {
-    vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
+    );
 
     render(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
@@ -104,9 +112,13 @@ describe('SettingsPanel', () => {
   });
 
   it('shows save and reset buttons', async () => {
-    vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
+    );
 
     render(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
@@ -142,7 +154,7 @@ describe('SettingsPanel', () => {
 
     await waitFor(() => {
       const saveCalls = (mockFetch.mock.calls as [string, RequestInit?][]).filter(
-        (call) => call[0] === '/api/settings' && call[1]?.method === 'PUT'
+        (call) => call[0] === '/api/settings' && call[1]?.method === 'PUT',
       );
       expect(saveCalls.length).toBe(1);
     });
@@ -151,9 +163,13 @@ describe('SettingsPanel', () => {
   });
 
   it('calls onClose when Cancel is clicked', async () => {
-    vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
+    );
 
     const onClose = vi.fn();
     render(<SettingsPanel isOpen={true} onClose={onClose} />);
@@ -169,9 +185,13 @@ describe('SettingsPanel', () => {
   });
 
   it('calls onClose when X button is clicked', async () => {
-    vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
+    );
 
     const onClose = vi.fn();
     render(<SettingsPanel isOpen={true} onClose={onClose} />);
@@ -182,7 +202,9 @@ describe('SettingsPanel', () => {
 
     // The X button is the sibling of the header
     const closeButtons = screen.getAllByRole('button');
-    const xButton = closeButtons.find(btn => btn.querySelector('svg') && btn.closest('.flex.items-center.justify-between'));
+    const xButton = closeButtons.find(
+      (btn) => btn.querySelector('svg') && btn.closest('.flex.items-center.justify-between'),
+    );
     if (xButton) {
       fireEvent.click(xButton);
       expect(onClose).toHaveBeenCalled();
@@ -192,9 +214,13 @@ describe('SettingsPanel', () => {
   });
 
   it('toggles section expansion', async () => {
-    vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
+    );
 
     render(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
@@ -218,10 +244,14 @@ describe('SettingsPanel', () => {
   });
 
   it('shows loading indicator on reset', async () => {
-    vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) }));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSettings) }),
+    );
     vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
 
     render(<SettingsPanel isOpen={true} onClose={() => {}} />);
@@ -235,7 +265,7 @@ describe('SettingsPanel', () => {
     await waitFor(() => {
       const fetchCalls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
       const resetCalls = (fetchCalls as [string, RequestInit?][]).filter(
-        (call) => call[0] === '/api/settings/reset'
+        (call) => call[0] === '/api/settings/reset',
       );
       expect(resetCalls.length).toBe(1);
     });
@@ -244,15 +274,21 @@ describe('SettingsPanel', () => {
   });
 
   it('shows error toast on failed load', async () => {
-    vi.stubGlobal('fetch', vi.fn()
-      .mockRejectedValueOnce(new Error('Network error'))
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }),
+    );
 
     render(<SettingsPanel isOpen={true} onClose={() => {}} />);
 
     await waitFor(() => {
       const toasts = useTaskStore.getState().toasts;
-      expect(toasts.some(t => t.type === 'error' && t.message.includes('Failed to load settings'))).toBe(true);
+      expect(
+        toasts.some((t) => t.type === 'error' && t.message.includes('Failed to load settings')),
+      ).toBe(true);
     });
 
     vi.unstubAllGlobals();

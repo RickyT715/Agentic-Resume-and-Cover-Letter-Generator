@@ -29,9 +29,7 @@ function renderWithQuery(ui: React.ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
 describe('TaskPanel', () => {
@@ -39,10 +37,13 @@ describe('TaskPanel', () => {
     useTaskStore.setState({ tasks: [], activeTaskId: null, toasts: [], darkMode: false });
     vi.restoreAllMocks();
     // Mock fetch for template loading
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve([]),
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      }),
+    );
   });
 
   afterEach(() => {

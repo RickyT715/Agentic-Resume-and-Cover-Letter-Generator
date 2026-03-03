@@ -55,7 +55,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           if (isLastStep) {
             newTaskStatus = 'completed';
           }
-        } else if (update.status === 'running' && (task.status === 'pending' || task.status === 'queued')) {
+        } else if (
+          update.status === 'running' &&
+          (task.status === 'pending' || task.status === 'queued')
+        ) {
           newTaskStatus = 'running';
         }
 
@@ -79,15 +82,13 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   updateTask: (taskId, updates) =>
     set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === taskId ? { ...task, ...updates } : task
-      ),
+      tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, ...updates } : task)),
     })),
 
   updateTaskJobDescription: (taskId, jobDescription) =>
     set((state) => ({
       tasks: state.tasks.map((task) =>
-        task.id === taskId ? { ...task, job_description: jobDescription } : task
+        task.id === taskId ? { ...task, job_description: jobDescription } : task,
       ),
     })),
 

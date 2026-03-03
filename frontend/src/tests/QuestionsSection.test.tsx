@@ -55,19 +55,25 @@ describe('QuestionsSection', () => {
   });
 
   it('shows answer when present', () => {
-    const questions = [makeQuestion({ answer: 'Because the mission aligns with my values.', status: 'completed' })];
+    const questions = [
+      makeQuestion({ answer: 'Because the mission aligns with my values.', status: 'completed' }),
+    ];
     render(<QuestionsSection taskId="t1" questions={questions} jobDescription="Test JD" />);
     expect(screen.getByText('Because the mission aligns with my values.')).toBeTruthy();
   });
 
   it('shows word count for answers', () => {
-    const questions = [makeQuestion({ answer: 'I love this company very much', status: 'completed' })];
+    const questions = [
+      makeQuestion({ answer: 'I love this company very much', status: 'completed' }),
+    ];
     render(<QuestionsSection taskId="t1" questions={questions} jobDescription="Test JD" />);
     expect(screen.getByText('6 words')).toBeTruthy();
   });
 
   it('shows error message for failed question', () => {
-    const questions = [makeQuestion({ status: 'failed', error_message: 'API rate limit exceeded' })];
+    const questions = [
+      makeQuestion({ status: 'failed', error_message: 'API rate limit exceeded' }),
+    ];
     render(<QuestionsSection taskId="t1" questions={questions} jobDescription="Test JD" />);
     expect(screen.getByText('API rate limit exceeded')).toBeTruthy();
   });
@@ -116,7 +122,7 @@ describe('QuestionsSection', () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/tasks/t1/questions',
-        expect.objectContaining({ method: 'POST' })
+        expect.objectContaining({ method: 'POST' }),
       );
     });
 
@@ -136,7 +142,7 @@ describe('QuestionsSection', () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/tasks/t1/questions/q-1',
-        expect.objectContaining({ method: 'DELETE' })
+        expect.objectContaining({ method: 'DELETE' }),
       );
     });
 

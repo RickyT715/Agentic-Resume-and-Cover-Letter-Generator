@@ -13,6 +13,16 @@
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon.svg" />
+
+    <!-- Prevent dark mode FOUC -->
+    <script>
+      (function() {
+        var theme = localStorage.getItem('darkMode');
+        if (theme === 'true' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

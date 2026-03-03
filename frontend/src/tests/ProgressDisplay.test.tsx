@@ -81,7 +81,11 @@ describe('ProgressDisplay', () => {
   it('shows step message when present', () => {
     const task = makeTask({
       steps: [
-        makeStep({ step: 'generate_resume', status: 'running', message: 'Generating tailored resume...' }),
+        makeStep({
+          step: 'generate_resume',
+          status: 'running',
+          message: 'Generating tailored resume...',
+        }),
         makeStep({ step: 'compile_latex' }),
         makeStep({ step: 'extract_text' }),
         makeStep({ step: 'generate_cover_letter' }),

@@ -1,75 +1,87 @@
-import { useState } from "react"
-import { Badge } from "./ui/badge"
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"
-import { BarChart2, CheckCircle, XCircle, Target, ChevronDown, ChevronRight } from "lucide-react"
+import { useState } from 'react';
+import { Badge } from './ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { BarChart2, CheckCircle, XCircle, Target, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface EvaluationData {
-  ats_score: number
+  ats_score: number;
   ats_breakdown: {
-    keyword_similarity: number
-    semantic_similarity: number
-    skill_coverage: number
-    fuzzy_match: number
-    resume_quality: number
-    section_bonus: number
-    action_verbs_score: number
-    quantified_score: number
-    section_score: number
-    format_score: number
-  }
-  matched_keywords: string[]
-  missing_keywords: string[]
-  combined_score: number
-  passed: boolean
-  llm_score?: number | null
+    keyword_similarity: number;
+    semantic_similarity: number;
+    skill_coverage: number;
+    fuzzy_match: number;
+    resume_quality: number;
+    section_bonus: number;
+    action_verbs_score: number;
+    quantified_score: number;
+    section_score: number;
+    format_score: number;
+  };
+  matched_keywords: string[];
+  missing_keywords: string[];
+  combined_score: number;
+  passed: boolean;
+  llm_score?: number | null;
   llm_breakdown?: {
-    keyword_alignment: number
-    professional_tone: number
-    quantified_achievements: number
-    relevance: number
-    ats_compliance: number
-    reasoning: string
-    improvements: string[]
-  } | null
+    keyword_alignment: number;
+    professional_tone: number;
+    quantified_achievements: number;
+    relevance: number;
+    ats_compliance: number;
+    reasoning: string;
+    improvements: string[];
+  } | null;
 }
 
 interface SkillMatchChartProps {
-  evaluation: EvaluationData
+  evaluation: EvaluationData;
 }
 
 function ScoreBar({ label, value }: { label: string; value: number }) {
-  const percentage = Math.round(value * 100)
-  const bgClass = percentage >= 70 ? "bg-green-500" : percentage >= 50 ? "bg-yellow-500" : "bg-red-500"
+  const percentage = Math.round(value * 100);
+  const bgClass =
+    percentage >= 70 ? 'bg-green-500' : percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500';
 
   return (
     <div className="flex items-center gap-3">
       <span className="text-sm text-gray-600 dark:text-gray-400 w-40 flex-shrink-0">{label}</span>
       <div className="flex-1 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div className={`h-full ${bgClass} transition-all duration-500`} style={{ width: `${percentage}%` }} />
+        <div
+          className={`h-full ${bgClass} transition-all duration-500`}
+          style={{ width: `${percentage}%` }}
+        />
       </div>
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-12 text-right">{percentage}%</span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-12 text-right">
+        {percentage}%
+      </span>
     </div>
-  )
+  );
 }
 
 function SmallScoreBar({ label, value }: { label: string; value: number }) {
-  const percentage = Math.round(value * 100)
-  const bgClass = percentage >= 70 ? "bg-green-400" : percentage >= 50 ? "bg-yellow-400" : "bg-red-400"
+  const percentage = Math.round(value * 100);
+  const bgClass =
+    percentage >= 70 ? 'bg-green-400' : percentage >= 50 ? 'bg-yellow-400' : 'bg-red-400';
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-gray-500 dark:text-gray-500 w-32 flex-shrink-0">{label}</span>
       <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div className={`h-full ${bgClass} transition-all duration-500`} style={{ width: `${percentage}%` }} />
+        <div
+          className={`h-full ${bgClass} transition-all duration-500`}
+          style={{ width: `${percentage}%` }}
+        />
       </div>
-      <span className="text-xs text-gray-500 dark:text-gray-400 w-10 text-right">{percentage}%</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400 w-10 text-right">
+        {percentage}%
+      </span>
     </div>
-  )
+  );
 }
 
 export function SkillMatchChart({ evaluation }: SkillMatchChartProps) {
-  const { ats_breakdown, matched_keywords, missing_keywords, combined_score, passed } = evaluation
-  const [qualityExpanded, setQualityExpanded] = useState(false)
+  const { ats_breakdown, matched_keywords, missing_keywords, combined_score, passed } = evaluation;
+  const [qualityExpanded, setQualityExpanded] = useState(false);
 
   return (
     <Card>
@@ -77,8 +89,8 @@ export function SkillMatchChart({ evaluation }: SkillMatchChartProps) {
         <BarChart2 className="w-4 h-4 text-blue-500" />
         <CardTitle>Resume Evaluation</CardTitle>
         <div className="ml-auto flex items-center gap-2">
-          <Badge variant={passed ? "success" : "warning"}>
-            {passed ? "Passed" : "Needs Improvement"}
+          <Badge variant={passed ? 'success' : 'warning'}>
+            {passed ? 'Passed' : 'Needs Improvement'}
           </Badge>
           <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
             {Math.round(combined_score * 100)}%
@@ -105,7 +117,11 @@ export function SkillMatchChart({ evaluation }: SkillMatchChartProps) {
               onClick={() => setQualityExpanded(!qualityExpanded)}
               className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
-              {qualityExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              {qualityExpanded ? (
+                <ChevronDown className="w-3 h-3" />
+              ) : (
+                <ChevronRight className="w-3 h-3" />
+              )}
               Quality Details
             </button>
             {qualityExpanded && (
@@ -129,7 +145,9 @@ export function SkillMatchChart({ evaluation }: SkillMatchChartProps) {
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {matched_keywords.slice(0, 12).map((kw) => (
-                  <Badge key={kw} variant="success">{kw}</Badge>
+                  <Badge key={kw} variant="success">
+                    {kw}
+                  </Badge>
                 ))}
               </div>
             </div>
@@ -142,7 +160,9 @@ export function SkillMatchChart({ evaluation }: SkillMatchChartProps) {
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {missing_keywords.slice(0, 8).map((kw) => (
-                  <Badge key={kw} variant="error">{kw}</Badge>
+                  <Badge key={kw} variant="error">
+                    {kw}
+                  </Badge>
                 ))}
               </div>
             </div>
@@ -172,5 +192,5 @@ export function SkillMatchChart({ evaluation }: SkillMatchChartProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -42,7 +42,13 @@ describe('TaskSidebar', () => {
   it('renders tasks from store', () => {
     useTaskStore.setState({
       tasks: [
-        makeTask({ id: 't1', task_number: 1, status: 'completed', company_name: 'Google', position_name: 'SWE' }),
+        makeTask({
+          id: 't1',
+          task_number: 1,
+          status: 'completed',
+          company_name: 'Google',
+          position_name: 'SWE',
+        }),
         makeTask({ id: 't2', task_number: 2, status: 'pending' }),
       ],
     });
@@ -132,7 +138,7 @@ describe('TaskSidebar', () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/tasks',
-        expect.objectContaining({ method: 'POST' })
+        expect.objectContaining({ method: 'POST' }),
       );
     });
 

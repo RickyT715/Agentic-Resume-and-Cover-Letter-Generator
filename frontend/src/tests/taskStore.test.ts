@@ -72,7 +72,7 @@ describe('taskStore', () => {
       useTaskStore.getState().addTask(makeTask({ id: 't1' }));
       useTaskStore.getState().addTask(makeTask({ id: 't2' }));
       useTaskStore.getState().updateTask('t1', { status: 'failed' });
-      const t2 = useTaskStore.getState().tasks.find(t => t.id === 't2');
+      const t2 = useTaskStore.getState().tasks.find((t) => t.id === 't2');
       expect(t2?.status).toBe('pending');
     });
   });
@@ -149,7 +149,7 @@ describe('taskStore', () => {
       };
       useTaskStore.getState().updateTaskProgress(update);
       const task = useTaskStore.getState().tasks[0];
-      const step = task.steps.find(s => s.step === 'generate_resume');
+      const step = task.steps.find((s) => s.step === 'generate_resume');
       expect(step?.status).toBe('running');
       expect(step?.message).toBe('Generating...');
       expect(task.status).toBe('running');
@@ -195,10 +195,12 @@ describe('taskStore', () => {
     });
 
     it('sets completed on compile_latex for resume-only task', () => {
-      useTaskStore.getState().addTask(makeTask({
-        status: 'running',
-        generate_cover_letter: false,
-      }));
+      useTaskStore.getState().addTask(
+        makeTask({
+          status: 'running',
+          generate_cover_letter: false,
+        }),
+      );
       useTaskStore.getState().updateTaskProgress({
         task_id: 'test-1',
         task_number: 1,

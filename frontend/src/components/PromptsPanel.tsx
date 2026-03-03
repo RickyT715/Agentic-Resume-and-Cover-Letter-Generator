@@ -17,23 +17,28 @@ type PromptKey =
 const PROMPT_LABELS: Record<PromptKey, { title: string; description: string }> = {
   resume_prompt: {
     title: 'Resume Prompt',
-    description: 'Main prompt for generating resumes. Uses {{user_information}} and {{latex_template}} placeholders.',
+    description:
+      'Main prompt for generating resumes. Uses {{user_information}} and {{latex_template}} placeholders.',
   },
   cover_letter_prompt: {
     title: 'Cover Letter Prompt',
-    description: 'Prompt for generating cover letters. Uses {{RESUME_CONTENT}} and {{JOB_DESCRIPTION}} placeholders.',
+    description:
+      'Prompt for generating cover letters. Uses {{RESUME_CONTENT}} and {{JOB_DESCRIPTION}} placeholders.',
   },
   user_information: {
     title: 'User Information',
-    description: 'Your personal information (education, experience, projects, skills). Replaces {{user_information}} in resume prompt.',
+    description:
+      'Your personal information (education, experience, projects, skills). Replaces {{user_information}} in resume prompt.',
   },
   resume_format: {
     title: 'Resume Format (LaTeX)',
-    description: 'LaTeX template for resume formatting. Replaces {{latex_template}} in resume prompt.',
+    description:
+      'LaTeX template for resume formatting. Replaces {{latex_template}} in resume prompt.',
   },
   application_question_prompt: {
     title: 'Application Q&A Prompt',
-    description: 'Prompt for answering application questions. Uses {{USER_INFORMATION}}, {{JOB_DESCRIPTION}}, {{QUESTION}}, {{WORD_LIMIT}}.',
+    description:
+      'Prompt for answering application questions. Uses {{USER_INFORMATION}}, {{JOB_DESCRIPTION}}, {{QUESTION}}, {{WORD_LIMIT}}.',
   },
   resume_prompt_zh: {
     title: 'Resume Prompt',
@@ -45,7 +50,8 @@ const PROMPT_LABELS: Record<PromptKey, { title: string; description: string }> =
   },
   user_information_zh: {
     title: 'User Information',
-    description: '您的个人信息（教育、经历、项目、技能）。替换简历提示词中的 {{user_information}}。',
+    description:
+      '您的个人信息（教育、经历、项目、技能）。替换简历提示词中的 {{user_information}}。',
   },
   resume_format_zh: {
     title: 'Resume Format (LaTeX)',
@@ -53,19 +59,32 @@ const PROMPT_LABELS: Record<PromptKey, { title: string; description: string }> =
   },
   application_question_prompt_zh: {
     title: 'Application Q&A Prompt',
-    description: '求职申请问题回答提示词。使用 {{USER_INFORMATION}}、{{JOB_DESCRIPTION}}、{{QUESTION}}、{{WORD_LIMIT}}。',
+    description:
+      '求职申请问题回答提示词。使用 {{USER_INFORMATION}}、{{JOB_DESCRIPTION}}、{{QUESTION}}、{{WORD_LIMIT}}。',
   },
 };
 
-const EN_TABS: PromptKey[] = ['user_information', 'resume_format', 'resume_prompt', 'cover_letter_prompt', 'application_question_prompt'];
-const ZH_TABS: PromptKey[] = ['user_information_zh', 'resume_format_zh', 'resume_prompt_zh', 'cover_letter_prompt_zh', 'application_question_prompt_zh'];
+const EN_TABS: PromptKey[] = [
+  'user_information',
+  'resume_format',
+  'resume_prompt',
+  'cover_letter_prompt',
+  'application_question_prompt',
+];
+const ZH_TABS: PromptKey[] = [
+  'user_information_zh',
+  'resume_format_zh',
+  'resume_prompt_zh',
+  'cover_letter_prompt_zh',
+  'application_question_prompt_zh',
+];
 
 interface PromptsPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
+export default function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
   const [prompts, setPrompts] = useState<Record<string, string> | null>(null);
   const [promptLang, setPromptLang] = useState<'en' | 'zh'>('en');
   const [activeTab, setActiveTab] = useState<PromptKey>('user_information');
@@ -108,41 +127,44 @@ export function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
     }
   };
 
-  const savePrompt = useCallback(async (key: PromptKey) => {
-    if (!prompts) return;
+  const savePrompt = useCallback(
+    async (key: PromptKey) => {
+      if (!prompts) return;
 
-    setSaving(true);
-    setWarnings([]);
+      setSaving(true);
+      setWarnings([]);
 
-    try {
-      const response = await fetch(`/api/prompts/${key}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: prompts[key] }),
-      });
+      try {
+        const response = await fetch(`/api/prompts/${key}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: prompts[key] }),
+        });
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result.warnings && result.warnings.length > 0) {
-          setWarnings(result.warnings);
-          addToast('info', `${PROMPT_LABELS[key].title} saved with warnings`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.warnings && result.warnings.length > 0) {
+            setWarnings(result.warnings);
+            addToast('info', `${PROMPT_LABELS[key].title} saved with warnings`);
+          } else {
+            addToast('success', `${PROMPT_LABELS[key].title} saved successfully!`);
+          }
+          setHasChanges(false);
         } else {
-          addToast('success', `${PROMPT_LABELS[key].title} saved successfully!`);
+          throw new Error('Failed to save prompt');
         }
-        setHasChanges(false);
-      } else {
-        throw new Error('Failed to save prompt');
+      } catch (error) {
+        console.error('Failed to save prompt:', error);
+        addToast('error', 'Failed to save prompt');
+      } finally {
+        setSaving(false);
       }
-    } catch (error) {
-      console.error('Failed to save prompt:', error);
-      addToast('error', 'Failed to save prompt');
-    } finally {
-      setSaving(false);
-    }
-  }, [prompts, addToast]);
+    },
+    [prompts, addToast],
+  );
 
   const updatePrompt = (key: PromptKey, value: string) => {
-    setPrompts(prev => prev ? { ...prev, [key]: value } : null);
+    setPrompts((prev) => (prev ? { ...prev, [key]: value } : null));
     setHasChanges(true);
     setWarnings([]);
   };
@@ -232,7 +254,10 @@ export function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
           {tabs.map((key) => (
             <button
               key={key}
-              onClick={() => { setActiveTab(key); setWarnings([]); }}
+              onClick={() => {
+                setActiveTab(key);
+                setWarnings([]);
+              }}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === key
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800'
@@ -258,7 +283,9 @@ export function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Placeholder Warnings</p>
+                      <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
+                        Placeholder Warnings
+                      </p>
                       <ul className="text-xs text-yellow-700 dark:text-yellow-400 mt-1 space-y-0.5">
                         {warnings.map((w, i) => (
                           <li key={i}>{w}</li>
@@ -271,7 +298,8 @@ export function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
 
               {/* Description */}
               <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                <strong>{PROMPT_LABELS[activeTab].title}:</strong> {PROMPT_LABELS[activeTab].description}
+                <strong>{PROMPT_LABELS[activeTab].title}:</strong>{' '}
+                {PROMPT_LABELS[activeTab].description}
               </div>
 
               {/* Editor */}

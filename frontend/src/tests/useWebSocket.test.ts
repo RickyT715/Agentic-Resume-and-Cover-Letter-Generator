@@ -43,12 +43,15 @@ describe('useWebSocket', () => {
 
   beforeEach(() => {
     instances = [];
-    vi.stubGlobal('WebSocket', class extends MockWebSocket {
-      constructor(url: string) {
-        super(url);
-        instances.push(this);
-      }
-    });
+    vi.stubGlobal(
+      'WebSocket',
+      class extends MockWebSocket {
+        constructor(url: string) {
+          super(url);
+          instances.push(this);
+        }
+      },
+    );
     // Provide window.location for URL construction
     vi.stubGlobal('location', {
       protocol: 'http:',
@@ -69,7 +72,9 @@ describe('useWebSocket', () => {
   it('MockWebSocket simulates message', () => {
     const ws = new MockWebSocket('ws://localhost:48765/ws');
     let received: unknown = null;
-    ws.onmessage = (ev) => { received = JSON.parse(ev.data); };
+    ws.onmessage = (ev) => {
+      received = JSON.parse(ev.data);
+    };
     ws.simulateMessage({ type: 'progress', data: { step: 'compile_latex' } });
     expect(received).toEqual({ type: 'progress', data: { step: 'compile_latex' } });
   });
@@ -77,7 +82,9 @@ describe('useWebSocket', () => {
   it('MockWebSocket simulates close', () => {
     const ws = new MockWebSocket('ws://localhost:48765/ws');
     let closed = false;
-    ws.onclose = () => { closed = true; };
+    ws.onclose = () => {
+      closed = true;
+    };
     ws.simulateClose();
     expect(closed).toBe(true);
     expect(ws.readyState).toBe(MockWebSocket.CLOSED);
@@ -86,7 +93,9 @@ describe('useWebSocket', () => {
   it('MockWebSocket simulates error', () => {
     const ws = new MockWebSocket('ws://localhost:48765/ws');
     let errored = false;
-    ws.onerror = () => { errored = true; };
+    ws.onerror = () => {
+      errored = true;
+    };
     ws.simulateError();
     expect(errored).toBe(true);
   });
