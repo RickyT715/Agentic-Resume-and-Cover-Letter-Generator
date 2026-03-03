@@ -6,6 +6,7 @@ Configurable via environment variables.
 
 import logging
 from functools import wraps
+from typing import Any
 
 from fastapi import FastAPI
 
@@ -37,7 +38,7 @@ try:
     limiter = Limiter(key_func=get_remote_address, default_limits=[DEFAULT_RATE])
     _slowapi_available = True
 except ImportError:
-    limiter = None  # type: ignore[assignment]
+    limiter = None
     _slowapi_available = False
 
 
@@ -61,6 +62,10 @@ def setup_rate_limiting(app: FastAPI):
     from slowapi.errors import RateLimitExceeded
 
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    async def _handle_rate_limit_exceeded(request: Any, exc: Exception) -> Any:
+        return _rate_limit_exceeded_handler(request, exc)
+
+    app.add_exception_handler(RateLimitExceeded, _handle_rate_limit_exceeded)
 
     logger.info(f"Rate limiting enabled: default={DEFAULT_RATE}")

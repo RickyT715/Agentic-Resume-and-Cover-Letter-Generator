@@ -194,7 +194,7 @@ async def update_prompt(prompt_key: str, data: PromptUpdate) -> dict[str, Any]:
     if not success:
         raise HTTPException(status_code=500, detail="Failed to update prompt")
 
-    result = {
+    result: dict[str, Any] = {
         "key": prompt_key,
         "content": data.content,
         "message": "Prompt updated successfully",
@@ -508,7 +508,7 @@ async def evaluate_task(task_id: str):
         resume_latex=task.latex_source,
         job_description=task.job_description,
         jd_analysis=_extract_jd_analysis(task),
-        provider_name=task.provider,
+        provider_name=task.provider or "gemini",
         task_id=task.id,
         task_number=task.task_number,
         use_llm_judge=True,
