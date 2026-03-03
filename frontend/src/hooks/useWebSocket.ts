@@ -1,17 +1,20 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useCallback, useState } from 'react';
 import { useTaskStore } from '../store/taskStore';
 import { WebSocketMessage } from '../types/task';
 
 const getWsUrl = () => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const host = window.location.hostname;
-  const port = import.meta.env.DEV ? (import.meta.env.VITE_BACKEND_PORT || '48765') : window.location.port;
+  const port = import.meta.env.DEV
+    ? import.meta.env.VITE_BACKEND_PORT || '48765'
+    : window.location.port;
   return `${protocol}//${host}:${port}/ws`;
 };
 
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const connectRef = useRef<(() => void) | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const updateTaskProgress = useTaskStore((state) => state.updateTaskProgress);
   const updateTask = useTaskStore((state) => state.updateTask);
@@ -29,7 +32,7 @@ export function useWebSocket() {
         console.error('Failed to fetch task details:', e);
       }
     },
-    [updateTask]
+    [updateTask],
   );
 
   const connect = useCallback(() => {
@@ -54,7 +57,11 @@ export function useWebSocket() {
             updateTaskProgress(update);
 
             // Fetch full task details on terminal states
-            if (update.status === 'completed' || update.status === 'failed' || update.status === 'cancelled') {
+            if (
+              update.status === 'completed' ||
+              update.status === 'failed' ||
+              update.status === 'cancelled'
+            ) {
               // Check if this is the last step completion or any failure/cancel
               const isTerminal =
                 update.status === 'failed' ||
@@ -90,7 +97,7 @@ export function useWebSocket() {
           clearTimeout(reconnectTimeoutRef.current);
         }
         reconnectTimeoutRef.current = window.setTimeout(() => {
-          connect();
+          connectRef.current?.();
         }, 3000);
       };
 
@@ -105,6 +112,10 @@ export function useWebSocket() {
       setIsConnected(false);
     }
   }, [updateTaskProgress, fetchTaskDetails, addToast]);
+
+  useLayoutEffect(() => {
+    connectRef.current = connect;
+  });
 
   useEffect(() => {
     connect();

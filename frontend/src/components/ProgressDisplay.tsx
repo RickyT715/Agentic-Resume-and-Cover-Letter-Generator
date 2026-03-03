@@ -33,19 +33,15 @@ function useElapsedTime(startedAt?: string, completedAt?: string, isRunning?: bo
       setElapsed(null);
       return;
     }
-
     const start = new Date(startedAt).getTime();
-
     if (completedAt) {
       setElapsed((new Date(completedAt).getTime() - start) / 1000);
       return;
     }
-
     if (!isRunning) {
       setElapsed(null);
       return;
     }
-
     const update = () => setElapsed((Date.now() - start) / 1000);
     update();
     const interval = setInterval(update, 1000);
@@ -63,13 +59,13 @@ export function ProgressDisplay({ task }: ProgressDisplayProps) {
   const steps = task.steps || [];
   const taskStartedAt = steps.find((s) => s.started_at)?.started_at;
   const isTaskRunning = task.status === 'running';
-  const lastCompletedStep = [...steps].reverse().find(
-    (s) => s.status === 'completed' || s.status === 'failed'
-  );
+  const lastCompletedStep = [...steps]
+    .reverse()
+    .find((s) => s.status === 'completed' || s.status === 'failed');
   const totalElapsed = useElapsedTime(
     taskStartedAt,
     task.completed_at || lastCompletedStep?.completed_at,
-    isTaskRunning
+    isTaskRunning,
   );
 
   const getStepIcon = (step: StepProgress) => {
@@ -102,9 +98,7 @@ export function ProgressDisplay({ task }: ProgressDisplayProps) {
     }
   };
 
-  const completedSteps = steps.filter(
-    (s) => s.status === 'completed'
-  ).length;
+  const completedSteps = steps.filter((s) => s.status === 'completed').length;
   const totalSteps = steps.length;
   const progressPercent = Math.round((completedSteps / totalSteps) * 100);
 
@@ -135,7 +129,13 @@ export function ProgressDisplay({ task }: ProgressDisplayProps) {
 
       <div className="p-4 space-y-3">
         {steps.map((step, index) => (
-          <StepRow key={step.step} step={step} index={index} getStepIcon={getStepIcon} getStepStyles={getStepStyles} />
+          <StepRow
+            key={step.step}
+            step={step}
+            index={index}
+            getStepIcon={getStepIcon}
+            getStepStyles={getStepStyles}
+          />
         ))}
       </div>
     </div>
@@ -194,8 +194,8 @@ function StepRow({
               step.status === 'failed'
                 ? 'text-red-600 dark:text-red-400'
                 : step.status === 'running'
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400'
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-gray-600 dark:text-gray-400'
             }`}
           >
             {step.message}
