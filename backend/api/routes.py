@@ -95,6 +95,16 @@ class AppSettingsUpdate(BaseModel):
     claude_proxy_model: str | None = None
     claude_proxy_temperature: float | None = None
     claude_proxy_max_output_tokens: int | None = None
+    # DeepSeek
+    deepseek_api_key: str | None = None
+    deepseek_model: str | None = None
+    deepseek_temperature: float | None = None
+    deepseek_max_output_tokens: int | None = None
+    # Qwen
+    qwen_api_key: str | None = None
+    qwen_model: str | None = None
+    qwen_temperature: float | None = None
+    qwen_max_output_tokens: int | None = None
     # General
     enforce_resume_one_page: bool | None = None
     enforce_cover_letter_one_page: bool | None = None
@@ -102,6 +112,17 @@ class AppSettingsUpdate(BaseModel):
     generate_cover_letter: bool | None = None
     max_latex_retries: int | None = None
     default_template_id: str | None = None
+    default_experience_level: str | None = None
+    allow_ai_fabrication: bool | None = None
+    # Resume Validation
+    enable_contact_replacement: bool | None = None
+    enable_text_validation: bool | None = None
+    enable_llm_validation: bool | None = None
+    # User Profile Links
+    user_linkedin_url: str | None = None
+    user_github_url: str | None = None
+    # Per-Agent Provider Overrides
+    agent_providers: dict[str, str] | None = None
 
 
 class AddQuestionRequest(BaseModel):

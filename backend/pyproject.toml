@@ -1,6 +1,6 @@
 [project]
 name = "resume-generator-backend"
-version = "3.2.0"
+version = "3.3.0"
 description = "AI-powered resume and cover letter generator with multi-agent pipeline"
 requires-python = ">=3.11"
 dependencies = [

@@ -52,6 +52,18 @@ class AppSettings(BaseModel):
     claude_proxy_temperature: float | None = None
     claude_proxy_max_output_tokens: int | None = None
 
+    # DeepSeek Settings
+    deepseek_api_key: str = ""
+    deepseek_model: str = "deepseek-chat"
+    deepseek_temperature: float | None = None
+    deepseek_max_output_tokens: int | None = None
+
+    # Qwen Settings
+    qwen_api_key: str = ""
+    qwen_model: str = "qwen-plus"
+    qwen_temperature: float | None = None
+    qwen_max_output_tokens: int | None = None
+
     # Page Length Validation
     enforce_resume_one_page: bool = True
     enforce_cover_letter_one_page: bool = True
@@ -125,7 +137,7 @@ class SettingsManager:
         """Get all settings as a dictionary, optionally masking API keys."""
         data = self._settings.model_dump()
         if mask_api_key:
-            for key_field in ("gemini_api_key", "claude_api_key", "openai_compat_api_key", "claude_proxy_api_key"):
+            for key_field in self._api_key_fields:
                 if data.get(key_field):
                     key = data[key_field]
                     if len(key) > 8:
@@ -134,7 +146,14 @@ class SettingsManager:
                         data[key_field] = "****"
         return data
 
-    _api_key_fields = {"gemini_api_key", "claude_api_key", "openai_compat_api_key", "claude_proxy_api_key"}
+    _api_key_fields = {
+        "gemini_api_key",
+        "claude_api_key",
+        "openai_compat_api_key",
+        "claude_proxy_api_key",
+        "deepseek_api_key",
+        "qwen_api_key",
+    }
 
     def update(self, updates: dict[str, Any]) -> AppSettings:
         """Update settings with new values."""

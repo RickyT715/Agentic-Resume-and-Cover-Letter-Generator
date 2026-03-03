@@ -33,12 +33,40 @@ def tmp_prompts_dir(tmp_path):
         "Answer: {{USER_INFORMATION}} JD: {{JOB_DESCRIPTION}} Q: {{QUESTION}} Limit: {{WORD_LIMIT}}",
         encoding="utf-8",
     )
+    # No-fabrication variant prompt files (EN)
+    (prompts_dir / "Resume_prompts_no_fabrication.txt").write_text(
+        "Resume no-fabrication {{user_information}} {{latex_template}} {{JOB_DESCRIPTION}} Only use verified facts.",
+        encoding="utf-8",
+    )
+    (prompts_dir / "Cover_letter_prompt_no_fabrication.txt").write_text(
+        "Cover letter no-fabrication {{RESUME_CONTENT}} {{JOB_DESCRIPTION}} No invented details.",
+        encoding="utf-8",
+    )
+    (prompts_dir / "Application_question_prompt_no_fabrication.txt").write_text(
+        "Answer no-fabrication: {{USER_INFORMATION}} JD: {{JOB_DESCRIPTION}} Q: {{QUESTION}} Limit: {{WORD_LIMIT}} Only real facts.",
+        encoding="utf-8",
+    )
+    # No-summary format templates
+    (prompts_dir / "Resume_format_no_summary.txt").write_text(
+        "\\documentclass{article}\n% No Summary section\n\\section{Education}", encoding="utf-8"
+    )
+    (prompts_dir / "Resume_format_no_summary_zh.txt").write_text(
+        "\\documentclass{article}\\usepackage{xeCJK}\n% 无个人总结\n\\section{教育背景}", encoding="utf-8"
+    )
     # Chinese prompt files
     (prompts_dir / "Resume_prompts_zh.txt").write_text(
         "中文简历 {{user_information}} {{latex_template}} {{JOB_DESCRIPTION}}", encoding="utf-8"
     )
+    (prompts_dir / "Resume_prompts_no_fabrication_zh.txt").write_text(
+        "中文简历禁止虚构 {{user_information}} {{latex_template}} {{JOB_DESCRIPTION}} 仅使用真实信息。",
+        encoding="utf-8",
+    )
     (prompts_dir / "Cover_letter_prompt_zh.txt").write_text(
         "中文求职信 {{RESUME_CONTENT}} {{JOB_DESCRIPTION}}", encoding="utf-8"
+    )
+    (prompts_dir / "Cover_letter_prompt_no_fabrication_zh.txt").write_text(
+        "中文求职信禁止虚构 {{RESUME_CONTENT}} {{JOB_DESCRIPTION}} 不编造细节。",
+        encoding="utf-8",
     )
     (prompts_dir / "User_information_prompts_zh.txt").write_text("我是一名有5年经验的软件工程师。", encoding="utf-8")
     (prompts_dir / "Resume_format_prompts_zh.txt").write_text(
@@ -46,6 +74,10 @@ def tmp_prompts_dir(tmp_path):
     )
     (prompts_dir / "Application_question_prompt_zh.txt").write_text(
         "回答: {{USER_INFORMATION}} 职位: {{JOB_DESCRIPTION}} 问题: {{QUESTION}} 字数: {{WORD_LIMIT}}",
+        encoding="utf-8",
+    )
+    (prompts_dir / "Application_question_prompt_no_fabrication_zh.txt").write_text(
+        "回答禁止虚构: {{USER_INFORMATION}} 职位: {{JOB_DESCRIPTION}} 问题: {{QUESTION}} 字数: {{WORD_LIMIT}} 仅真实信息。",
         encoding="utf-8",
     )
     return prompts_dir

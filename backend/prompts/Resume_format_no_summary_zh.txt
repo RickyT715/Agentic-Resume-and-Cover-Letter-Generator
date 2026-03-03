@@ -1,0 +1,143 @@
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{xeCJK}
+\setCJKmainfont{SimSun}
+\setCJKsansfont{SimHei}
+\setCJKmonofont{SimSun}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.375in}
+\addtolength{\evensidemargin}{-0.375in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+
+\urlstyle{same}
+
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[2]{
+  \item\small{
+    \textbf{#1}{#2 \vspace{-1pt}}
+  }
+}
+
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-1pt}\item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-5pt}
+}
+
+
+\newcommand{\resumeSubItem}[2]{\resumeItem{#1}{#2}\vspace{-2pt}}
+
+
+\renewcommand{\labelitemii}{$\circ$}
+
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=*]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+
+\begin{document}
+
+% 注意：请用 <user_information> 中候选人的真实联系方式替换以下占位符。
+% 不要复制占位符。使用 user_information 中的姓名、邮箱、电话、LinkedIn和GitHub。
+\begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+  \textbf{\href{}{\Large CANDIDATE_NAME}} & Email : \href{mailto:CANDIDATE_EMAIL}{CANDIDATE_EMAIL}\\
+  \href{CANDIDATE_LINKEDIN}{CANDIDATE_LINKEDIN} & Mobile : CANDIDATE_PHONE \\
+  \href{CANDIDATE_GITHUB}{CANDIDATE_GITHUB} & \\
+\end{tabular*}
+
+
+% 一页排版 — 无个人总结板块。最大化经验和项目空间。
+%
+% 板块顺序：教育背景 → 技术技能 → 工作经验 → 项目经历
+% 此模板省略个人总结板块以节省一页简历的空间。
+
+
+%-----------教育背景-----------
+\section{教育背景}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {学位名称}{地点}
+      {大学名称}{日期范围}
+      \resumeItemListStart
+      \resumeItem{}{GPA: X.XX/4.00 | 相关课程：...}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+
+%-----------技术技能-----------
+\section{技术技能}
+  \resumeSubHeadingListStart
+    \resumeSubItem{编程语言：}{Python, Java, JavaScript, TypeScript, SQL}
+    \resumeSubItem{框架：}{React, Node.js, Spring Boot, FastAPI}
+    \resumeSubItem{云计算与运维：}{AWS, Docker, Kubernetes, CI/CD, Terraform}
+    \resumeSubItem{数据库：}{PostgreSQL, MongoDB, Redis}
+    \resumeSubItem{工具：}{Git, Linux, Jira}
+  \resumeSubHeadingListEnd
+
+
+%-----------工作经验-----------
+\section{工作经验}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {职位名称}{日期范围}
+      {公司名称}{地点}
+      \resumeItemListStart
+        \resumeItem{}{通过[Z方法]使用[技术栈]，实现了[X成果]，达到了[Y指标]}
+        \resumeItem{}{[每个职位3-5个要点，每个以不同的动词开头]}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+
+%-----------项目经历-----------
+\section{项目经历}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {项目名称}{日期范围}
+      {使用技术}{链接（如有）}
+      \resumeItemListStart
+        \resumeItem{}{[每个项目2-4个要点，包含量化成果]}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+
+\end{document}

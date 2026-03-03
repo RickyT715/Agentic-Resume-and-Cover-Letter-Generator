@@ -14,15 +14,23 @@ class PromptManager:
 
     PROMPT_FILES = {
         "resume_prompt": "Resume_prompts.txt",
+        "resume_prompt_no_fabrication": "Resume_prompts_no_fabrication.txt",
         "cover_letter_prompt": "Cover_letter_prompt.txt",
+        "cover_letter_prompt_no_fabrication": "Cover_letter_prompt_no_fabrication.txt",
         "user_information": "User_information_prompts.txt",
         "resume_format": "Resume_format_prompts.txt",
+        "resume_format_no_summary": "Resume_format_no_summary.txt",
         "application_question_prompt": "Application_question_prompt.txt",
+        "application_question_prompt_no_fabrication": "Application_question_prompt_no_fabrication.txt",
         "resume_prompt_zh": "Resume_prompts_zh.txt",
+        "resume_prompt_no_fabrication_zh": "Resume_prompts_no_fabrication_zh.txt",
         "cover_letter_prompt_zh": "Cover_letter_prompt_zh.txt",
+        "cover_letter_prompt_no_fabrication_zh": "Cover_letter_prompt_no_fabrication_zh.txt",
         "user_information_zh": "User_information_prompts_zh.txt",
         "resume_format_zh": "Resume_format_prompts_zh.txt",
+        "resume_format_no_summary_zh": "Resume_format_no_summary_zh.txt",
         "application_question_prompt_zh": "Application_question_prompt_zh.txt",
+        "application_question_prompt_no_fabrication_zh": "Application_question_prompt_no_fabrication_zh.txt",
     }
 
     def __init__(self, prompts_dir: Path | None = None):
@@ -124,9 +132,20 @@ class PromptManager:
             Fully substituted prompt
         """
         suffix = "_zh" if language == "zh" else ""
-        prompt = self.get_prompt(f"resume_prompt{suffix}")
+
+        # Select prompt variant based on fabrication setting
+        if allow_fabrication:
+            prompt = self.get_prompt(f"resume_prompt{suffix}")
+        else:
+            prompt = self.get_prompt(f"resume_prompt_no_fabrication{suffix}")
+
         user_info = self.get_prompt(f"user_information{suffix}")
-        latex_template = self.get_prompt(f"resume_format{suffix}")
+
+        # Select format variant: no-summary template when one-page is enforced
+        if enforce_one_page:
+            latex_template = self.get_prompt(f"resume_format_no_summary{suffix}")
+        else:
+            latex_template = self.get_prompt(f"resume_format{suffix}")
 
         # Perform substitutions
         prompt = prompt.replace("{{user_information}}", user_info)
@@ -147,26 +166,9 @@ class PromptManager:
                 override = self._get_experience_level_override(experience_level)
             prompt += f"\n\n{override}"
 
-        # Append one-page optimization instructions
-        if enforce_one_page:
-            if language == "zh":
-                prompt += (
-                    "\n\n## 一页限制优化\n"
-                    "简历必须严格控制在一页以内。为节省空间，不要包含个人总结（Summary/Objective）部分。"
-                )
-            else:
-                prompt += (
-                    "\n\n## One-Page Optimization\n"
-                    "The resume MUST fit on exactly one page. To save space, "
-                    "do NOT include a Summary or Objective section."
-                )
-
-        # Append anti-fabrication instructions
-        if not allow_fabrication:
-            prompt += f"\n\n{self._get_anti_fabrication_instructions('resume', language)}"
-
         logger.debug(
-            f"Applied template substitutions (template={template_id}, experience={experience_level}) to resume prompt"
+            f"Applied template substitutions (template={template_id}, experience={experience_level}, "
+            f"fabrication={allow_fabrication}, one_page={enforce_one_page}) to resume prompt"
         )
         return prompt
 
@@ -247,14 +249,16 @@ class PromptManager:
             Fully substituted prompt
         """
         suffix = "_zh" if language == "zh" else ""
-        prompt = self.get_prompt(f"cover_letter_prompt{suffix}")
+
+        # Select prompt variant based on fabrication setting
+        if allow_fabrication:
+            prompt = self.get_prompt(f"cover_letter_prompt{suffix}")
+        else:
+            prompt = self.get_prompt(f"cover_letter_prompt_no_fabrication{suffix}")
 
         # Perform substitutions
         prompt = prompt.replace("{{RESUME_CONTENT}}", resume_content)
         prompt = prompt.replace("{{JOB_DESCRIPTION}}", job_description)
-
-        if not allow_fabrication:
-            prompt += f"\n\n{self._get_anti_fabrication_instructions('cover_letter', language)}"
 
         logger.debug("Applied template substitutions to cover letter prompt")
         return prompt
@@ -286,7 +290,13 @@ class PromptManager:
             Fully substituted prompt
         """
         suffix = "_zh" if language == "zh" else ""
-        prompt = self.get_prompt(f"application_question_prompt{suffix}")
+
+        # Select prompt variant based on fabrication setting
+        if allow_fabrication:
+            prompt = self.get_prompt(f"application_question_prompt{suffix}")
+        else:
+            prompt = self.get_prompt(f"application_question_prompt_no_fabrication{suffix}")
+
         user_info = self.get_prompt(f"user_information{suffix}")
 
         prompt = prompt.replace("{{USER_INFORMATION}}", user_info)
@@ -294,44 +304,8 @@ class PromptManager:
         prompt = prompt.replace("{{QUESTION}}", question)
         prompt = prompt.replace("{{WORD_LIMIT}}", str(word_limit))
 
-        if not allow_fabrication:
-            prompt += f"\n\n{self._get_anti_fabrication_instructions('question', language)}"
-
         logger.debug("Applied template substitutions to application question prompt")
         return prompt
-
-    def _get_anti_fabrication_instructions(self, prompt_type: str, language: str) -> str:
-        """Get anti-fabrication instructions for the given prompt type and language."""
-        if prompt_type == "resume":
-            if language == "zh":
-                return (
-                    "## 禁止虚构信息\n"
-                    "不要发明、编造或估算任何信息。只使用 <user_information> 中明确陈述的事实。"
-                    "不要添加候选人未明确列出的技能。不要编造指标、百分比或量化结果。"
-                )
-            return (
-                "## No Fabrication Policy\n"
-                "Do NOT invent, fabricate, or estimate any information. "
-                "Only use facts explicitly stated in <user_information>. "
-                "Do not add skills the candidate doesn't explicitly list. "
-                "Do not invent metrics, percentages, or quantitative results."
-            )
-        elif prompt_type == "cover_letter":
-            if language == "zh":
-                return "## 禁止虚构信息\n不要编造或估算任何细节。只使用简历和用户背景中直接提供的信息。"
-            return (
-                "## No Fabrication Policy\n"
-                "Do NOT fabricate or estimate any details. "
-                "Only use information directly from the resume and user background."
-            )
-        else:  # question
-            if language == "zh":
-                return "## 禁止虚构信息\n只使用申请人背景中明确提供的信息。不要编造经历或细节。"
-            return (
-                "## No Fabrication Policy\n"
-                "Only use information explicitly provided in the applicant's background. "
-                "Do not fabricate experiences or details."
-            )
 
     def validate_prompt(self, prompt_key: str, content: str) -> list:
         """
@@ -339,8 +313,8 @@ class PromptManager:
         Returns a list of warning messages (empty = no issues).
         """
         warnings = []
-        # Strip _zh suffix to apply same validation rules
-        base_key = prompt_key.removesuffix("_zh")
+        # Strip _zh and _no_fabrication suffixes to apply same validation rules
+        base_key = prompt_key.removesuffix("_zh").removesuffix("_no_fabrication")
         if base_key == "resume_prompt":
             for placeholder in ["{{user_information}}", "{{latex_template}}", "{{JOB_DESCRIPTION}}"]:
                 if placeholder not in content:

@@ -157,6 +157,172 @@ class TestSettingsEndpoints:
         assert r.status_code == 200
         mock_sm.get_all.assert_called_with(mask_api_key=True)
 
+    async def test_update_settings_basic(self, app_with_mocks):
+        """PUT /api/settings with basic fields should succeed."""
+        app, _, mock_sm, *_ = app_with_mocks
+        mock_sm.update.return_value = MagicMock()
+        mock_sm.get_all.return_value = {"default_provider": "claude"}
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.put("/api/settings", json={"default_provider": "claude", "max_latex_retries": 5})
+        assert r.status_code == 200
+        mock_sm.update.assert_called_once()
+
+    async def test_update_settings_allow_ai_fabrication(self, app_with_mocks):
+        """PUT /api/settings should accept allow_ai_fabrication field."""
+        app, _, mock_sm, *_ = app_with_mocks
+        mock_sm.update.return_value = MagicMock()
+        mock_sm.get_all.return_value = {"allow_ai_fabrication": False}
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.put("/api/settings", json={"allow_ai_fabrication": False})
+        assert r.status_code == 200
+        call_args = mock_sm.update.call_args[0][0]
+        assert "allow_ai_fabrication" in call_args
+        assert call_args["allow_ai_fabrication"] is False
+
+    async def test_update_settings_user_profile_links(self, app_with_mocks):
+        """PUT /api/settings should accept user profile link fields."""
+        app, _, mock_sm, *_ = app_with_mocks
+        mock_sm.update.return_value = MagicMock()
+        mock_sm.get_all.return_value = {}
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.put(
+                "/api/settings",
+                json={
+                    "user_linkedin_url": "https://linkedin.com/in/test",
+                    "user_github_url": "https://github.com/test",
+                },
+            )
+        assert r.status_code == 200
+        call_args = mock_sm.update.call_args[0][0]
+        assert call_args["user_linkedin_url"] == "https://linkedin.com/in/test"
+        assert call_args["user_github_url"] == "https://github.com/test"
+
+    async def test_update_settings_deepseek_fields(self, app_with_mocks):
+        """PUT /api/settings should accept DeepSeek provider fields."""
+        app, _, mock_sm, *_ = app_with_mocks
+        mock_sm.update.return_value = MagicMock()
+        mock_sm.get_all.return_value = {}
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.put(
+                "/api/settings",
+                json={
+                    "deepseek_api_key": "sk-deep-123",
+                    "deepseek_model": "deepseek-chat",
+                    "deepseek_temperature": 0.7,
+                    "deepseek_max_output_tokens": 4096,
+                },
+            )
+        assert r.status_code == 200
+        call_args = mock_sm.update.call_args[0][0]
+        assert call_args["deepseek_api_key"] == "sk-deep-123"
+        assert call_args["deepseek_model"] == "deepseek-chat"
+
+    async def test_update_settings_qwen_fields(self, app_with_mocks):
+        """PUT /api/settings should accept Qwen provider fields."""
+        app, _, mock_sm, *_ = app_with_mocks
+        mock_sm.update.return_value = MagicMock()
+        mock_sm.get_all.return_value = {}
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.put(
+                "/api/settings",
+                json={
+                    "qwen_api_key": "sk-qwen-456",
+                    "qwen_model": "qwen-plus",
+                    "qwen_temperature": 0.5,
+                    "qwen_max_output_tokens": 8192,
+                },
+            )
+        assert r.status_code == 200
+        call_args = mock_sm.update.call_args[0][0]
+        assert call_args["qwen_api_key"] == "sk-qwen-456"
+        assert call_args["qwen_model"] == "qwen-plus"
+
+    async def test_update_settings_validation_fields(self, app_with_mocks):
+        """PUT /api/settings should accept resume validation fields."""
+        app, _, mock_sm, *_ = app_with_mocks
+        mock_sm.update.return_value = MagicMock()
+        mock_sm.get_all.return_value = {}
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.put(
+                "/api/settings",
+                json={
+                    "enable_contact_replacement": False,
+                    "enable_text_validation": False,
+                    "enable_llm_validation": False,
+                },
+            )
+        assert r.status_code == 200
+        call_args = mock_sm.update.call_args[0][0]
+        assert call_args["enable_contact_replacement"] is False
+        assert call_args["enable_text_validation"] is False
+        assert call_args["enable_llm_validation"] is False
+
+    async def test_update_settings_agent_providers(self, app_with_mocks):
+        """PUT /api/settings should accept agent_providers dict."""
+        app, _, mock_sm, *_ = app_with_mocks
+        mock_sm.update.return_value = MagicMock()
+        mock_sm.get_all.return_value = {}
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.put(
+                "/api/settings",
+                json={"agent_providers": {"resume_writer": "claude", "jd_analyzer": "gemini"}},
+            )
+        assert r.status_code == 200
+        call_args = mock_sm.update.call_args[0][0]
+        assert call_args["agent_providers"] == {"resume_writer": "claude", "jd_analyzer": "gemini"}
+
+    async def test_update_settings_experience_level(self, app_with_mocks):
+        """PUT /api/settings should accept default_experience_level."""
+        app, _, mock_sm, *_ = app_with_mocks
+        mock_sm.update.return_value = MagicMock()
+        mock_sm.get_all.return_value = {}
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.put("/api/settings", json={"default_experience_level": "new_grad"})
+        assert r.status_code == 200
+        call_args = mock_sm.update.call_args[0][0]
+        assert call_args["default_experience_level"] == "new_grad"
+
+    async def test_update_settings_all_previously_missing_fields(self, app_with_mocks):
+        """PUT /api/settings should accept ALL fields that were previously missing."""
+        app, _, mock_sm, *_ = app_with_mocks
+        mock_sm.update.return_value = MagicMock()
+        mock_sm.get_all.return_value = {}
+        all_fields = {
+            "deepseek_api_key": "sk-deep",
+            "deepseek_model": "deepseek-chat",
+            "deepseek_temperature": 0.7,
+            "deepseek_max_output_tokens": 4096,
+            "qwen_api_key": "sk-qwen",
+            "qwen_model": "qwen-plus",
+            "qwen_temperature": 0.5,
+            "qwen_max_output_tokens": 8192,
+            "default_experience_level": "experienced",
+            "allow_ai_fabrication": False,
+            "enable_contact_replacement": True,
+            "enable_text_validation": True,
+            "enable_llm_validation": False,
+            "user_linkedin_url": "https://linkedin.com/in/user",
+            "user_github_url": "https://github.com/user",
+            "agent_providers": {"resume_writer": "claude"},
+        }
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.put("/api/settings", json=all_fields)
+        assert r.status_code == 200
+        call_args = mock_sm.update.call_args[0][0]
+        # Verify none of the fields were silently dropped
+        for key, value in all_fields.items():
+            assert key in call_args, f"Field '{key}' was dropped by AppSettingsUpdate model"
+            assert call_args[key] == value, f"Field '{key}' has wrong value"
+
 
 @pytest.mark.asyncio
 class TestPromptsEndpoints:

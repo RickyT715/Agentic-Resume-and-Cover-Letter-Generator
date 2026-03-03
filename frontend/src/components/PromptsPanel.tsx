@@ -4,26 +4,44 @@ import { useTaskStore } from '../store/taskStore';
 
 type PromptKey =
   | 'resume_prompt'
+  | 'resume_prompt_no_fabrication'
   | 'cover_letter_prompt'
+  | 'cover_letter_prompt_no_fabrication'
   | 'user_information'
   | 'resume_format'
+  | 'resume_format_no_summary'
   | 'application_question_prompt'
+  | 'application_question_prompt_no_fabrication'
   | 'resume_prompt_zh'
+  | 'resume_prompt_no_fabrication_zh'
   | 'cover_letter_prompt_zh'
+  | 'cover_letter_prompt_no_fabrication_zh'
   | 'user_information_zh'
   | 'resume_format_zh'
-  | 'application_question_prompt_zh';
+  | 'resume_format_no_summary_zh'
+  | 'application_question_prompt_zh'
+  | 'application_question_prompt_no_fabrication_zh';
 
 const PROMPT_LABELS: Record<PromptKey, { title: string; description: string }> = {
   resume_prompt: {
     title: 'Resume Prompt',
     description:
-      'Main prompt for generating resumes. Uses {{user_information}} and {{latex_template}} placeholders.',
+      'Main prompt for generating resumes (with AI fabrication allowed). Uses {{user_information}} and {{latex_template}} placeholders.',
+  },
+  resume_prompt_no_fabrication: {
+    title: 'Resume (No Fabrication)',
+    description:
+      'Resume prompt used when AI fabrication is disabled. Only uses facts from user information. Uses {{user_information}} and {{latex_template}} placeholders.',
   },
   cover_letter_prompt: {
     title: 'Cover Letter Prompt',
     description:
-      'Prompt for generating cover letters. Uses {{RESUME_CONTENT}} and {{JOB_DESCRIPTION}} placeholders.',
+      'Prompt for generating cover letters (with AI fabrication allowed). Uses {{RESUME_CONTENT}} and {{JOB_DESCRIPTION}} placeholders.',
+  },
+  cover_letter_prompt_no_fabrication: {
+    title: 'Cover Letter (No Fabrication)',
+    description:
+      'Cover letter prompt used when AI fabrication is disabled. Only uses facts from resume. Uses {{RESUME_CONTENT}} and {{JOB_DESCRIPTION}} placeholders.',
   },
   user_information: {
     title: 'User Information',
@@ -33,20 +51,42 @@ const PROMPT_LABELS: Record<PromptKey, { title: string; description: string }> =
   resume_format: {
     title: 'Resume Format (LaTeX)',
     description:
-      'LaTeX template for resume formatting. Replaces {{latex_template}} in resume prompt.',
+      'LaTeX template for resume formatting (includes Summary section). Replaces {{latex_template}} in resume prompt.',
+  },
+  resume_format_no_summary: {
+    title: 'Resume Format (No Summary)',
+    description:
+      'LaTeX template without Summary section, used when one-page enforcement is enabled. Replaces {{latex_template}} in resume prompt.',
   },
   application_question_prompt: {
-    title: 'Application Q&A Prompt',
+    title: 'Q&A Prompt',
     description:
-      'Prompt for answering application questions. Uses {{USER_INFORMATION}}, {{JOB_DESCRIPTION}}, {{QUESTION}}, {{WORD_LIMIT}}.',
+      'Prompt for answering application questions (with AI fabrication allowed). Uses {{USER_INFORMATION}}, {{JOB_DESCRIPTION}}, {{QUESTION}}, {{WORD_LIMIT}}.',
+  },
+  application_question_prompt_no_fabrication: {
+    title: 'Q&A (No Fabrication)',
+    description:
+      'Q&A prompt used when AI fabrication is disabled. Only uses facts from background. Uses {{USER_INFORMATION}}, {{JOB_DESCRIPTION}}, {{QUESTION}}, {{WORD_LIMIT}}.',
   },
   resume_prompt_zh: {
     title: 'Resume Prompt',
-    description: '简历生成主提示词。使用 {{user_information}} 和 {{latex_template}} 占位符。',
+    description:
+      '简历生成主提示词（允许AI扩展）。使用 {{user_information}} 和 {{latex_template}} 占位符。',
+  },
+  resume_prompt_no_fabrication_zh: {
+    title: 'Resume (No Fabrication)',
+    description:
+      '禁用AI虚构时使用的简历提示词。仅使用用户信息中的事实。使用 {{user_information}} 和 {{latex_template}} 占位符。',
   },
   cover_letter_prompt_zh: {
     title: 'Cover Letter Prompt',
-    description: '求职信生成提示词。使用 {{RESUME_CONTENT}} 和 {{JOB_DESCRIPTION}} 占位符。',
+    description:
+      '求职信生成提示词（允许AI扩展）。使用 {{RESUME_CONTENT}} 和 {{JOB_DESCRIPTION}} 占位符。',
+  },
+  cover_letter_prompt_no_fabrication_zh: {
+    title: 'Cover Letter (No Fabrication)',
+    description:
+      '禁用AI虚构时使用的求职信提示词。仅使用简历中的事实。使用 {{RESUME_CONTENT}} 和 {{JOB_DESCRIPTION}} 占位符。',
   },
   user_information_zh: {
     title: 'User Information',
@@ -55,28 +95,46 @@ const PROMPT_LABELS: Record<PromptKey, { title: string; description: string }> =
   },
   resume_format_zh: {
     title: 'Resume Format (LaTeX)',
-    description: '中文简历 LaTeX 模板。替换简历提示词中的 {{latex_template}}。',
+    description: '中文简历 LaTeX 模板（包含个人总结板块）。替换简历提示词中的 {{latex_template}}。',
+  },
+  resume_format_no_summary_zh: {
+    title: 'Resume Format (No Summary)',
+    description:
+      '无个人总结的中文简历 LaTeX 模板，启用一页限制时使用。替换简历提示词中的 {{latex_template}}。',
   },
   application_question_prompt_zh: {
-    title: 'Application Q&A Prompt',
+    title: 'Q&A Prompt',
     description:
-      '求职申请问题回答提示词。使用 {{USER_INFORMATION}}、{{JOB_DESCRIPTION}}、{{QUESTION}}、{{WORD_LIMIT}}。',
+      '求职申请问题回答提示词（允许AI扩展）。使用 {{USER_INFORMATION}}、{{JOB_DESCRIPTION}}、{{QUESTION}}、{{WORD_LIMIT}}。',
+  },
+  application_question_prompt_no_fabrication_zh: {
+    title: 'Q&A (No Fabrication)',
+    description:
+      '禁用AI虚构时使用的问题回答提示词。仅使用背景中的事实。使用 {{USER_INFORMATION}}、{{JOB_DESCRIPTION}}、{{QUESTION}}、{{WORD_LIMIT}}。',
   },
 };
 
 const EN_TABS: PromptKey[] = [
   'user_information',
   'resume_format',
+  'resume_format_no_summary',
   'resume_prompt',
+  'resume_prompt_no_fabrication',
   'cover_letter_prompt',
+  'cover_letter_prompt_no_fabrication',
   'application_question_prompt',
+  'application_question_prompt_no_fabrication',
 ];
 const ZH_TABS: PromptKey[] = [
   'user_information_zh',
   'resume_format_zh',
+  'resume_format_no_summary_zh',
   'resume_prompt_zh',
+  'resume_prompt_no_fabrication_zh',
   'cover_letter_prompt_zh',
+  'cover_letter_prompt_no_fabrication_zh',
   'application_question_prompt_zh',
+  'application_question_prompt_no_fabrication_zh',
 ];
 
 interface PromptsPanelProps {
@@ -96,12 +154,6 @@ export default function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
 
   const tabs = promptLang === 'zh' ? ZH_TABS : EN_TABS;
 
-  useEffect(() => {
-    if (isOpen) {
-      loadPrompts();
-    }
-  }, [isOpen]);
-
   // When switching language, reset active tab to first tab of that language
   const handleLangSwitch = (lang: 'en' | 'zh') => {
     setPromptLang(lang);
@@ -109,7 +161,7 @@ export default function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
     setWarnings([]);
   };
 
-  const loadPrompts = async () => {
+  const loadPrompts = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/prompts');
@@ -125,7 +177,13 @@ export default function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadPrompts();
+    }
+  }, [isOpen, loadPrompts]);
 
   const savePrompt = useCallback(
     async (key: PromptKey) => {
@@ -258,7 +316,7 @@ export default function PromptsPanel({ isOpen, onClose }: PromptsPanelProps) {
                 setActiveTab(key);
                 setWarnings([]);
               }}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === key
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800'
                   : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'

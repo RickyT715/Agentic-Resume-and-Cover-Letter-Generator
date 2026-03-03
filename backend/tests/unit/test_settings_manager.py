@@ -90,6 +90,48 @@ class TestGetAll:
         for field in ("gemini_api_key", "claude_api_key", "openai_compat_api_key", "claude_proxy_api_key"):
             assert "..." in result[field]
 
+    def test_get_all_masks_deepseek_api_key(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update({"deepseek_api_key": "sk-deep1234567890ab"})
+        result = sm.get_all(mask_api_key=True)
+        assert result["deepseek_api_key"] == "sk-d...90ab"
+
+    def test_get_all_masks_qwen_api_key(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update({"qwen_api_key": "sk-qwen1234567890cd"})
+        result = sm.get_all(mask_api_key=True)
+        assert result["qwen_api_key"] == "sk-q...90cd"
+
+    def test_get_all_masks_all_six_key_fields(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update(
+            {
+                "gemini_api_key": "1234567890123456",
+                "claude_api_key": "abcdefghijklmnop",
+                "openai_compat_api_key": "aaaa1111bbbb2222",
+                "claude_proxy_api_key": "xxxx9999yyyy8888",
+                "deepseek_api_key": "deep1111deep2222",
+                "qwen_api_key": "qwen3333qwen4444",
+            }
+        )
+        result = sm.get_all(mask_api_key=True)
+        for field in (
+            "gemini_api_key",
+            "claude_api_key",
+            "openai_compat_api_key",
+            "claude_proxy_api_key",
+            "deepseek_api_key",
+            "qwen_api_key",
+        ):
+            assert "..." in result[field], f"{field} was not masked"
+
+    def test_get_all_no_masking_deepseek_qwen(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update({"deepseek_api_key": "real_deepseek_key", "qwen_api_key": "real_qwen_key"})
+        result = sm.get_all(mask_api_key=False)
+        assert result["deepseek_api_key"] == "real_deepseek_key"
+        assert result["qwen_api_key"] == "real_qwen_key"
+
     def test_get_all_returns_all_fields(self, settings_manager_isolated):
         result = settings_manager_isolated.get_all()
         assert "default_provider" in result
@@ -137,6 +179,75 @@ class TestUpdate:
     def test_update_returns_settings(self, settings_manager_isolated):
         result = settings_manager_isolated.update({"default_provider": "claude"})
         assert result.default_provider == "claude"
+
+    def test_update_allow_ai_fabrication(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update({"allow_ai_fabrication": False})
+        assert sm.settings.allow_ai_fabrication is False
+
+    def test_update_user_profile_links(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update(
+            {
+                "user_linkedin_url": "https://linkedin.com/in/testuser",
+                "user_github_url": "https://github.com/testuser",
+            }
+        )
+        assert sm.settings.user_linkedin_url == "https://linkedin.com/in/testuser"
+        assert sm.settings.user_github_url == "https://github.com/testuser"
+
+    def test_update_deepseek_settings(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update(
+            {
+                "deepseek_api_key": "sk-deep-test",
+                "deepseek_model": "deepseek-coder",
+                "deepseek_temperature": 0.7,
+                "deepseek_max_output_tokens": 4096,
+            }
+        )
+        assert sm.settings.deepseek_api_key == "sk-deep-test"
+        assert sm.settings.deepseek_model == "deepseek-coder"
+        assert sm.settings.deepseek_temperature == 0.7
+        assert sm.settings.deepseek_max_output_tokens == 4096
+
+    def test_update_qwen_settings(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update(
+            {
+                "qwen_api_key": "sk-qwen-test",
+                "qwen_model": "qwen-max",
+                "qwen_temperature": 0.5,
+                "qwen_max_output_tokens": 8192,
+            }
+        )
+        assert sm.settings.qwen_api_key == "sk-qwen-test"
+        assert sm.settings.qwen_model == "qwen-max"
+        assert sm.settings.qwen_temperature == 0.5
+        assert sm.settings.qwen_max_output_tokens == 8192
+
+    def test_update_validation_settings(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update(
+            {
+                "enable_contact_replacement": False,
+                "enable_text_validation": False,
+                "enable_llm_validation": False,
+            }
+        )
+        assert sm.settings.enable_contact_replacement is False
+        assert sm.settings.enable_text_validation is False
+        assert sm.settings.enable_llm_validation is False
+
+    def test_update_experience_level(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update({"default_experience_level": "new_grad"})
+        assert sm.settings.default_experience_level == "new_grad"
+
+    def test_update_agent_providers(self, settings_manager_isolated):
+        sm = settings_manager_isolated
+        sm.update({"agent_providers": {"resume_writer": "claude", "jd_analyzer": "gemini"}})
+        assert sm.settings.agent_providers == {"resume_writer": "claude", "jd_analyzer": "gemini"}
 
 
 # ===================== get =====================

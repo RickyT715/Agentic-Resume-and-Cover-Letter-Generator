@@ -4,7 +4,18 @@
 
 An AI-powered system that generates tailored resumes, cover letters, and application question answers using a **multi-agent LangGraph pipeline** with automated evaluation, company research (RAG), and multiple LLM providers. Built with FastAPI, React, and TypeScript.
 
-## What's New in v3.2
+## What's New in v3.3
+
+- **Prompt Variant System** — Separate prompt files for fabrication-on vs fabrication-off modes, eliminating contradictory instructions when AI fabrication is disabled
+  - 8 new no-fabrication prompt variants (resume, cover letter, Q&A — both EN and ZH)
+  - No-summary LaTeX templates for one-page enforcement (omits Summary section to save space)
+  - Settings toggle (`allow_ai_fabrication`) selects the correct prompt file at generation time
+- **Settings Bug Fix** — Fixed `AppSettingsUpdate` model missing 17+ fields (DeepSeek, Qwen, fabrication, validation, profile links, agent providers), which caused settings to silently drop on save
+- **DeepSeek & Qwen Settings** — Added `deepseek_api_key/model/temperature/max_output_tokens` and `qwen_api_key/model/temperature/max_output_tokens` to the settings model, with proper API key masking
+- **Full Prompts Editor** — Prompts panel now shows all 18 prompt types (9 EN + 9 ZH) including no-fabrication variants and no-summary format templates
+- **Comprehensive Test Suite** — 560+ backend tests and 200+ frontend tests covering prompt variant selection, settings persistence, API routes, and UI components
+
+### v3.2
 
 - **ATS-Optimized Resume Format** — Redesigned LaTeX template based on research from 30+ sources (FAANG recruiter guides, ATS system docs, Google/Harvard/Stanford career services). Key improvements:
   - **Conditional layout** — Experienced (2+ yrs): Summary → Experience → Projects → Skills → Education. New grads: Education → Skills → Projects → Experience
@@ -367,15 +378,20 @@ Edit via the **Prompts** panel in the UI or directly in `backend/prompts/`:
 | File | Description |
 |------|-------------|
 | `User_information_prompts.txt` | Your personal info (education, experience, skills) |
-| `Resume_format_prompts.txt` | LaTeX template structure |
+| `Resume_format_prompts.txt` | LaTeX template structure (includes Summary section) |
+| `Resume_format_no_summary.txt` | LaTeX template without Summary (for one-page enforcement) |
 | `Resume_prompts.txt` | Main resume generation prompt |
+| `Resume_prompts_no_fabrication.txt` | Resume prompt (no AI fabrication — strict accuracy) |
 | `Cover_letter_prompt.txt` | Cover letter generation prompt |
+| `Cover_letter_prompt_no_fabrication.txt` | Cover letter prompt (no AI fabrication) |
 | `Application_question_prompt.txt` | Application question answering prompt |
-| `User_information_prompts_zh.txt` | Your personal info (Chinese version) |
-| `Resume_prompts_zh.txt` | Resume generation prompt (Chinese) |
-| `Resume_format_prompts_zh.txt` | LaTeX template structure (Chinese) |
-| `Cover_letter_prompt_zh.txt` | Cover letter prompt (Chinese) |
-| `Application_question_prompt_zh.txt` | Application question prompt (Chinese) |
+| `Application_question_prompt_no_fabrication.txt` | Q&A prompt (no AI fabrication) |
+
+Each English file has a corresponding `_zh.txt` Chinese version (18 files total).
+
+**Variant selection logic:**
+- When **AI fabrication is disabled** (`allow_ai_fabrication: false`), the `_no_fabrication` prompt variants are used instead of appending instructions
+- When **one-page enforcement is enabled** (`enforce_resume_one_page: true`), `Resume_format_no_summary` replaces `Resume_format_prompts` to omit the Summary section
 
 **Placeholders** (auto-substituted):
 - `{{user_information}}` — your personal info
@@ -517,7 +533,7 @@ backend/
 │   │   ├── test_task_manager.py
 │   │   ├── test_websocket_manager.py
 │   │   └── test_chinese_pipeline.py  # Chinese language pipeline tests
-│   ├── integration/           # Graph flow, LangGraph executor, mocked pipeline, state machine tests
+│   ├── integration/           # Graph flow, LangGraph executor, mocked pipeline, state machine, settings-prompt flow tests
 │   └── e2e/                   # Full API lifecycle tests
 │       └── test_zh_examples_report.py # Chinese E2E tests
 ├── config.py                  # Pydantic settings
@@ -553,6 +569,7 @@ frontend/
 │       ├── TaskSidebar.test.tsx
 │       ├── TaskPanel.test.tsx
 │       ├── SettingsPanel.test.tsx
+│       ├── PromptsPanel.test.tsx
 │       ├── ProgressDisplay.test.tsx
 │       ├── QuestionsSection.test.tsx
 │       ├── schemas.test.ts
@@ -574,7 +591,7 @@ commitlint.config.js           # Conventional commit enforcement
 
 ### Running Tests
 
-**Backend** (350+ tests):
+**Backend** (560+ tests):
 ```bash
 cd backend
 
@@ -591,7 +608,7 @@ pytest tests/unit/agents/                  # Agent tests only
 pytest tests/unit/test_latex_compiler.py   # Single file
 ```
 
-**Frontend** (110+ tests):
+**Frontend** (200+ tests):
 ```bash
 cd frontend
 npm test              # Single run
