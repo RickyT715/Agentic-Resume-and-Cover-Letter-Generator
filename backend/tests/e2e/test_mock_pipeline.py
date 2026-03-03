@@ -143,7 +143,7 @@ async def client():
 
 
 @pytest.fixture(autouse=True)
-def cleanup_tasks():
+async def cleanup_tasks():
     """Clean up any tasks created during tests."""
     # Store existing tasks
     existing_ids = set(task_manager.tasks.keys())
@@ -159,7 +159,7 @@ def cleanup_tasks():
                     with contextlib.suppress(Exception):
                         Path(path_str).unlink()
             del task_manager.tasks[tid]
-    task_manager._save_tasks()
+    await task_manager._save_tasks()
 
 
 # ---------------------------------------------------------------------------
@@ -390,7 +390,7 @@ class TestFullV2Pipeline:
         """Test the full pipeline: resume generation only (no cover letter)."""
         with patch("services.task_manager.get_provider_for_task", return_value=mock_ai_client):
             # Create task (no cover letter)
-            task = task_manager.create_task(
+            task = await task_manager.create_task(
                 MagicMock(
                     job_description=SAMPLE_JD,
                     generate_cover_letter=False,
@@ -427,7 +427,7 @@ class TestFullV2Pipeline:
     async def test_complete_pipeline_with_cover_letter(self, mock_ai_client):
         """Test the full pipeline: resume + cover letter."""
         with patch("services.task_manager.get_provider_for_task", return_value=mock_ai_client):
-            task = task_manager.create_task(
+            task = await task_manager.create_task(
                 MagicMock(
                     job_description=SAMPLE_JD,
                     generate_cover_letter=True,
@@ -503,7 +503,7 @@ class TestFullV2Pipeline:
     @pytest.mark.asyncio
     async def test_task_cancel(self, mock_ai_client):
         """Test cancelling a pending task."""
-        task = task_manager.create_task(
+        task = await task_manager.create_task(
             MagicMock(
                 job_description=SAMPLE_JD,
                 generate_cover_letter=False,
@@ -515,7 +515,7 @@ class TestFullV2Pipeline:
         )
         assert task.status.value == "pending"
 
-        result = task_manager.cancel_task(task.id)
+        result = await task_manager.cancel_task(task.id)
         assert result is not None
         assert result.status.value == "cancelled"
 
@@ -523,7 +523,7 @@ class TestFullV2Pipeline:
     async def test_task_retry_resets_state(self, mock_ai_client):
         """Test that retrying a task resets it properly."""
         with patch("services.task_manager.get_provider_for_task", return_value=mock_ai_client):
-            task = task_manager.create_task(
+            task = await task_manager.create_task(
                 MagicMock(
                     job_description=SAMPLE_JD,
                     generate_cover_letter=False,
@@ -540,7 +540,7 @@ class TestFullV2Pipeline:
             assert task.status.value == "completed"
 
             # Retry
-            retried = task_manager.retry_task(task.id)
+            retried = await task_manager.retry_task(task.id)
             assert retried.status.value == "pending"
             assert retried.resume_pdf_path is None
             assert retried.error_message is None

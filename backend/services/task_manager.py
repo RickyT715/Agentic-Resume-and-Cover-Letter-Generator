@@ -7,6 +7,8 @@ from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
+import aiofiles
+
 from config import settings
 from models.task import ApplicationQuestion, QuestionStatus, Task, TaskCreate, TaskStatus, TaskStep
 from services.latex_compiler import CompilationAttempt, CompilationError, LaTeXCompiler
@@ -44,12 +46,12 @@ class TaskManager:
         self.task_counter = 0
         self._progress_callbacks: list[Callable] = []
         self._semaphore = asyncio.Semaphore(settings.max_concurrent_tasks)
+        self._lock = asyncio.Lock()
 
         # Initialize services
         logger.info("Initializing TaskManager services...")
         self.settings_manager = get_settings_manager()
         self.prompt_manager = get_prompt_manager()
-        self.latex_compiler = LaTeXCompiler(max_retries=settings.max_latex_retries)
         self.pdf_extractor = PDFTextExtractor()
         self.text_to_pdf = TextToPDFConverter()
 
@@ -81,16 +83,19 @@ class TaskManager:
         except Exception as e:
             logger.error(f"Failed to load tasks from disk: {e}")
 
-    def _save_tasks(self):
-        """Persist tasks to disk."""
-        try:
-            data = {
-                "task_counter": self.task_counter,
-                "tasks": [task.model_dump(mode="json") for task in self.tasks.values()],
-            }
-            TASKS_FILE.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
-        except Exception as e:
-            logger.error(f"Failed to save tasks: {e}")
+    async def _save_tasks(self):
+        """Persist tasks to disk (async, protected by lock)."""
+        async with self._lock:
+            try:
+                data = {
+                    "task_counter": self.task_counter,
+                    "tasks": [task.model_dump(mode="json") for task in self.tasks.values()],
+                }
+                content = json.dumps(data, indent=2, default=str)
+                async with aiofiles.open(TASKS_FILE, "w", encoding="utf-8") as f:
+                    await f.write(content)
+            except Exception as e:
+                logger.error(f"Failed to save tasks: {e}")
 
     # ===================== JD History =====================
 
@@ -163,7 +168,7 @@ class TaskManager:
         log_level = logging.ERROR if status == TaskStatus.FAILED else logging.INFO
         logger.log(log_level, f"Task {task.task_number} [{task.id}] - {step.value}: {status.value} - {message}")
 
-        self._save_tasks()
+        await self._save_tasks()
 
         for callback in self._progress_callbacks:
             try:
@@ -173,32 +178,33 @@ class TaskManager:
 
     # ===================== CRUD =====================
 
-    def create_task(self, task_data: TaskCreate) -> Task:
-        self.task_counter += 1
+    async def create_task(self, task_data: TaskCreate) -> Task:
+        async with self._lock:
+            self.task_counter += 1
 
-        generate_cover_letter = task_data.generate_cover_letter
-        if generate_cover_letter is None:
-            generate_cover_letter = self.settings_manager.get("generate_cover_letter", True)
+            generate_cover_letter = task_data.generate_cover_letter
+            if generate_cover_letter is None:
+                generate_cover_letter = self.settings_manager.get("generate_cover_letter", True)
 
-        template_id = task_data.template_id or self.settings_manager.get("default_template_id", "classic")
+            template_id = task_data.template_id or self.settings_manager.get("default_template_id", "classic")
 
-        experience_level = task_data.experience_level
-        if not experience_level or experience_level == "auto":
-            saved_level = self.settings_manager.get("default_experience_level", "auto")
-            if isinstance(saved_level, str) and saved_level not in ("", "auto"):
-                experience_level = saved_level
+            experience_level = task_data.experience_level
+            if not experience_level or experience_level == "auto":
+                saved_level = self.settings_manager.get("default_experience_level", "auto")
+                if isinstance(saved_level, str) and saved_level not in ("", "auto"):
+                    experience_level = saved_level
 
-        task = Task(
-            task_number=self.task_counter,
-            job_description=task_data.job_description,
-            generate_cover_letter=generate_cover_letter,
-            template_id=template_id,
-            language=task_data.language,
-            experience_level=experience_level,
-            provider=task_data.provider,
-        )
-        self.tasks[task.id] = task
-        self._save_tasks()
+            task = Task(
+                task_number=self.task_counter,
+                job_description=task_data.job_description,
+                generate_cover_letter=generate_cover_letter,
+                template_id=template_id,
+                language=task_data.language,
+                experience_level=experience_level,
+                provider=task_data.provider,
+            )
+            self.tasks[task.id] = task
+        await self._save_tasks()
         logger.info(f"Created task {task.task_number} [{task.id}]")
         return task
 
@@ -208,7 +214,7 @@ class TaskManager:
     def get_all_tasks(self) -> list[Task]:
         return list(self.tasks.values())
 
-    def delete_task(self, task_id: str) -> bool:
+    async def delete_task(self, task_id: str) -> bool:
         """Delete a task and its output files."""
         task = self.tasks.get(task_id)
         if not task:
@@ -226,12 +232,13 @@ class TaskManager:
                     except Exception as e:
                         logger.warning(f"Failed to delete file {p}: {e}")
 
-        del self.tasks[task_id]
-        self._save_tasks()
+        async with self._lock:
+            del self.tasks[task_id]
+        await self._save_tasks()
         logger.info(f"Deleted task {task.task_number} [{task_id}]")
         return True
 
-    def delete_completed_tasks(self) -> int:
+    async def delete_completed_tasks(self) -> int:
         """Delete all completed tasks. Returns count deleted."""
         to_delete = [
             tid
@@ -239,10 +246,10 @@ class TaskManager:
             if t.status in (TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED)
         ]
         for tid in to_delete:
-            self.delete_task(tid)
+            await self.delete_task(tid)
         return len(to_delete)
 
-    def retry_task(self, task_id: str) -> Task | None:
+    async def retry_task(self, task_id: str) -> Task | None:
         """Reset a failed/cancelled/completed task to pending so it can be re-run."""
         task = self.tasks.get(task_id)
         if not task or task.status not in (TaskStatus.FAILED, TaskStatus.CANCELLED, TaskStatus.COMPLETED):
@@ -257,11 +264,11 @@ class TaskManager:
         task.latex_source = None
         task.completed_at = None
         task._rebuild_steps()
-        self._save_tasks()
+        await self._save_tasks()
         logger.info(f"Reset task {task.task_number} [{task_id}] to pending for retry")
         return task
 
-    def cancel_task(self, task_id: str) -> Task | None:
+    async def cancel_task(self, task_id: str) -> Task | None:
         """Mark a task for cancellation."""
         task = self.tasks.get(task_id)
         if not task or task.status not in (TaskStatus.RUNNING, TaskStatus.QUEUED, TaskStatus.PENDING):
@@ -272,19 +279,19 @@ class TaskManager:
             for step in task.steps:
                 if step.status == TaskStatus.PENDING:
                     step.status = TaskStatus.CANCELLED
-        self._save_tasks()
+        await self._save_tasks()
         logger.info(f"Cancellation requested for task {task.task_number} [{task_id}]")
         return task
 
-    def update_task_job_description(self, task_id: str, job_description: str) -> Task | None:
+    async def update_task_job_description(self, task_id: str, job_description: str) -> Task | None:
         task = self.tasks.get(task_id)
         if task and task.status == TaskStatus.PENDING:
             task.job_description = job_description
-            self._save_tasks()
+            await self._save_tasks()
             return task
         return None
 
-    def update_task_settings(
+    async def update_task_settings(
         self,
         task_id: str,
         job_description: str | None = None,
@@ -309,24 +316,24 @@ class TaskManager:
                 task.experience_level = experience_level
             if provider is not None:
                 task.provider = provider if provider != "" else None
-            self._save_tasks()
+            await self._save_tasks()
             return task
         return None
 
     # ===================== Questions =====================
 
-    def add_question(self, task_id: str, question: str, word_limit: int = 150) -> ApplicationQuestion | None:
+    async def add_question(self, task_id: str, question: str, word_limit: int = 150) -> ApplicationQuestion | None:
         """Add an application question to a task."""
         task = self.tasks.get(task_id)
         if not task:
             return None
         q = ApplicationQuestion(question=question, word_limit=word_limit)
         task.questions.append(q)
-        self._save_tasks()
+        await self._save_tasks()
         logger.info(f"Added question {q.id} to task {task.task_number}")
         return q
 
-    def update_question(
+    async def update_question(
         self, task_id: str, question_id: str, question: str | None = None, word_limit: int | None = None
     ) -> ApplicationQuestion | None:
         """Update a question's text or word limit. Resets answer if question text changed."""
@@ -343,11 +350,11 @@ class TaskManager:
                     q.answered_at = None
                 if word_limit is not None:
                     q.word_limit = word_limit
-                self._save_tasks()
+                await self._save_tasks()
                 return q
         return None
 
-    def delete_question(self, task_id: str, question_id: str) -> bool:
+    async def delete_question(self, task_id: str, question_id: str) -> bool:
         """Delete a question from a task."""
         task = self.tasks.get(task_id)
         if not task:
@@ -355,7 +362,7 @@ class TaskManager:
         original_len = len(task.questions)
         task.questions = [q for q in task.questions if q.id != question_id]
         if len(task.questions) < original_len:
-            self._save_tasks()
+            await self._save_tasks()
             logger.info(f"Deleted question {question_id} from task {task.task_number}")
             return True
         return False
@@ -376,7 +383,7 @@ class TaskManager:
 
         target_q.status = QuestionStatus.RUNNING
         target_q.error_message = None
-        self._save_tasks()
+        await self._save_tasks()
 
         try:
             ai_client = get_provider_for_task(task.provider)
@@ -394,13 +401,13 @@ class TaskManager:
             target_q.answer = answer.strip()
             target_q.status = QuestionStatus.COMPLETED
             target_q.answered_at = datetime.now()
-            self._save_tasks()
+            await self._save_tasks()
             logger.info(f"Generated answer for question {question_id} on task {task.task_number}")
             return target_q
         except Exception as e:
             target_q.status = QuestionStatus.FAILED
             target_q.error_message = str(e)
-            self._save_tasks()
+            await self._save_tasks()
             logger.error(f"Failed to generate answer for question {question_id}: {e}")
             return target_q
 
@@ -428,7 +435,7 @@ class TaskManager:
             raise ValueError(f"Task {task_id} not found")
 
         task.status = TaskStatus.QUEUED
-        self._save_tasks()
+        await self._save_tasks()
 
         # Broadcast queued status
         await self._notify_progress(task, task.steps[0].step, TaskStatus.PENDING, "Waiting in queue...")
@@ -436,7 +443,7 @@ class TaskManager:
         async with self._semaphore:
             if task.cancelled:
                 task.status = TaskStatus.CANCELLED
-                self._save_tasks()
+                await self._save_tasks()
                 return
             await self._execute_task(task_id)
 
@@ -448,14 +455,14 @@ class TaskManager:
 
         task.status = TaskStatus.QUEUED
         task.pipeline_version = "v3"
-        self._save_tasks()
+        await self._save_tasks()
 
         await self._notify_progress(task, task.steps[0].step, TaskStatus.PENDING, "Waiting in queue (v3 pipeline)...")
 
         async with self._semaphore:
             if task.cancelled:
                 task.status = TaskStatus.CANCELLED
-                self._save_tasks()
+                await self._save_tasks()
                 return
 
             from services.langgraph_executor import run_langgraph_pipeline
@@ -472,7 +479,7 @@ class TaskManager:
                         logger.error(f"Progress callback error: {e}")
 
             await run_langgraph_pipeline(task, progress_callback=v3_progress_callback)
-            self._save_tasks()
+            await self._save_tasks()
 
     async def _execute_task(self, task_id: str):
         task = self.tasks.get(task_id)
@@ -582,7 +589,7 @@ class TaskManager:
         except _TaskCancelled:
             task.status = TaskStatus.CANCELLED
             task.completed_at = datetime.now()
-            self._save_tasks()
+            await self._save_tasks()
             await self._broadcast_cancel(task)
             return
         except Exception as e:
@@ -603,7 +610,7 @@ class TaskManager:
                     step.status = TaskStatus.FAILED
                     step.message = str(e)
                     await self._notify_progress(task, step.step, TaskStatus.FAILED, str(e))
-            self._save_tasks()
+            await self._save_tasks()
             return
 
         # Build file name from metadata (company + position) or fallback
@@ -695,7 +702,7 @@ class TaskManager:
                 task.resume_pdf_path = str(final_path)
                 task.status = TaskStatus.CANCELLED
                 task.completed_at = datetime.now()
-                self._save_tasks()
+                await self._save_tasks()
                 await self._broadcast_cancel(task)
                 return
             except Exception as e:
@@ -713,7 +720,7 @@ class TaskManager:
                         step.status = TaskStatus.FAILED
                         step.message = str(e)
                         await self._notify_progress(task, step.step, TaskStatus.FAILED, str(e))
-                self._save_tasks()
+                await self._save_tasks()
                 return
 
         # ---- Finalize ----
@@ -728,7 +735,7 @@ class TaskManager:
 
         elapsed = (datetime.now() - start_time).total_seconds()
         logger.info(f"Task {task.task_number} COMPLETED in {elapsed:.2f}s")
-        self._save_tasks()
+        await self._save_tasks()
 
         final_step = TaskStep.CREATE_COVER_PDF if task.generate_cover_letter else TaskStep.COMPILE_LATEX
         await self._notify_progress(
@@ -762,7 +769,8 @@ class TaskManager:
         ai_client=None,
         user_info_text: str = "",
     ):
-        self.latex_compiler.clear_attempts()
+        # Create a fresh compiler per task to avoid shared state across concurrent tasks
+        compiler = LaTeXCompiler(max_retries=settings.max_latex_retries)
         current_latex = initial_latex
         max_attempts = max(settings.max_latex_retries, max_page_retries)
 
@@ -777,19 +785,19 @@ class TaskManager:
                 attempt=attempt,
             )
 
-            compiler = "xelatex" if task.language == "zh" else "pdflatex"
+            latex_compiler = "xelatex" if task.language == "zh" else "pdflatex"
             loop = asyncio.get_running_loop()
             result: CompilationAttempt = await loop.run_in_executor(
                 None,
-                self.latex_compiler.compile_once,
+                compiler.compile_once,
                 current_latex,
                 f"resume_task_{task.task_number}",
                 attempt,
-                compiler,
+                latex_compiler,
             )
 
             result.used_error_feedback = attempt > 1
-            self.latex_compiler.add_attempt(result)
+            compiler.add_attempt(result)
 
             if result.success:
                 if enforce_one_page and result.pdf_path:
@@ -902,10 +910,10 @@ class TaskManager:
                 except Exception as e:
                     logger.error(f"Task {task.task_number}: Regen failed: {e}")
 
-        task.failed_latex_attempts = [a.latex_code for a in self.latex_compiler.attempts]
+        task.failed_latex_attempts = [a.latex_code for a in compiler.attempts]
         raise CompilationError(
             f"LaTeX compilation failed after {max_attempts} attempts",
-            self.latex_compiler.attempts,
+            compiler.attempts,
         )
 
     async def _create_cover_letter_with_page_check(

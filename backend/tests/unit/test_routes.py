@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -23,7 +23,14 @@ def mock_services():
     task = Task(task_number=1, job_description="Test JD")
     mock_tm.get_task.return_value = task
     mock_tm.get_all_tasks.return_value = [task]
-    mock_tm.create_task.return_value = task
+    # These are now async in TaskManager
+    mock_tm.create_task = AsyncMock(return_value=task)
+    mock_tm.delete_task = AsyncMock(return_value=True)
+    mock_tm.delete_completed_tasks = AsyncMock(return_value=0)
+    mock_tm.cancel_task = AsyncMock(return_value=task)
+    mock_tm.retry_task = AsyncMock(return_value=task)
+    mock_tm.update_task_job_description = AsyncMock(return_value=task)
+    mock_tm.update_task_settings = AsyncMock(return_value=task)
 
     # Settings manager defaults
     mock_sm.get_all.return_value = {"default_provider": "gemini"}
@@ -93,7 +100,7 @@ class TestTaskEndpoints:
 
     async def test_delete_task(self, app_with_mocks):
         app, mock_tm, _, _, task = app_with_mocks
-        mock_tm.delete_task.return_value = True
+        mock_tm.delete_task = AsyncMock(return_value=True)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.delete(f"/api/tasks/{task.id}")
@@ -101,7 +108,7 @@ class TestTaskEndpoints:
 
     async def test_delete_task_not_found(self, app_with_mocks):
         app, mock_tm, *_ = app_with_mocks
-        mock_tm.delete_task.return_value = False
+        mock_tm.delete_task = AsyncMock(return_value=False)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.delete("/api/tasks/nonexistent")
@@ -125,7 +132,7 @@ class TestTaskEndpoints:
 
     async def test_cancel_task(self, app_with_mocks):
         app, mock_tm, _, _, task = app_with_mocks
-        mock_tm.cancel_task.return_value = task
+        mock_tm.cancel_task = AsyncMock(return_value=task)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.post(f"/api/tasks/{task.id}/cancel")
@@ -133,7 +140,7 @@ class TestTaskEndpoints:
 
     async def test_retry_task(self, app_with_mocks):
         app, mock_tm, _, _, task = app_with_mocks
-        mock_tm.retry_task.return_value = task
+        mock_tm.retry_task = AsyncMock(return_value=task)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             r = await client.post(f"/api/tasks/{task.id}/retry")

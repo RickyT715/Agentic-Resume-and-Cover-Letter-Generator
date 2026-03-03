@@ -94,20 +94,20 @@ def task_manager_isolated(tmp_path, prompt_manager):
         tm.task_counter = 0
         tm._progress_callbacks = []
         tm._semaphore = asyncio.Semaphore(3)
+        tm._lock = asyncio.Lock()
         tm.gemini_client = MagicMock()
         tm.settings_manager = MagicMock()
         tm.prompt_manager = prompt_manager
-        tm.latex_compiler = MagicMock()
         tm.pdf_extractor = MagicMock()
         tm.text_to_pdf = MagicMock()
 
         # Make settings_manager.get return sensible defaults
         tm.settings_manager.get.return_value = True
 
-        # Override _save_tasks to write to temp path
+        # Override _save_tasks to write to temp path (async version)
         tasks_file = data_dir / "tasks.json"
 
-        def patched_save():
+        async def patched_save():
             data = {
                 "task_counter": tm.task_counter,
                 "tasks": [t.model_dump(mode="json") for t in tm.tasks.values()],

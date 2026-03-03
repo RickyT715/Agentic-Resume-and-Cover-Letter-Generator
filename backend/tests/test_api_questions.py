@@ -23,6 +23,11 @@ def mock_task_manager():
     mock_tm.get_task.return_value = task
     mock_tm.get_all_tasks.return_value = [task]
 
+    # These methods are now async in TaskManager
+    mock_tm.add_question = AsyncMock()
+    mock_tm.update_question = AsyncMock()
+    mock_tm.delete_question = AsyncMock()
+
     return mock_tm, task, q1
 
 
@@ -69,7 +74,7 @@ class TestAddQuestion:
 
         app, mock_tm, task, _q1 = app_with_mock
         new_q = ApplicationQuestion(question="New Q", word_limit=200)
-        mock_tm.add_question.return_value = new_q
+        mock_tm.add_question = AsyncMock(return_value=new_q)
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -87,7 +92,7 @@ class TestAddQuestion:
 
         app, mock_tm, task, _q1 = app_with_mock
         new_q = ApplicationQuestion(question="Q", word_limit=150)
-        mock_tm.add_question.return_value = new_q
+        mock_tm.add_question = AsyncMock(return_value=new_q)
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -100,7 +105,7 @@ class TestAddQuestion:
 
     async def test_add_question_task_not_found(self, app_with_mock):
         app, mock_tm, task, _q1 = app_with_mock
-        mock_tm.add_question.return_value = None
+        mock_tm.add_question = AsyncMock(return_value=None)
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -118,7 +123,7 @@ class TestUpdateQuestion:
 
         app, mock_tm, task, q1 = app_with_mock
         updated = ApplicationQuestion(id=q1.id, question="Updated Q", word_limit=200)
-        mock_tm.update_question.return_value = updated
+        mock_tm.update_question = AsyncMock(return_value=updated)
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -131,7 +136,7 @@ class TestUpdateQuestion:
 
     async def test_update_question_not_found(self, app_with_mock):
         app, mock_tm, task, _q1 = app_with_mock
-        mock_tm.update_question.return_value = None
+        mock_tm.update_question = AsyncMock(return_value=None)
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -146,7 +151,7 @@ class TestUpdateQuestion:
 class TestDeleteQuestion:
     async def test_delete_question(self, app_with_mock):
         app, mock_tm, task, q1 = app_with_mock
-        mock_tm.delete_question.return_value = True
+        mock_tm.delete_question = AsyncMock(return_value=True)
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -156,7 +161,7 @@ class TestDeleteQuestion:
 
     async def test_delete_question_not_found(self, app_with_mock):
         app, mock_tm, task, _q1 = app_with_mock
-        mock_tm.delete_question.return_value = False
+        mock_tm.delete_question = AsyncMock(return_value=False)
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:

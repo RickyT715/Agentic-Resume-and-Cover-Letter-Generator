@@ -8,12 +8,9 @@ import logging
 import re
 
 from agents.state import ResumeState
+from config import settings
 
 logger = logging.getLogger(__name__)
-
-# Quality threshold - below this triggers a retry
-QUALITY_THRESHOLD = 0.7
-MAX_RETRIES = 2
 
 
 def _heuristic_score(latex_source: str, jd_analysis: dict, language: str = "en") -> tuple[float, str]:
@@ -180,12 +177,12 @@ async def quality_gate_node(state: ResumeState) -> dict:
         logger.warning(f"Evaluation module failed, using heuristic: {e}")
         score, feedback = _heuristic_score(latex_source, jd_analysis, language=language)
 
-    passed = score >= QUALITY_THRESHOLD or retry_count >= MAX_RETRIES
+    passed = score >= settings.quality_threshold or retry_count >= settings.quality_max_retries
 
     logger.info(
         f"Task {state['task_number']}: Quality gate - "
-        f"score={score:.2f}, threshold={QUALITY_THRESHOLD}, "
-        f"passed={passed}, retries={retry_count}/{MAX_RETRIES}"
+        f"score={score:.2f}, threshold={settings.quality_threshold}, "
+        f"passed={passed}, retries={retry_count}/{settings.quality_max_retries}"
     )
 
     if not passed:
@@ -209,6 +206,6 @@ def should_retry(state: ResumeState) -> str:
     """
     if state.get("quality_passed", True):
         return "compile_latex"
-    if state.get("retry_count", 0) >= MAX_RETRIES:
+    if state.get("retry_count", 0) >= settings.quality_max_retries:
         return "compile_latex"
     return "resume_writer"

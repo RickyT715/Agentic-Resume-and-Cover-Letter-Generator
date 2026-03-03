@@ -335,63 +335,6 @@ async def llm_validate_resume(
         return [f"LLM validation failed: {e}"]
 
 
-def validate_resume(
-    latex: str,
-    user_info_text: str,
-    language: str,
-    settings_manager,
-    ai_client=None,
-    job_description: str = "",
-    skip_llm: bool = False,
-) -> tuple[str, list[str]]:
-    """Orchestrator: run enabled validation methods in order.
-
-    Args:
-        latex: LaTeX source code
-        user_info_text: Raw user information text
-        language: "en" or "zh"
-        settings_manager: SettingsManager instance
-        ai_client: AI provider client (needed for LLM validation)
-        job_description: Job description text (needed for LLM validation)
-        skip_llm: If True, skip LLM validation even if enabled (for retries)
-
-    Returns:
-        Tuple of (possibly-fixed LaTeX, list of warning strings)
-    """
-    enable_replacement = settings_manager.get("enable_contact_replacement", True)
-    enable_text_check = settings_manager.get("enable_text_validation", True)
-    enable_llm_check = settings_manager.get("enable_llm_validation", False)
-
-    contact = parse_contact_info(user_info_text, language)
-    warnings: list[str] = []
-    current_latex = latex
-
-    # Method 1: Replace contact header
-    if enable_replacement:
-        try:
-            current_latex = replace_contact_header(current_latex, contact)
-        except Exception as e:
-            logger.error(f"Contact replacement failed: {e}")
-            warnings.append(f"Contact header replacement failed: {e}")
-
-    # Method 2: Text validation
-    if enable_text_check:
-        try:
-            text_warnings = check_contact_info(current_latex, contact)
-            warnings.extend(text_warnings)
-        except Exception as e:
-            logger.error(f"Text validation failed: {e}")
-            warnings.append(f"Text validation error: {e}")
-
-    # Method 3: LLM validation (sync wrapper returns warnings only — caller must await)
-    # Note: LLM validation is async, so we return a marker for the caller
-    if enable_llm_check and not skip_llm and ai_client is not None:
-        # Return a special marker — the caller will need to handle async
-        warnings.append("__LLM_VALIDATION_PENDING__")
-
-    return current_latex, warnings
-
-
 async def validate_resume_async(
     latex: str,
     user_info_text: str,
