@@ -161,13 +161,9 @@ class PromptManager:
         # Append experience level override if explicitly set
         if experience_level and experience_level != "auto":
             if language == "zh":
-                override = self._get_experience_level_override_zh(
-                    experience_level, enforce_one_page
-                )
+                override = self._get_experience_level_override_zh(experience_level, enforce_one_page)
             else:
-                override = self._get_experience_level_override(
-                    experience_level, enforce_one_page
-                )
+                override = self._get_experience_level_override(experience_level, enforce_one_page)
             prompt += f"\n\n{override}"
 
         # Append no-summary override when one-page format is enforced.
@@ -185,9 +181,7 @@ class PromptManager:
         )
         return prompt
 
-    def _get_experience_level_override(
-        self, level: str, enforce_one_page: bool = False
-    ) -> str:
+    def _get_experience_level_override(self, level: str, enforce_one_page: bool = False) -> str:
         """Get English experience level override instructions."""
         if level == "new_grad":
             return (
@@ -217,9 +211,7 @@ class PromptManager:
                 "- Education section should be minimal (degree, university, date only)"
             )
 
-    def _get_experience_level_override_zh(
-        self, level: str, enforce_one_page: bool = False
-    ) -> str:
+    def _get_experience_level_override_zh(self, level: str, enforce_one_page: bool = False) -> str:
         """Get Chinese experience level override instructions."""
         if level == "new_grad":
             return (

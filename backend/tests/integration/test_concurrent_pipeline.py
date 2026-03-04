@@ -140,10 +140,8 @@ async def cleanup_tasks():
                         Path(path_str).unlink()
             del task_manager.tasks[tid]
     # Save without lock since we just need to persist cleanup
-    try:
+    with contextlib.suppress(RuntimeError):
         await task_manager._save_tasks()
-    except RuntimeError:
-        pass  # Event loop mismatch on teardown is benign
 
 
 # ---------------------------------------------------------------------------
@@ -180,9 +178,7 @@ class TestConcurrentPipelineExecution:
             return task
 
         # Create all 30 tasks concurrently
-        tasks = await asyncio.gather(
-            *[create_and_map(c, p, i) for i, (c, p) in enumerate(COMPANIES)]
-        )
+        tasks = await asyncio.gather(*[create_and_map(c, p, i) for i, (c, p) in enumerate(COMPANIES)])
 
         assert len(tasks) == 30
 
@@ -217,9 +213,7 @@ class TestConcurrentPipelineExecution:
 
             client.generate_resume = dynamic_resume
             client.generate_cover_letter = AsyncMock(return_value=MOCK_COVER_LETTER)
-            client.generate_resume_with_error_feedback = AsyncMock(
-                return_value=_mock_latex("Fallback", "Engineer")
-            )
+            client.generate_resume_with_error_feedback = AsyncMock(return_value=_mock_latex("Fallback", "Engineer"))
             call_count += 1
             return client
 
@@ -254,9 +248,7 @@ class TestConcurrentPipelineExecution:
                 assert "\\documentclass" in t.latex_source, f"Invalid LaTeX for {company}"
 
                 # Verify company metadata was extracted correctly
-                assert t.company_name == company, (
-                    f"Company mismatch: expected {company}, got {t.company_name}"
-                )
+                assert t.company_name == company, f"Company mismatch: expected {company}, got {t.company_name}"
                 assert t.position_name == position, (
                     f"Position mismatch for {company}: expected {position}, got {t.position_name}"
                 )
@@ -268,10 +260,7 @@ class TestConcurrentPipelineExecution:
                 print(f"Task for {company} status={t.status.value}: {t.error_message}")
 
         # At minimum, all should complete (they use valid LaTeX)
-        assert completed_count == 30, (
-            f"Only {completed_count}/30 tasks completed. "
-            f"Check pdflatex availability."
-        )
+        assert completed_count == 30, f"Only {completed_count}/30 tasks completed. Check pdflatex availability."
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(120)
@@ -303,9 +292,7 @@ class TestConcurrentPipelineExecution:
                 )
             )
 
-        tasks = await asyncio.gather(
-            *[create_task(c, p, i) for i, (c, p) in enumerate(subset)]
-        )
+        tasks = await asyncio.gather(*[create_task(c, p, i) for i, (c, p) in enumerate(subset)])
 
         # Verify unique task numbers
         numbers = [t.task_number for t in tasks]
@@ -324,9 +311,7 @@ class TestConcurrentPipelineExecution:
 
             client.generate_resume = dynamic_resume
             client.generate_cover_letter = AsyncMock(return_value=MOCK_COVER_LETTER)
-            client.generate_resume_with_error_feedback = AsyncMock(
-                return_value=_mock_latex("Fallback", "Engineer")
-            )
+            client.generate_resume_with_error_feedback = AsyncMock(return_value=_mock_latex("Fallback", "Engineer"))
             return client
 
         with patch("services.task_manager.get_provider_for_task", side_effect=smart_lookup):
@@ -339,7 +324,7 @@ class TestConcurrentPipelineExecution:
             if task.resume_pdf_path:
                 pdf_paths.append(task.resume_pdf_path)
 
-        assert len(pdf_paths) == len(set(pdf_paths)), f"Duplicate PDF paths detected!"
+        assert len(pdf_paths) == len(set(pdf_paths)), "Duplicate PDF paths detected!"
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(120)
@@ -383,9 +368,7 @@ class TestConcurrentPipelineExecution:
 
             client.generate_resume = dyn
             client.generate_cover_letter = AsyncMock(return_value=MOCK_COVER_LETTER)
-            client.generate_resume_with_error_feedback = AsyncMock(
-                return_value=_mock_latex("Fallback", "Eng")
-            )
+            client.generate_resume_with_error_feedback = AsyncMock(return_value=_mock_latex("Fallback", "Eng"))
             return client
 
         with patch("services.task_manager.get_provider_for_task", side_effect=make_client_fn):
@@ -397,9 +380,7 @@ class TestConcurrentPipelineExecution:
         # Every task should have received at least one progress update
         task_ids_with_updates = {u["task_id"] for u in progress_updates}
         for t in tasks:
-            assert t.id in task_ids_with_updates, (
-                f"Task {t.task_number} got no progress updates!"
-            )
+            assert t.id in task_ids_with_updates, f"Task {t.task_number} got no progress updates!"
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(120)
@@ -424,7 +405,7 @@ class TestConcurrentPipelineExecution:
         )
 
         task_to_company = {}
-        for t, (co, pos) in zip(tasks, subset):
+        for t, (co, pos) in zip(tasks, subset, strict=True):
             task_to_company[t.id] = co
 
         def make_client_fn(provider_name=None):
@@ -440,9 +421,7 @@ class TestConcurrentPipelineExecution:
 
             client.generate_resume = dyn
             client.generate_cover_letter = AsyncMock(return_value=MOCK_COVER_LETTER)
-            client.generate_resume_with_error_feedback = AsyncMock(
-                return_value=_mock_latex("Fallback", "Eng")
-            )
+            client.generate_resume_with_error_feedback = AsyncMock(return_value=_mock_latex("Fallback", "Eng"))
             return client
 
         with patch("services.task_manager.get_provider_for_task", side_effect=make_client_fn):
@@ -457,14 +436,12 @@ class TestConcurrentPipelineExecution:
 
             # The LaTeX source should contain the expected company
             assert expected_company in task.latex_source, (
-                f"Task {t.id}: expected '{expected_company}' in LaTeX, "
-                f"but company_name={task.company_name}"
+                f"Task {t.id}: expected '{expected_company}' in LaTeX, but company_name={task.company_name}"
             )
 
             # The LaTeX should NOT contain other companies
             for co, _ in subset:
                 if co != expected_company:
                     assert co not in task.latex_source, (
-                        f"Cross-contamination: task for {expected_company} "
-                        f"contains LaTeX for {co}!"
+                        f"Cross-contamination: task for {expected_company} contains LaTeX for {co}!"
                     )

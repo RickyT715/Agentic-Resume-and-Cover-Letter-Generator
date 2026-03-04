@@ -15,7 +15,7 @@ import json
 import sys
 import time
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -126,9 +126,7 @@ class TestConcurrentTaskCreation:
         from models.task import TaskCreate
 
         tm = concurrent_task_manager
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)])
         numbers = sorted(t.task_number for t in tasks)
         assert numbers == list(range(1, 51))
 
@@ -138,9 +136,7 @@ class TestConcurrentTaskCreation:
         from models.task import TaskCreate
 
         tm = concurrent_task_manager
-        await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)]
-        )
+        await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)])
         assert tm.task_counter == 50
 
     @pytest.mark.asyncio
@@ -149,9 +145,7 @@ class TestConcurrentTaskCreation:
         from models.task import TaskCreate
 
         tm = concurrent_task_manager
-        created = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)]
-        )
+        created = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)])
         all_tasks = tm.get_all_tasks()
         assert len(all_tasks) == 50
         created_ids = {t.id for t in created}
@@ -328,9 +322,7 @@ class TestProgressUnderLoad:
 
         tm._progress_callbacks.append(track_progress)
 
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)])
 
         # Send a progress update for each task
         await asyncio.gather(
@@ -381,9 +373,7 @@ class TestRaceConditions:
         tm = concurrent_task_manager
 
         # Create 30 tasks first
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(30)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(30)])
 
         # Delete half while creating more
         async def delete_batch():
@@ -395,7 +385,7 @@ class TestRaceConditions:
                 *[tm.create_task(TaskCreate(job_description=f"New job {i}")) for i in range(15)]
             )
 
-        _, new_tasks = await asyncio.gather(delete_batch(), create_batch())
+        await asyncio.gather(delete_batch(), create_batch())
 
         # Should have 15 original + 15 new = 30 tasks
         all_tasks = tm.get_all_tasks()
@@ -412,9 +402,7 @@ class TestRaceConditions:
 
         tm = concurrent_task_manager
 
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(20)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(20)])
 
         # Cancel first 10 while creating 10 more
         async def cancel_batch():
@@ -422,9 +410,7 @@ class TestRaceConditions:
                 await tm.cancel_task(t.id)
 
         async def create_more():
-            return await asyncio.gather(
-                *[tm.create_task(TaskCreate(job_description=f"More {i}")) for i in range(10)]
-            )
+            return await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"More {i}")) for i in range(10)])
 
         await asyncio.gather(cancel_batch(), create_more())
 
@@ -437,9 +423,7 @@ class TestRaceConditions:
         from models.task import TaskCreate, TaskStatus
 
         tm = concurrent_task_manager
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(10)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(10)])
 
         # Set all to failed
         for t in tasks:
@@ -461,9 +445,7 @@ class TestRaceConditions:
         tm = concurrent_task_manager
 
         # Phase 1: Create 40 tasks
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(40)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(40)])
 
         # Phase 2: Delete 10, create 10 more
         delete_ids = [t.id for t in tasks[:10]]
@@ -493,9 +475,7 @@ class TestConcurrentCancellation:
         from models.task import TaskCreate, TaskStatus
 
         tm = concurrent_task_manager
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(30)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(30)])
 
         results = await asyncio.gather(*[tm.cancel_task(t.id) for t in tasks])
 
@@ -529,9 +509,7 @@ class TestPersistenceUnderLoad:
         from models.task import TaskCreate
 
         tm = concurrent_task_manager
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)])
 
         # Force a save
         await tm._save_tasks()
@@ -554,9 +532,7 @@ class TestPersistenceUnderLoad:
         tm = concurrent_task_manager
 
         # Create some tasks
-        await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(20)]
-        )
+        await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(20)])
 
         # Trigger many concurrent saves
         await asyncio.gather(*[tm._save_tasks() for _ in range(20)])
@@ -612,9 +588,7 @@ class TestSemaphoreRunInteraction:
 
         tm._execute_task = mock_execute
 
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(30)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(30)])
 
         await asyncio.gather(*[tm.run_task(t.id) for t in tasks])
 
@@ -682,14 +656,12 @@ class TestStress:
     @pytest.mark.asyncio
     async def test_mixed_operations_50_tasks(self, concurrent_task_manager):
         """Run create, read, cancel, delete in parallel across 50 tasks."""
-        from models.task import TaskCreate, TaskStatus
+        from models.task import TaskCreate
 
         tm = concurrent_task_manager
 
         # Create 50
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)])
 
         # Mixed operations
         ops = []
@@ -714,19 +686,13 @@ class TestStress:
         tm = concurrent_task_manager
         tm._save_interval = 0.1  # Short interval for test
 
-        tasks = await asyncio.gather(
-            *[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)]
-        )
+        tasks = await asyncio.gather(*[tm.create_task(TaskCreate(job_description=f"Job {i}")) for i in range(50)])
 
         # Each task sends 5 progress updates
         ops = []
         for t in tasks:
             for j in range(5):
-                ops.append(
-                    tm._notify_progress(
-                        t, TaskStep.GENERATE_RESUME, TaskStatus.RUNNING, f"Step {j}"
-                    )
-                )
+                ops.append(tm._notify_progress(t, TaskStep.GENERATE_RESUME, TaskStatus.RUNNING, f"Step {j}"))
 
         await asyncio.gather(*ops)
 
