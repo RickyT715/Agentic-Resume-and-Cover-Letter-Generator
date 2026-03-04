@@ -113,7 +113,7 @@ def task_manager_isolated(tmp_path, prompt_manager):
         mock_settings.data_dir = data_dir
         mock_settings.output_dir = tmp_path / "output"
         mock_settings.output_dir.mkdir()
-        mock_settings.max_concurrent_tasks = 3
+        mock_settings.max_concurrent_tasks = 50
         mock_settings.max_latex_retries = 3
 
         tm = TaskManager.__new__(TaskManager)
@@ -125,8 +125,11 @@ def task_manager_isolated(tmp_path, prompt_manager):
         tm.tasks = {}
         tm.task_counter = 0
         tm._progress_callbacks = []
-        tm._semaphore = asyncio.Semaphore(3)
+        tm._semaphore = asyncio.Semaphore(50)
         tm._lock = asyncio.Lock()
+        tm._last_progress_save = 0.0
+        tm._save_interval = 2.0
+        tm._deferred_save_handle = None
         tm.gemini_client = MagicMock()
         tm.settings_manager = MagicMock()
         tm.prompt_manager = prompt_manager

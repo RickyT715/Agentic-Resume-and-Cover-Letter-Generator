@@ -161,10 +161,23 @@ class PromptManager:
         # Append experience level override if explicitly set
         if experience_level and experience_level != "auto":
             if language == "zh":
-                override = self._get_experience_level_override_zh(experience_level)
+                override = self._get_experience_level_override_zh(
+                    experience_level, enforce_one_page
+                )
             else:
-                override = self._get_experience_level_override(experience_level)
+                override = self._get_experience_level_override(
+                    experience_level, enforce_one_page
+                )
             prompt += f"\n\n{override}"
+
+        # Append no-summary override when one-page format is enforced.
+        # This must come AFTER all other instructions so it takes precedence
+        # over any Summary-related instructions in the prompt text.
+        if enforce_one_page:
+            if language == "zh":
+                prompt += f"\n\n{self._get_no_summary_override_zh()}"
+            else:
+                prompt += f"\n\n{self._get_no_summary_override()}"
 
         logger.debug(
             f"Applied template substitutions (template={template_id}, experience={experience_level}, "
@@ -172,7 +185,9 @@ class PromptManager:
         )
         return prompt
 
-    def _get_experience_level_override(self, level: str) -> str:
+    def _get_experience_level_override(
+        self, level: str, enforce_one_page: bool = False
+    ) -> str:
         """Get English experience level override instructions."""
         if level == "new_grad":
             return (
@@ -184,6 +199,15 @@ class PromptManager:
                 "- List internships under Experience but keep them concise (2-3 bullets each)"
             )
         else:  # experienced
+            if enforce_one_page:
+                return (
+                    "## Experience Level: Experienced Professional\n"
+                    "The candidate is an experienced professional. Follow this layout STRICTLY:\n"
+                    "- Section order: Experience → Projects → Technical Skills → Education\n"
+                    "- Do NOT include a Summary section — go directly to Experience after contact info\n"
+                    "- Emphasize work experience with detailed bullets (3-5 per role)\n"
+                    "- Education section should be minimal (degree, university, date only)"
+                )
             return (
                 "## Experience Level: Experienced Professional\n"
                 "The candidate is an experienced professional. Follow this layout STRICTLY:\n"
@@ -193,7 +217,9 @@ class PromptManager:
                 "- Education section should be minimal (degree, university, date only)"
             )
 
-    def _get_experience_level_override_zh(self, level: str) -> str:
+    def _get_experience_level_override_zh(
+        self, level: str, enforce_one_page: bool = False
+    ) -> str:
         """Get Chinese experience level override instructions."""
         if level == "new_grad":
             return (
@@ -205,6 +231,15 @@ class PromptManager:
                 "- 实习经历放在工作经验下，每段保持简洁（2-3个要点）"
             )
         else:  # experienced
+            if enforce_one_page:
+                return (
+                    "## 经验等级：有经验的专业人士\n"
+                    "候选人是有经验的专业人士。请严格按照以下布局：\n"
+                    "- 板块顺序：工作经验 → 项目经历 → 技术技能 → 教育背景\n"
+                    "- 不要包含个人总结——联系方式之后直接开始工作经验\n"
+                    "- 重点突出工作经验，每段3-5个详细要点\n"
+                    "- 教育背景保持简洁（学位、学校、日期即可）"
+                )
             return (
                 "## 经验等级：有经验的专业人士\n"
                 "候选人是有经验的专业人士。请严格按照以下布局：\n"
@@ -213,6 +248,35 @@ class PromptManager:
                 "- 重点突出工作经验，每段3-5个详细要点\n"
                 "- 教育背景保持简洁（学位、学校、日期即可）"
             )
+
+    def _get_no_summary_override(self) -> str:
+        """Get English no-summary override for one-page enforcement."""
+        return (
+            "## CRITICAL OVERRIDE: No Summary Section (One-Page Format)\n"
+            "The one-page format is enforced. The provided LaTeX template does NOT "
+            "contain a Summary section.\n"
+            "You MUST follow these rules — they OVERRIDE any earlier instructions:\n"
+            "- Do NOT include a Summary or Objective section anywhere in the resume\n"
+            "- Do NOT add a \\section{Summary} command — it is not in the template\n"
+            "- Begin resume content with Experience or Technical Skills immediately "
+            "after the contact header\n"
+            "- Ignore any earlier instructions about including a Summary section, "
+            "Summary in the quality checklist, or Summary in keyword distribution\n"
+            "- Distribute keywords across Experience bullets and Skills section instead"
+        )
+
+    def _get_no_summary_override_zh(self) -> str:
+        """Get Chinese no-summary override for one-page enforcement."""
+        return (
+            "## 重要覆盖：不包含个人总结（单页格式）\n"
+            "已启用单页格式。提供的LaTeX模板中不包含「个人总结」板块。\n"
+            "你必须遵循以下规则——它们覆盖上述所有相关指令：\n"
+            "- 不要在简历任何位置包含「个人总结」或「求职目标」板块\n"
+            "- 不要添加 \\section{个人总结} 命令——模板中没有此板块\n"
+            "- 简历内容从联系方式后直接开始「工作经验」或「技术技能」板块\n"
+            "- 忽略上述约束和质量检查表中关于个人总结的任何指令\n"
+            "- 将关键词分布在工作经验要点和技能部分中，而不是个人总结"
+        )
 
     def _load_template_instructions(self, template_id: str) -> str:
         """Load template style instructions from the templates directory."""

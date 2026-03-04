@@ -50,7 +50,7 @@ def isolated_task_manager(tmp_path):
     ):
         mock_settings.data_dir = data_dir
         mock_settings.output_dir = output_dir
-        mock_settings.max_concurrent_tasks = 3
+        mock_settings.max_concurrent_tasks = 50
         mock_settings.max_latex_retries = 3
 
         tm = TaskManager.__new__(TaskManager)
@@ -61,8 +61,11 @@ def isolated_task_manager(tmp_path):
         tm.tasks = {}
         tm.task_counter = 0
         tm._progress_callbacks = []
-        tm._semaphore = asyncio.Semaphore(3)
+        tm._semaphore = asyncio.Semaphore(50)
         tm._lock = asyncio.Lock()
+        tm._last_progress_save = 0.0
+        tm._save_interval = 2.0
+        tm._deferred_save_handle = None
         tm.settings_manager = MagicMock()
         tm.settings_manager.get.return_value = True
         tm.prompt_manager = pm

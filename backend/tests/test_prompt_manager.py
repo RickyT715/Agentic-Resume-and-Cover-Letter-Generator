@@ -429,6 +429,87 @@ class TestNoFabricationPromptValidation:
         assert warnings == []
 
 
+class TestNoSummaryOverride:
+    """Tests that enforce_one_page appends a no-summary override instruction."""
+
+    def test_one_page_appends_no_summary_override_en(self, prompt_manager):
+        """EN prompt should contain explicit no-summary override when one-page."""
+        result = prompt_manager.get_resume_prompt_with_substitutions(job_description="SWE", enforce_one_page=True)
+        assert "CRITICAL OVERRIDE" in result or "No Summary Section" in result
+
+    def test_one_page_appends_no_summary_override_zh(self, prompt_manager):
+        """ZH prompt should contain explicit no-summary override when one-page."""
+        result = prompt_manager.get_resume_prompt_with_substitutions(
+            job_description="SWE", language="zh", enforce_one_page=True
+        )
+        assert "重要覆盖" in result or "不包含个人总结" in result
+
+    def test_no_override_when_not_one_page(self, prompt_manager):
+        """Override should NOT appear when enforce_one_page=False."""
+        result = prompt_manager.get_resume_prompt_with_substitutions(job_description="SWE", enforce_one_page=False)
+        assert "CRITICAL OVERRIDE" not in result
+        assert "No Summary Section" not in result
+
+    def test_override_comes_after_quality_checklist(self, prompt_manager):
+        """No-summary override should appear after the quality checklist."""
+        result = prompt_manager.get_resume_prompt_with_substitutions(job_description="SWE", enforce_one_page=True)
+        checklist_pos = result.rfind("quality_checklist")
+        override_pos = result.find("CRITICAL OVERRIDE")
+        assert override_pos > checklist_pos
+
+    def test_experienced_override_omits_summary_when_one_page(self, prompt_manager):
+        """Experienced professional override should NOT mention Summary when one-page."""
+        result = prompt_manager.get_resume_prompt_with_substitutions(
+            job_description="SWE",
+            experience_level="experienced",
+            enforce_one_page=True,
+        )
+        # Should NOT contain "MUST include a Summary section"
+        assert "MUST include a Summary section" not in result
+        # Should contain "Do NOT include a Summary section"
+        assert "Do NOT include a Summary" in result
+
+    def test_experienced_override_includes_summary_when_not_one_page(self, prompt_manager):
+        """Experienced professional override should mention Summary when NOT one-page."""
+        result = prompt_manager.get_resume_prompt_with_substitutions(
+            job_description="SWE",
+            experience_level="experienced",
+            enforce_one_page=False,
+        )
+        assert "MUST include a Summary section" in result
+
+    def test_experienced_zh_override_omits_summary_when_one_page(self, prompt_manager):
+        """ZH experienced override should NOT mention 个人总结 when one-page."""
+        result = prompt_manager.get_resume_prompt_with_substitutions(
+            job_description="SWE",
+            language="zh",
+            experience_level="experienced",
+            enforce_one_page=True,
+        )
+        # Should NOT contain "必须包含个人总结"
+        assert "必须包含个人总结" not in result
+        # Should contain no-summary override
+        assert "不要包含个人总结" in result or "不包含个人总结" in result
+
+    def test_new_grad_unaffected_by_one_page(self, prompt_manager):
+        """New grad override already omits Summary, one-page shouldn't conflict."""
+        result = prompt_manager.get_resume_prompt_with_substitutions(
+            job_description="SWE",
+            experience_level="new_grad",
+            enforce_one_page=True,
+        )
+        assert "Do NOT include a Summary" in result
+
+    def test_no_fab_plus_one_page_has_override(self, prompt_manager):
+        """Combined no-fabrication + one-page should still include no-summary override."""
+        result = prompt_manager.get_resume_prompt_with_substitutions(
+            job_description="SWE",
+            allow_fabrication=False,
+            enforce_one_page=True,
+        )
+        assert "CRITICAL OVERRIDE" in result or "No Summary Section" in result
+
+
 class TestTaskLanguageBackwardCompat:
     def test_task_default_language(self):
         from models.task import Task

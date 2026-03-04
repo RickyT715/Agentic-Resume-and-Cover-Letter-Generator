@@ -26,6 +26,25 @@ class ContactInfo:
     github: str = ""
 
 
+def _escape_latex(text: str) -> str:
+    """Escape LaTeX special characters in plain text for safe insertion."""
+    replacements = [
+        ("\\", "\\textbackslash{}"),
+        ("#", "\\#"),
+        ("$", "\\$"),
+        ("%", "\\%"),
+        ("&", "\\&"),
+        ("_", "\\_"),
+        ("{", "\\{"),
+        ("}", "\\}"),
+        ("~", "\\textasciitilde{}"),
+        ("^", "\\textasciicircum{}"),
+    ]
+    for char, escaped in replacements:
+        text = text.replace(char, escaped)
+    return text
+
+
 def parse_contact_info(user_info_text: str, language: str = "en") -> ContactInfo:
     """Extract contact fields from the raw user information text.
 
@@ -42,12 +61,20 @@ def parse_contact_info(user_info_text: str, language: str = "en") -> ContactInfo
 
     lines = user_info_text.strip().splitlines()
 
-    # Name: first non-empty line
-    for line in lines:
-        stripped = line.strip()
-        if stripped:
-            info.name = stripped
-            break
+    # Name: try explicit "Name:" field first, then fall back to first non-header line
+    if language == "zh":
+        name_match = re.search(r"姓名[：:]\s*(.+)", user_info_text)
+    else:
+        name_match = re.search(r"Name\s*:\s*(.+)", user_info_text, re.IGNORECASE)
+    if name_match:
+        info.name = name_match.group(1).strip()
+    else:
+        # Fall back to first non-empty, non-markdown-header line
+        for line in lines:
+            stripped = line.strip()
+            if stripped and not stripped.startswith("#"):
+                info.name = stripped
+                break
 
     # Email
     if language == "zh":
@@ -74,7 +101,7 @@ def parse_contact_info(user_info_text: str, language: str = "en") -> ContactInfo
     for line in lines:
         lower = line.strip().lower()
         if "linkedin.com" in lower:
-            url_match = re.search(r"https?://[^\s,}]+linkedin\.com[^\s,}]*", line, re.IGNORECASE)
+            url_match = re.search(r"https?://[^\s,}]*linkedin\.com[^\s,}]*", line, re.IGNORECASE)
             if url_match:
                 info.linkedin = url_match.group(0).rstrip(".")
             elif not info.linkedin:
@@ -83,7 +110,7 @@ def parse_contact_info(user_info_text: str, language: str = "en") -> ContactInfo
                 if "linkedin.com" in cleaned.lower():
                     info.linkedin = cleaned
         if "github.com" in lower:
-            url_match = re.search(r"https?://[^\s,}]+github\.com[^\s,}]*", line, re.IGNORECASE)
+            url_match = re.search(r"https?://[^\s,}]*github\.com[^\s,}]*", line, re.IGNORECASE)
             if url_match:
                 info.github = url_match.group(0).rstrip(".")
             elif not info.github:
@@ -121,17 +148,20 @@ def replace_contact_header(latex: str, contact: ContactInfo) -> str:
         logger.warning("No tabular* contact header found in LaTeX")
         return latex
 
-    # Build replacement header
+    # Build replacement header — escape LaTeX special chars in user-provided text
     linkedin_url = contact.linkedin or ""
-    name_href = f"\\href{{{linkedin_url}}}{{\\Large {contact.name}}}" if linkedin_url else f"\\Large {contact.name}"
+    safe_name = _escape_latex(contact.name)
+    name_href = f"\\href{{{linkedin_url}}}{{\\Large {safe_name}}}" if linkedin_url else f"\\Large {safe_name}"
 
     email_part = ""
     if contact.email:
-        email_part = f"Email : \\href{{mailto:{contact.email}}}{{{contact.email}}}"
+        safe_email = _escape_latex(contact.email)
+        email_part = f"Email : \\href{{mailto:{contact.email}}}{{{safe_email}}}"
 
     phone_part = ""
     if contact.phone:
-        phone_part = f"Mobile : {contact.phone}"
+        safe_phone = _escape_latex(contact.phone)
+        phone_part = f"Mobile : {safe_phone}"
 
     # Build rows
     rows = []

@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     max_latex_retries: int = 3
 
     # Concurrency
-    max_concurrent_tasks: int = 3
+    max_concurrent_tasks: int = 50
 
     # Quality Gate
     quality_threshold: float = 0.7

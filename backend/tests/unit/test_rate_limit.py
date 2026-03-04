@@ -16,10 +16,10 @@ class TestRateLimitConstants:
         assert DEFAULT_RATE == "60/minute"
 
     def test_task_create_rate_value(self):
-        """TASK_CREATE_RATE should be '10/minute'."""
+        """TASK_CREATE_RATE should be '60/minute'."""
         from middleware.rate_limit import TASK_CREATE_RATE
 
-        assert TASK_CREATE_RATE == "10/minute"
+        assert TASK_CREATE_RATE == "60/minute"
 
     def test_scrape_rate_value(self):
         """SCRAPE_RATE should be '5/minute'."""

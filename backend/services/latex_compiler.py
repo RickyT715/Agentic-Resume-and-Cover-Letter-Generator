@@ -1,4 +1,5 @@
 import logging
+import re
 import shutil
 import subprocess
 import tempfile
@@ -86,6 +87,11 @@ class LaTeXCompiler:
             logger.info(f"Saved debug LaTeX file: {debug_tex_file}")
         except Exception as e:
             logger.warning(f"Could not save debug LaTeX file: {e}")
+
+        # Safety net: escape any remaining unescaped # characters that would cause
+        # "macro parameter character #" errors. This catches cases where upstream
+        # post_process_latex may not have been applied (e.g. error feedback regen).
+        latex_code = re.sub(r"(?<!\\)#(?!\d)", r"\\#", latex_code)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)

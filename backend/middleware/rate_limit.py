@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Default rate limits
 DEFAULT_RATE = "60/minute"
-TASK_CREATE_RATE = "10/minute"
+TASK_CREATE_RATE = "60/minute"
 SCRAPE_RATE = "5/minute"
 
 

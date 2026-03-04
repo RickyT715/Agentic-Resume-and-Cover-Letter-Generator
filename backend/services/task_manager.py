@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import shutil
+import time
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
@@ -47,6 +48,11 @@ class TaskManager:
         self._progress_callbacks: list[Callable] = []
         self._semaphore = asyncio.Semaphore(settings.max_concurrent_tasks)
         self._lock = asyncio.Lock()
+
+        # Debounced save state for progress updates
+        self._last_progress_save: float = 0.0
+        self._save_interval: float = 2.0  # Min seconds between progress-triggered saves
+        self._deferred_save_handle: asyncio.TimerHandle | None = None
 
         # Initialize services
         logger.info("Initializing TaskManager services...")
@@ -137,6 +143,25 @@ class TaskManager:
     def register_progress_callback(self, callback: Callable):
         self._progress_callbacks.append(callback)
 
+    def _schedule_deferred_save(self):
+        """Schedule a deferred save after the debounce interval."""
+        if self._deferred_save_handle is not None:
+            return  # Already scheduled
+        try:
+            loop = asyncio.get_running_loop()
+            self._deferred_save_handle = loop.call_later(
+                self._save_interval,
+                lambda: asyncio.ensure_future(self._execute_deferred_save()),
+            )
+        except RuntimeError:
+            pass  # No running loop (e.g. during shutdown)
+
+    async def _execute_deferred_save(self):
+        """Execute a deferred save and reset the handle."""
+        self._deferred_save_handle = None
+        self._last_progress_save = time.monotonic()
+        await self._save_tasks()
+
     async def _notify_progress(
         self,
         task: Task,
@@ -145,7 +170,12 @@ class TaskManager:
         message: str = "",
         attempt: int = 0,
     ):
-        """Notify all registered callbacks of progress."""
+        """Notify all registered callbacks of progress.
+
+        Uses debounced persistence: always saves on terminal states,
+        throttles intermediate progress saves to reduce I/O contention
+        when many tasks run concurrently.
+        """
         update = {
             "task_id": task.id,
             "task_number": task.task_number,
@@ -168,7 +198,18 @@ class TaskManager:
         log_level = logging.ERROR if status == TaskStatus.FAILED else logging.INFO
         logger.log(log_level, f"Task {task.task_number} [{task.id}] - {step.value}: {status.value} - {message}")
 
-        await self._save_tasks()
+        # Debounced persistence: always save terminal states immediately,
+        # throttle intermediate progress to reduce file I/O under concurrency.
+        is_terminal = status in (TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED)
+        now = time.monotonic()
+        if is_terminal or (now - self._last_progress_save) >= self._save_interval:
+            await self._save_tasks()
+            self._last_progress_save = now
+            if self._deferred_save_handle is not None:
+                self._deferred_save_handle.cancel()
+                self._deferred_save_handle = None
+        else:
+            self._schedule_deferred_save()
 
         for callback in self._progress_callbacks:
             try:
